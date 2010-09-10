@@ -53,11 +53,38 @@ qx.Theme.define("logbuch.theme.Appearance",
       {
         return {
           font      : "logbuch-label-box",
-          textColor : "white",
-          decorator : "logbuch-label-box",
+          textColor : states.disabled ? "logbuch-label-box-disabled" : "logbuch-label-box",
+          decorator : states.disabled ? "logbuch-label-box-disabled" : "logbuch-label-box" ,
           padding   : 2
         };
       }
-    }    
+    },
+    
+    "logbuch-category-page" :
+    {
+      style : function(states)
+      {
+        return {
+          decorator       : "logbuch-category-page",
+          padding         : 5,
+          backgroundColor : "logbuch-background-category-page",
+          shadow          : "shadow-window"
+        };
+      }
+    },
+    
+    
+    "logbuch-datecell" :
+     {
+      style : function(states)
+      {
+        return {
+          font      : "small",
+	        textColor : "white",
+	        textAlign : "center",
+          padding   : 2
+        };
+      }
+    }
   }
 });

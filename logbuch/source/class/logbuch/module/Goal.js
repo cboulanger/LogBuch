@@ -17,24 +17,32 @@
 ************************************************************************ */
 
 /**
- * The header
+ * A category module for the editing of goals
  */
-qx.Class.define("logbuch.module.Sidebar",
+qx.Class.define("logbuch.module.Goal",
 {
-  extend : qx.ui.container.Composite,
+  extend : logbuch.module.AbstractCategoryModule,
   
-  implement : [ qcl.application.IModule, qcl.application.IWidgetModule ],
+  /*
+  *****************************************************************************
+     PROPERTIES
+  *****************************************************************************
+  */  
+  properties :
+  {
+
+  },
   
   /*
   *****************************************************************************
      CONSTRUCTOR
   *****************************************************************************
-  */  
+  */    
 
   construct : function()
   {
-    this.base(arguments);
-  },
+    this.base(arguments, "goal" );
+  },    
   
   /*
   *****************************************************************************
@@ -49,63 +57,71 @@ qx.Class.define("logbuch.module.Sidebar",
     ---------------------------------------------------------------------------
        PRIVATE MEMBERS
     ---------------------------------------------------------------------------
-    */        
-    __index : null,
-   
-    /**
-     * 
-     * @type qcl.application.Sandbox
-     */
-    __sandbox : null,
+    */       
+
     
     /*
     ---------------------------------------------------------------------------
        INTERFACE METHODS
     ---------------------------------------------------------------------------
-    */       
+    */    
     
-    /**
-     * Initializes the module
-     * @param sandbox {qcl.application.Sandbox}
-     */
-    init : function( sandbox )
-    {
-      this.__sandbox = sandbox;
-    },
-    
+
     /**
      * Builds the UI
      */
-    build : function()
+	  build : function()
 	  {
-			var lc = this.__sandbox.getLayoutConfig();
-			this.set({
-			  layout      : new qx.ui.layout.VBox(lc.getCalendar().getHGridLineWidth()),
-			  width       : lc.getSidebar().getWidth(), 
-			  marginTop   : lc.getSidebar().getMarginTop(), 
-			  marginRight : lc.getCalendar().getHGridLineWidth(),
-			  marginLeft  : lc.getSidebar().getMarginLeft()
-			});
-	  },
-    
-    start : function(){},
-    stop : function(){},
+      this.base(arguments);
+      this.add( new qx.ui.basic.Label("Hier kommt die Zielplanung hin" ));  
+    },
+ 
     
     /*
     ---------------------------------------------------------------------------
-       SIDEBAR METHODS
+       APPLY METHODS
+    ---------------------------------------------------------------------------
+    */    
+
+    
+    /*
+    ---------------------------------------------------------------------------
+       EVENT HANDLERS
     ---------------------------------------------------------------------------
     */
     
-    /**
-     * Adds a category box to the sidebar, given the category module
-     * @param categoryModule {logbuch.module.AbstractCategoryModule}
-     */
-    addModule : function( categoryModule )
-    {      
-      var categoryWidget = new logbuch.module.CategoryBox( categoryModule, this.__sandbox );
-      this.add( categoryWidget );      
-    }
+    _applyDate : function( date, old )
+    {
+      
+    },    
     
+    /*
+    ---------------------------------------------------------------------------
+       APIT
+    ---------------------------------------------------------------------------
+    */    
+    
+    /**
+     * Returns the category module's (translated) label
+     * @return {String}
+     */
+    getLabel : function()
+    {
+      return this.tr("Goals");
+    },
+
+    
+    dummy : null
+  },
+
+  /*
+   *****************************************************************************
+      DESTRUCT
+   *****************************************************************************
+   */
+
+  destruct : function()
+  {
+
   }
 });

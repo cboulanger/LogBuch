@@ -36,8 +36,30 @@ qx.Theme.define("logbuch.theme.Decoration",
       style :
       {
         width : 1,
+        color :  "logbuch-label-box"
+      }
+    },
+    
+    "logbuch-label-box-disabled" :
+    {
+      decorator : qx.ui.decoration.Single,
+
+      style :
+      {
+        width : 1,
+        color : "logbuch-label-box-disabled"
+      }
+    },    
+    
+    "logbuch-category-page" :
+    {
+      decorator : qx.ui.decoration.Single,
+
+      style :
+      {
+        width : 1,
         color : "white"
       }
-    }
+    }    
   }
 });

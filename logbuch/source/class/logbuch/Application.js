@@ -62,19 +62,22 @@ qx.Class.define("logbuch.Application",
     {
       viewport :
       {
-        maxHeight : 600,
-        minHeight : 600,
+        maxHeight : 610,
+        minHeight : 610,
         maxWidth  : 1000,
         minWidth  : 1000
       },
       workspace : {
-        marginTop   : 10,
-        marginRight : 10
+        marginTop     : 10,
+        marginRight   : 10,
+        marginBottom  : 10
       },
-      calendarDayBox : {
-        height  : 78,
-        width   : 120,
-        horizontalGridLineWidth : 5
+      calendar:
+      {
+        dateRowHeight   : 30,
+        boxHeight       : 78,
+        boxWidth        : 120,
+        hGridLineWidth  : 5
       },
       sidebar : {
         marginTop  : 44,
@@ -87,6 +90,8 @@ qx.Class.define("logbuch.Application",
         buttonWidth     : 70
       }
     },
+    
+    
     
     
     /*
@@ -141,11 +146,41 @@ qx.Class.define("logbuch.Application",
       core.register("sidebar", sidebar );
       ui.add( sidebar,{ edge : "west" } );
       
-      var calendar = new logbuch.module.Calendar();
-      core.register("main", calendar );
-      ui.add( calendar,{ edge : "center" } );
+      /*
+       * main workspace stack
+       */
+      var workspace = new qx.ui.container.Composite( new qx.ui.layout.Canvas() );
+      ui.add( workspace,{ edge : "center" } );
       
+      var calendarModule = new logbuch.module.Calendar();
+      core.register( "main", calendarModule );
+      workspace.add( calendarModule, { edge: 0 } );
+      
+      var eventModule = new logbuch.module.Event();
+      core.register( "event", eventModule );
+      sidebar.addModule( eventModule );
+      workspace.add( eventModule, { edge: 0 } );
+      
+      var goalModule = new logbuch.module.Goal();
+      core.register( "goal", goalModule );
+      sidebar.addModule( goalModule );
+      workspace.add( goalModule, { edge: 0 } );
 
+      var docModule = new logbuch.module.Documentation();
+      core.register( "documentation", docModule );
+      sidebar.addModule( docModule );
+      workspace.add( docModule, { edge: 0 } );      
+
+      var diaryModule = new logbuch.module.Diary();
+      core.register( "diary", diaryModule );
+      sidebar.addModule( diaryModule );
+      workspace.add( diaryModule, { edge: 0 } );       
+      
+      var inspirationModule = new logbuch.module.Inspiration();
+      core.register( "inspiration", inspirationModule );
+      sidebar.addModule( inspirationModule );
+      workspace.add( inspirationModule, { edge: 0 } );          
+      
       /*
        * build and start all modules 
        */
