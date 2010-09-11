@@ -18,6 +18,13 @@
 
 ************************************************************************ */
 
+  
+/**
+ * The core application object
+ * @type qcl.application.Core
+ */
+var core;
+
 /**
  * This is the main application class of your custom application "logbuch".
  * 
@@ -26,6 +33,7 @@
 qx.Class.define("logbuch.Application",
 {
   extend : qx.application.Standalone,
+  
   
   /*
   *****************************************************************************
@@ -121,18 +129,75 @@ qx.Class.define("logbuch.Application",
       }
       
       /*
+       * application core providing app functionality
+       */
+      core = new qcl.application.Core();
+      
+      /*
+       * create and show popup
+       */
+      core.createPopup();
+      core.showPopup(this.tr("Starting application..."));
+      
+      /*
        * create initial layout config object
        */
       this.__layoutConfig = qx.data.marshal.Json.createModel( this.__layoutConfigInit, true);
       
       /*
-       * create main layout and core application object, register
-       * modules with core and add uninitialized module ui to 
-       * the layout.
+       * creeate widgets
        */
+      var ui = this._createUI();      
+      
+      /*
+       * build and start all modules 
+       */
+      core.buildModules();
+      core.startModules();
+      
+      /*
+       * add the main layout to the document
+       */
+      this.getRoot().add( ui, { edge: 0 } );
+      this.getRoot().add( new logbuch.component.Login(), { edge : 0 } );
+      /*
+       * initalize server communication
+       */
+      core.getRpcManager().setServerUrl("../services/server.php");
+      
+      /*
+       * access and config
+       */
+      core.getAccessManager().init();
+      core.getConfigManager().init();
+      core.getAccessManager().setService("logbuch.access");
+      core.getConfigManager().setService("logbuch.config");
+      
+      /*
+       *  allow incoming server dialogs
+       */
+      core.allowServerDialogs(true);      
+      
+      /*
+       * run setup, then authenticate
+       */
+      this.info("Setting up application...");
+      core.showPopup( this.tr("Setting up application...") );
+      core.getRpcManager().execute(
+        "logbuch.setup","setup",[], 
+        this._connect, this
+      );      
+    },
+    
+    /**
+     * create main layout, register modules with core and add 
+     * uninitialized module ui to the layout.
+     * @return {qx.ui.container.Composite}
+     */
+    _createUI : function()
+    {
       var ui = new qx.ui.container.Composite( new qx.ui.layout.Dock() );
       ui.set( this.__layoutConfigInit.viewport );
-      var core = new qcl.application.Core();
       
       var header = new logbuch.module.Header();
       core.register("header", header );
@@ -149,7 +214,9 @@ qx.Class.define("logbuch.Application",
       /*
        * main workspace stack
        */
-      var workspace = new qx.ui.container.Composite( new qx.ui.layout.Canvas() );
+      var workspace = new qx.ui.container.Composite( new qx.ui.layout.Canvas() ).set({
+        visibility : "hidden"
+      });
       ui.add( workspace,{ edge : "center" } );
       
       var calendarModule = new logbuch.module.Calendar();
@@ -179,19 +246,70 @@ qx.Class.define("logbuch.Application",
       var inspirationModule = new logbuch.module.Inspiration();
       core.register( "inspiration", inspirationModule );
       sidebar.addModule( inspirationModule );
-      workspace.add( inspirationModule, { edge: 0 } );          
+      workspace.add( inspirationModule, { edge: 0 } ); 
       
-      /*
-       * build and start all modules 
-       */
-      core.buildModules();
-      core.startModules();
+      return ui;
       
-      /*
-       * add the main layout to the document
-       */
-      this.getRoot().add( ui, { edge: 0 } );
     },
+    
+    /**
+     * Connect to the server: authenticate and laod configuration
+     */
+    _connect : function()
+    {
+      this.info("Authenticating ...");
+      
+      /*
+       * (re-) authenticate
+       */
+      core.showPopup( this.tr("Connecting with server...") );
+      core.getAccessManager().connect(function()
+      {
+        /*
+         * notify subscribers
+         */
+        core.publish("connected");
+
+        /*
+         * when done, load config values and continue with loading datasources
+         */
+        core.showPopup( this.tr( "Loading configuration ...") );
+        core.getConfigManager().load(this._initializeState, this );
+        
+      },this);
+    },
+        
+    /**
+     * Initializes the application state
+     */
+    _initializeState : function()
+    {
+      this.info("Initializing application state ...");
+      /*
+       * initialize application state
+       */
+      core.getStateManager().setHistorySupport(true);
+      core.getStateManager().updateState();
+      
+      this._finalize();
+    },    
+    
+    
+    /**
+     * Finalizes the application 
+     */
+    _finalize :  function() 
+    {
+      /*
+       * reset popup to remove splash screen
+       */
+      core.hidePopup();
+      core.createPopup();
+      
+      this.info("Application ready.");
+      
+      //this.getRoot().add( new logbuch.component.Login(), { edge : 0 } );
+    },    
     
     /**
      * Returns qx.core.Object with values used for application layout

@@ -1,0 +1,20 @@
+<?xml version="1.0" standalone="yes"?>
+<root>
+  <model name="qcl_access_model_Permission">
+    <data>
+      <record namedId="*">
+        <description>Can do everything</description>
+      </record>
+      <record namedId="access.manage">
+        <description>Manage users, roles, permissions, and datasources</description>
+      </record>
+      
+    </data>
+    <links>
+      <relation name="Permission_Role">
+        <link namedId="*">admin</link>
+        <link namedId="access.manage">admin</link>
+      </relation>
+    </links>
+  </model>
+</root>

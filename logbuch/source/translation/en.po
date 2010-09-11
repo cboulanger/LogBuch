@@ -1,0 +1,51 @@
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: 1.0\n"
+"Report-Msgid-Bugs-To: you@your.org\n"
+"POT-Creation-Date: 2010-09-10 18:10+0100\n"
+"PO-Revision-Date: 2010-09-10 18:10+0100\n"
+"Last-Translator: you <you@your.org>\n"
+"Language-Team: Team <yourteam@your.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: logbuch/module/Diary.js:110
+msgid "Diary"
+msgstr ""
+
+#: logbuch/module/Documentation.js:110
+msgid "Documentation"
+msgstr ""
+
+#: logbuch/module/Event.js:121
+msgid "Events"
+msgstr ""
+
+#: logbuch/module/Footer.js:84
+msgid "Calendar"
+msgstr ""
+
+#: logbuch/module/Footer.js:135
+msgid "Today"
+msgstr ""
+
+#: logbuch/module/Footer.js:179
+msgid "Print"
+msgstr ""
+
+#: logbuch/module/Footer.js:191
+msgid "Admin"
+msgstr ""
+
+#: logbuch/module/Goal.js:110
+msgid "Goals"
+msgstr ""
+
+#: logbuch/module/Inspiration.js:110
+msgid "Inspiration"
+msgstr ""
+
+#~ msgid "event"
+#~ msgstr ""

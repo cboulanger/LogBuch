@@ -60,6 +60,47 @@ qx.Theme.define("logbuch.theme.Decoration",
         width : 1,
         color : "white"
       }
-    }    
+    },
+    
+    /*
+     * index-card widget
+     */
+    
+    "logbuch-indexcard-container" :
+    {
+      decorator : qx.ui.decoration.Single,
+      style :
+      {
+        left: [1, "solid", "white"],
+        right: [1, "solid", "white"],
+        bottom: [1, "solid", "white"]
+      }
+    },
+    
+    "logbuch-indexcard-tab" :
+    {
+      decorator : qx.ui.decoration.Single,
+      style :
+      {
+        top: [1, "solid", "white"],
+        left: [1, "solid", "white"],
+        right: [1, "solid", "white"]
+      }
+    },
+    
+    /*
+     * inputfield widget
+     */
+    
+    "logbuch-inputfield-input" :
+    {
+      decorator : qx.ui.decoration.Single,
+      style :
+      {
+        width : 1,
+        color : "logbuch-inputfield-input-border"
+      }
+    }
+    
   }
 });

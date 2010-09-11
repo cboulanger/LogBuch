@@ -52,6 +52,34 @@ qx.Theme.define("logbuch.theme.Font",
         [ "Segoe UI", "Candara" ] :
         [ "Tahoma", "Liberation Sans", "Arial", "sans-serif" ],
       bold : true
+    },
+    
+    /*
+     * index card
+     */
+    
+    "logbuch-indexcard-tab" :
+    {
+      size : 16,
+      family : qx.bom.client.Platform.MAC ? [ "Lucida Grande" ] :
+        (qx.bom.client.System.WINVISTA || qx.bom.client.System.WIN7) ?
+        [ "Segoe UI", "Candara" ] :
+        [ "Tahoma", "Liberation Sans", "Arial", "sans-serif" ],
+      bold : true
+    },    
+    
+    /*
+     * input field
+     */    
+    
+    "logbuch-inputfield-input" :
+    {
+      size : 12,
+      family : qx.bom.client.Platform.MAC ? [ "Lucida Grande" ] :
+        (qx.bom.client.System.WINVISTA || qx.bom.client.System.WIN7) ?
+        [ "Segoe UI", "Candara" ] :
+        [ "Tahoma", "Liberation Sans", "Arial", "sans-serif" ]
     }
+    
   }
 });

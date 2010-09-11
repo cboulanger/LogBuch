@@ -34,6 +34,7 @@ qx.Class.define("logbuch.module.Sidebar",
   construct : function()
   {
     this.base(arguments);
+    this.hide();
   },
   
   /*

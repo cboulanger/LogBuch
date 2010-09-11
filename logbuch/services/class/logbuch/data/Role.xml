@@ -1,0 +1,29 @@
+<?xml version="1.0" standalone="yes"?>
+<root>
+  <model name="qcl_access_model_Role">
+    <data>
+      <record namedId="anonymous">
+        <name>Anonymous user</name>
+      </record>
+      <record namedId="user">
+        <name>Normal user</name>
+      </record>
+      <record namedId="manager">
+        <name>Manager role</name>
+      </record>
+      <record namedId="admin">
+        <name>Administrator role</name>
+      </record>
+    </data>
+    <links>
+      <relation name="Permission_Role">
+        <link namedId="admin">access.manage</link>
+      </relation>
+      <relation name="User_Role">
+        <link namedId="user">admin</link>
+        <link namedId="manager">admin</link>
+        <link namedId="admin">admin</link>
+      </relation>
+    </links>
+  </model>
+</root>

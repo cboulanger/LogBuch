@@ -25,10 +25,19 @@ qx.Class.define("logbuch.module.Footer",
   
   implement : [ qcl.application.IModule, qcl.application.IWidgetModule ],
 
+  /*
+  *****************************************************************************
+     CONSTRUCTOR
+  *****************************************************************************
+  */
+  
+  /**
+   * Constructor
+   */
   construct : function()
   {
     this.base(arguments);
-
+    this.hide();
   }, 
   
   /*

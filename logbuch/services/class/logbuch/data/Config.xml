@@ -1,0 +1,15 @@
+<?xml version="1.0" standalone="yes"?>
+<root>
+  <model name="qcl_config_ConfigModel">
+    <data>
+      <record namedId="foo">
+        <type>0</type>
+        <default>bar</default>
+        <customize>1</customize>
+      </record>
+    </data>
+    <links>
+      <relation name="Config_UserConfig"/>
+    </links>
+  </model>
+</root>
