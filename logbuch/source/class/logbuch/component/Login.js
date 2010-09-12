@@ -31,13 +31,16 @@ qx.Class.define("logbuch.component.Login",
   
   /**
    * Constructor
+   * @param core {qcl.application.Core}
    */
-  construct : function()
+  construct : function( core )
   {
+    this.__core = core;
     this.base(arguments, this.tr("Login") );
     this.set({
-      height : 500,
-      margin : [100,100,100,100] // FIXME
+      visibility : "hidden",
+      height     : 450,
+      width      : 810
     });
     
     this.getChildrenContainer().set({
@@ -48,20 +51,69 @@ qx.Class.define("logbuch.component.Login",
       paddingBottom : 30
     });
     
-    var name = new logbuch.component.InputField( "Name oder Autorenkürzel eingeben");
-    this.add( name );
+    var usernameInput, passwordInput, loginButton;
     
-    var password = new logbuch.component.InputField( "Persönliches Password eingeben", null, "password");
-    this.add( password );
+    /*
+     * user name
+     */
+    usernameInput = new logbuch.component.InputField( this.tr("Enter name or alias") ).set({
+      liveUpdate : true
+    });
+    usernameInput.getInputControl().addListener("keypress",function(e){
+      if ( e.getKeyIdentifier() == "Enter" ) 
+      {
+        passwordInput.focus();
+      }    
+    },this);
+    this.add( usernameInput );
+    
+    /*
+     * password
+     */
+    passwordInput = new logbuch.component.InputField( this.tr( "Enter your password" ), null, "password").set({
+      liveUpdate : true
+    });
+    passwordInput.getInputControl().addListener("keypress",function(e){
+      if ( e.getKeyIdentifier() == "Enter" ) 
+      {
+        loginButton.focus();
+        loginButton.execute();
+      }    
+    },this);
+    this.add( passwordInput );
     
     this.add( new qx.ui.core.Spacer(), {flex:1} );
     
     var hbox = new qx.ui.container.Composite( new qx.ui.layout.HBox( 5 ) );
-    var loginButton = new qx.ui.form.Button( this.tr("Login") );
+    
+    /*
+     * login button
+     */
+    loginButton = new qx.ui.form.Button( this.tr("Login") );
+    loginButton.addListener("execute", function(){
+      core.showPopup( this.tr("Logging in ...") );
+      core.authenticate( usernameInput.getValue(), passwordInput.getValue(), function(){
+        core.hidePopup();
+      },this );
+    },this );
     hbox.add( loginButton );
-    var cancelButton = new qx.ui.form.Button( this.tr("Cancel" ) );
-    hbox.add( cancelButton );
+    
+    /*
+     * cancel
+     */
+//    var cancelButton = new qx.ui.form.Button( this.tr("Cancel" ) );
+//    hbox.add( cancelButton );
     this.add(hbox);
+    
+    /*
+     * empty form and set focus when shown
+     */
+    this.addListener("appear",function(e){
+      usernameInput.setValue(null);
+      passwordInput.setValue(null);
+      usernameInput.focus();
+    }, this );
+    
     
   },
   

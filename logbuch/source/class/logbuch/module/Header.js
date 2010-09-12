@@ -14,7 +14,7 @@
 
 /* ************************************************************************
 
-#asset(qx/icon/${qx.icontheme}/32/actions/dialog-close.png)
+#asset(qx/icon/${qx.icontheme}/22/actions/dialog-close.png)
 
 ************************************************************************ */
 
@@ -110,22 +110,29 @@ qx.Class.define("logbuch.module.Header",
       /*
        * logged in user
        */
-      var userName = "Max Mustermann, TÜVRheinland"; // FIXME
-      userNameLabel = new qx.ui.basic.Label( userName ).set({
+      userNameLabel = new qx.ui.basic.Label().set({
         appearance  : "title-project"
       });
-      //this.__sandbox.getActiveUser().bind("fullname");
+      this.__sandbox.subscribe("authenticated",function(e){
+        userNameLabel.setValue(
+          e.getData() ? this.__sandbox.getActiveUserData().fullname : null        
+        );
+      },this);
       this.add( userNameLabel );
 
       /*
        * log out button
        */
-      var logoutButton = new qx.ui.form.Button( null, "icon/32/actions/dialog-close.png" ).set({
-        maxHeight : 38
+      var logoutButton = new qx.ui.form.Button( null, "icon/22/actions/dialog-close.png" ).set({
+        maxHeight : 28,
+        visibility : "hidden"
       });
       logoutButton.addListener("execute",function(){
         this.__sandbox.publish("logout");
       },this);
+      this.__sandbox.subscribe("authenticated",function(e){        
+          e.getData() ? logoutButton.show() : logoutButton.hide(); 
+      },this);      
       
       this.add( logoutButton );
 	  },

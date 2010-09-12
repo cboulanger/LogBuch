@@ -83,6 +83,13 @@ qx.Class.define("logbuch.component.InputField",
       nullable  : true,
       apply     : "_applyValue",
       event     : "changeValue"
+    },
+    
+    liveUpdate :
+    {
+      check     : "Boolean",
+      init      : false,
+      apply     : "_applyLiveUpdate"
     }
     
     
@@ -97,13 +104,6 @@ qx.Class.define("logbuch.component.InputField",
   members :
   {
   
-    /*
-    ---------------------------------------------------------------------------
-       PRIVATE MEMBERS
-    ---------------------------------------------------------------------------
-    */ 
-
-    
     /*
     ---------------------------------------------------------------------------
       WIDGET API
@@ -141,6 +141,13 @@ qx.Class.define("logbuch.component.InputField",
       return control || this.base(arguments, id);
     },
 
+    /**
+     * Focus the input control in this widget
+     */
+    focus : function()
+    {
+      this.getInputControl().focus();
+    },
     
     /*
     ---------------------------------------------------------------------------
@@ -150,12 +157,42 @@ qx.Class.define("logbuch.component.InputField",
     
     _applyLabel : function( value, old )
     {
-      this.getChildControl("label").setValue( value );
+      this.getLabelControl().setValue( value );
     },
     
     _applyValue : function( value, old )
     {
-      this.getChildControl("input").setValue( value );
+      this.getInputControl().setValue( value );
+    },
+    
+    _applyLiveUpdate : function( value, old )
+    {
+      this.getInputControl().setLiveUpdate( value );
+    },
+    
+    /*
+    ---------------------------------------------------------------------------
+       API
+    ---------------------------------------------------------------------------
+    */
+    
+    /**
+     * Returns the input control
+     * @return {qx.ui.form.AbstractField}
+     */
+    getInputControl : function()
+    {
+      return this.getChildControl("input");
+    },
+    
+    /**
+     * Returns the label widget
+     * @return {qx.ui.basic.Label}
+     */
+    getLabelControl : function()
+    {
+      return this.getChildControl("label");
     }    
+    
   }
 });

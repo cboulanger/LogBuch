@@ -145,9 +145,24 @@ qx.Class.define("logbuch.Application",
       this.__layoutConfig = qx.data.marshal.Json.createModel( this.__layoutConfigInit, true);
       
       /*
-       * creeate widgets
+       * creeate main workspace and hide parts of it as 
+       * long as no authenticated user exists
        */
-      var ui = this._createUI();      
+      var ui = this._createUI();
+      core.subscribe("authenticated",function(e){
+        if ( e.getData() )
+        {
+          core.getModuleById("sidebar").show();
+          core.getModuleById("footer").show();
+          ui.getUserData( "workspace").show();
+        }
+        else
+        {
+          core.getModuleById("sidebar").hide();
+          core.getModuleById("footer").hide();
+          ui.getUserData("workspace").hide();
+        }
+      }, this );
       
       /*
        * build and start all modules 
@@ -159,24 +174,38 @@ qx.Class.define("logbuch.Application",
        * add the main layout to the document
        */
       this.getRoot().add( ui, { edge: 0 } );
-      this.getRoot().add( new logbuch.component.Login(), { edge : 0 } );
+      
+      /*
+       * add login dialog
+       */
+      var loginDialog = new logbuch.component.Login( core );
+      this.getRoot().add( loginDialog, { left : 100, top : 100 } ); 
+      core.subscribe("authenticated",function(e){
+        e.getData() ? this.hide() : this.show();
+      }, loginDialog );      
+      
       /*
        * initalize server communication
        */
-      core.getRpcManager().setServerUrl("../services/server.php");
+      core.setServerUrl("../services/server.php");
       
       /*
        * access and config
        */
-      core.getAccessManager().init();
-      core.getConfigManager().init();
-      core.getAccessManager().setService("logbuch.access");
-      core.getConfigManager().setService("logbuch.config");
+      core.setAccessService("logbuch.access");
+      core.setConfigService("logbuch.config");
       
       /*
        *  allow incoming server dialogs
        */
-      core.allowServerDialogs(true);      
+      core.allowServerDialogs(true);
+      
+      /*
+       * publish a message when the authentication state changes
+       */
+      core.addListener("changeActiveUser", function(e){
+        core.publish("authenticated", ! e.getData().isAnonymous() );
+      },this);      
       
       /*
        * run setup, then authenticate
@@ -199,14 +228,23 @@ qx.Class.define("logbuch.Application",
       var ui = new qx.ui.container.Composite( new qx.ui.layout.Dock() );
       ui.set( this.__layoutConfigInit.viewport );
       
+      /*
+       * header
+       */
       var header = new logbuch.module.Header();
       core.register("header", header );
       ui.add( header,{ edge : "north" } );
       
+      /*
+       * footer
+       */
       var footer = new logbuch.module.Footer();
       core.register("footer", footer );
-      ui.add( footer,{ edge : "south" } );      
+      ui.add( footer,{ edge : "south" } );
       
+      /*
+       * sidebar
+       */
       var sidebar = new logbuch.module.Sidebar();
       core.register("sidebar", sidebar );
       ui.add( sidebar,{ edge : "west" } );
@@ -218,31 +256,50 @@ qx.Class.define("logbuch.Application",
         visibility : "hidden"
       });
       ui.add( workspace,{ edge : "center" } );
+      ui.setUserData( "workspace", workspace );
       
+      /*
+       * calendar
+       */
       var calendarModule = new logbuch.module.Calendar();
       core.register( "main", calendarModule );
       workspace.add( calendarModule, { edge: 0 } );
-      
+
+      /*
+       * events
+       */
       var eventModule = new logbuch.module.Event();
       core.register( "event", eventModule );
       sidebar.addModule( eventModule );
       workspace.add( eventModule, { edge: 0 } );
       
+      /*
+       * goals
+       */
       var goalModule = new logbuch.module.Goal();
       core.register( "goal", goalModule );
       sidebar.addModule( goalModule );
       workspace.add( goalModule, { edge: 0 } );
 
+      /*
+       * documentation
+       */
       var docModule = new logbuch.module.Documentation();
       core.register( "documentation", docModule );
       sidebar.addModule( docModule );
       workspace.add( docModule, { edge: 0 } );      
 
+      /*
+       * diary
+       */
       var diaryModule = new logbuch.module.Diary();
       core.register( "diary", diaryModule );
       sidebar.addModule( diaryModule );
       workspace.add( diaryModule, { edge: 0 } );       
       
+      /*
+       * inspiration
+       */
       var inspirationModule = new logbuch.module.Inspiration();
       core.register( "inspiration", inspirationModule );
       sidebar.addModule( inspirationModule );
@@ -257,21 +314,26 @@ qx.Class.define("logbuch.Application",
      */
     _connect : function()
     {
-      this.info("Authenticating ...");
+      this.info("Connecting ...");
       
       /*
        * (re-) authenticate
        */
       core.showPopup( this.tr("Connecting with server...") );
-      core.getAccessManager().connect(function()
+      core.connect(function()
       {
         /*
-         * notify subscribers
+         * add logout event
          */
-        core.publish("connected");
-
+        core.subscribe("logout", function(){
+          core.showPopup( this.tr("Logging out ...") );
+          core.logout( function(){
+            core.hidePopup();
+          },this);
+        },this);
+        
         /*
-         * when done, load config values and continue with loading datasources
+         * load config values and continue 
          */
         core.showPopup( this.tr( "Loading configuration ...") );
         core.getConfigManager().load(this._initializeState, this );
@@ -305,10 +367,8 @@ qx.Class.define("logbuch.Application",
        */
       core.hidePopup();
       core.createPopup();
-      
+      core.publish("ready");
       this.info("Application ready.");
-      
-      //this.getRoot().add( new logbuch.component.Login(), { edge : 0 } );
     },    
     
     /**
