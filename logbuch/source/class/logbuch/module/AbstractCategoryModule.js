@@ -24,7 +24,33 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
 {
   extend : qx.ui.container.Composite,
   
-  implement : [ qcl.application.IModule, qcl.application.IWidgetModule ],
+  implement : [ 
+    qcl.application.IModule, 
+    qcl.application.IWidgetModule,
+    qcl.application.IFormModule
+  ],  
+  
+ /*
+  *****************************************************************************
+     EVENTS
+  *****************************************************************************
+  */
+  
+  events :
+  {
+    /**
+     * Can be used to indicate that a form has been completed.
+     * @type qx.event.type.Event
+     */
+    "completed" : "qx.event.type.Event",
+    
+    /**
+     * Can be used to indicate that some action on the card has been canceled.
+     * @type qx.event.type.Event
+     */
+    "cancel" : "qx.event.type.Event"    
+    
+  },  
   
   /*
   *****************************************************************************
@@ -105,7 +131,7 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
         appearance       : "logbuch-category-page",
 	      marginRight      : lc.getWorkspace().getMarginRight(),
         marginTop        : lc.getWorkspace().getMarginTop() + 
-                           lc.getCalendar().getDateRowHeight(),
+                           lc.getCalendar().getDateRowHeight() - 2,
         marginBottom     : lc.getWorkspace().getMarginBottom()                          
 	    });
     },
@@ -125,6 +151,11 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
     {
       this.__sandbox.unsubscribe("activate-category", this._onSandboxActivateCategory, this);
     },
+    
+    /**
+     * Empty stub
+     */
+    getFormModel : function(){},
     
     /*
     ---------------------------------------------------------------------------

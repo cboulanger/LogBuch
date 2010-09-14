@@ -96,6 +96,12 @@ qx.Class.define("logbuch.Application",
         marginTop       : 10,
         controlsHeight  : 20,
         buttonWidth     : 70
+      },
+      event :
+      {
+        rowHeight         : 62,
+        leftColumnWidth   : 150,
+        rightColumnWidth  : 150 
       }
     },
     
@@ -145,19 +151,43 @@ qx.Class.define("logbuch.Application",
       this.__layoutConfig = qx.data.marshal.Json.createModel( this.__layoutConfigInit, true);
       
       /*
-       * creeate main workspace and hide parts of it as 
-       * long as no authenticated user exists
+       * create main ui
        */
       var ui = this._createUI();
+      
+      /*
+       * message modules
+       */
+      var messageModules = this._createMessageModule();
+      
+      /*
+       * setup modules
+       */
+      var setupDialog = this._createSetupDialog();
+      
+      /*
+       * registration dialog
+       */
+      var registrationDialog = this._createRegistrationDialog();
+      
+      /*
+       * determine ui changes on authentication state change
+       */
       core.subscribe("authenticated",function(e){
         if ( e.getData() )
         {
+          registrationDialog.show();
+          setupDialog.show();
+//          messageModules.show();
           core.getModuleById("sidebar").show();
           core.getModuleById("footer").show();
           ui.getUserData( "workspace").show();
         }
         else
         {
+//          registrationDialog.hide();
+//          setupDialog.hide();
+//          messageModules.hide();
           core.getModuleById("sidebar").hide();
           core.getModuleById("footer").hide();
           ui.getUserData("workspace").hide();
@@ -171,9 +201,12 @@ qx.Class.define("logbuch.Application",
       core.startModules();
       
       /*
-       * add the main layout to the document
+       * add widgets to the document
        */
       this.getRoot().add( ui, { edge: 0 } );
+      //this.getRoot().add( messageModules, { top: 100, left : 100 } );
+      //this.getRoot().add( setupDialog, { top: 100, left : 100 } );
+      //this.getRoot().add( registrationDialog, { top: 100, left : 100 } );
       
       /*
        * add login dialog
@@ -308,6 +341,79 @@ qx.Class.define("logbuch.Application",
       return ui;
       
     },
+    
+    _createMessageModule : function()
+    {
+      var hbox = new qx.ui.container.Composite( new qx.ui.layout.HBox(5) ).set({
+        width   : 800,
+        height  : 500,
+        visibility : "hidden"
+      });
+      
+      var messageBoard = new logbuch.module.MessageBoard( this.tr("logBUCH Messages") );
+      core.register("messageBoard", messageBoard );  
+      hbox.add( messageBoard, { flex : 3 } );
+      
+      var messageConsole = new logbuch.module.MessageConsole( this.tr("Message") );
+      core.register("messageConsole", messageConsole );
+      hbox.add( messageConsole, { flex : 1 } );
+      
+      // fake messages
+      for( var i=0; i<20; i++ )
+      {
+        messageBoard.addMessage( new logbuch.component.Message( 
+          new Date(),
+          "D.B. Blubb GmbH",
+          "Neuer Flugzeugtreibstoff auf der Grundlage von Erdbeereis gefunden!",
+          "Man kann es <b>kaum</b> glauben: Aber <a href='http://www.google.de'>google</a> weiß alles über Dich! Holterdipolter und was weiß ich? Lirum larum Löffelstiel"
+        ));
+      }
+      
+      return hbox;
+    },
+    
+    _createSetupDialog : function()
+    {
+      var hbox = new qx.ui.container.Composite( new qx.ui.layout.HBox(5) ).set({
+        width   : 800,
+        height  : 500,
+        visibility : "hidden"
+      });
+      
+      var left = new logbuch.module.Setup( this.tr("Setup project") );
+      core.register("setup-project", left );  
+      hbox.add( left, { flex : 1 } );
+      
+      var right = new logbuch.module.PersonForm( this.tr("Administrator") );
+      core.register("setup-administrator", right );
+      hbox.add( right, { flex : 1 } );
+      
+      return hbox;
+    },
+    
+    _createRegistrationDialog : function()
+    {
+      var hbox = new qx.ui.container.Composite( new qx.ui.layout.HBox(5) ).set({
+        width   : 800,
+        height  : 500,
+        visibility : "hidden"
+      });
+      
+      var left = new logbuch.module.Registration( this.tr("Registration") );
+      core.register("registration", left );  
+      hbox.add( left, { flex : 1 } );
+      
+      var right = new logbuch.module.PersonForm( this.tr("Personal Information") );
+      right.setEnabled( false );
+      core.register("personal-information", right );
+      hbox.add( right, { flex : 1 } );
+      
+      left.addListener("completed",function(){
+        right.setEnabled(true);
+      },this);
+      
+      return hbox;
+    },    
     
     /**
      * Connect to the server: authenticate and laod configuration

@@ -165,6 +165,7 @@ qx.Class.define("logbuch.module.Calendar",
     __scroller      : null,
     __cellRenderer  : null,
     __data          : null,
+    __dateFormat    : "ccc dd.MM.yyyy",
     
     /**
      * 
@@ -267,11 +268,11 @@ qx.Class.define("logbuch.module.Calendar",
         var msAheadBefore = Math.floor( this.getDaysLoaded() / 2 ) * 86400000;
         var firstLoaded = new Date( date.getTime() - msAheadBefore );
         this.setFirstDateLoaded( firstLoaded );
-        console.log( "first loaded: " + df.format(firstLoaded) );
+        //console.log( "first loaded: " + df.format(firstLoaded) );
         
         var lastLoaded = new Date( date.getTime() + msAheadBefore );        
         this.setLastDateLoaded( lastLoaded );
-        console.log( "last loaded: " + df.format(lastLoaded) );
+        //console.log( "last loaded: " + df.format(lastLoaded) );
         
         /*
          * determine non-work days
@@ -297,11 +298,11 @@ qx.Class.define("logbuch.module.Calendar",
         var delta = date.getDay() - qx.locale.Date.getWeekStart();
         var firstVisible = new Date( date.getTime() - delta * 86400000 );
         this.setFirstDateVisible( firstVisible );
-        console.log( "change first visible: " + df.format(firstVisible) );
+        //console.log( "change first visible: " + df.format(firstVisible) );
         
         var lastVisible = new Date( firstVisible.getTime() + ( 6 * 86400000 ) );
         this.setLastDateVisible( lastVisible );
-        console.log( "change last visible: " + df.format(lastVisible) );
+        //console.log( "change last visible: " + df.format(lastVisible) );
         
         //var dayOfYear = Math.ceil((date - new Date(this.getFullYear(),0,1)) / 86400000);
       } 
@@ -469,7 +470,7 @@ qx.Class.define("logbuch.module.Calendar",
       /*
        * date cell renderer
        */
-      var dateCellRenderer = new qx.ui.virtual.cell.Date(new qx.util.format.DateFormat("ccc dd.MM.yyyy"));
+      var dateCellRenderer = new qx.ui.virtual.cell.Date(new qx.util.format.DateFormat( this.__dateFormat));
       dateCellRenderer.set({
         appearance : "logbuch-datecell"
       });     

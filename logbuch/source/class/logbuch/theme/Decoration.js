@@ -89,16 +89,16 @@ qx.Theme.define("logbuch.theme.Decoration",
     },
     
     /*
-     * inputfield widget
+     * field widget
      */
     
-    "logbuch-inputfield-input" :
+    "logbuch-field-border" :
     {
       decorator : qx.ui.decoration.Single,
       style :
       {
         width : 1,
-        color : "logbuch-inputfield-input-border"
+        color : "logbuch-field-border"
       }
     }
     

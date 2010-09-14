@@ -30,8 +30,29 @@ qx.Class.define("logbuch.component.IndexCard",
     qx.ui.core.MContentPadding
   ],
   
+ /*
+  *****************************************************************************
+     EVENTS
+  *****************************************************************************
+  */
   
-    /*
+  events :
+  {
+    /**
+     * Can be used to indicate that a form has been completed.
+     * @type qx.event.type.Event
+     */
+    "completed" : "qx.event.type.Event",
+    
+    /**
+     * Can be used to indicate that some action on the card has been canceled.
+     * @type qx.event.type.Event
+     */
+    "cancel" : "qx.event.type.Event"    
+    
+  },
+  
+ /*
   *****************************************************************************
      CONSTRUCTOR
   *****************************************************************************

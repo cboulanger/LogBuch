@@ -47,6 +47,25 @@ qx.Theme.define("logbuch.theme.Appearance",
       }
     },
     
+    /*
+     * input and other fields
+     */
+    
+    "logbuch-field" : 
+    {
+      style : function(states)
+      {
+        return {
+          padding         : 3,
+          backgroundColor : "logbuch-field-background",
+          decorator       : "logbuch-field-border"
+        };
+      }
+    },    
+    
+    /*
+     * @todo rename
+     */
     "logbuch-label-box" :
     {
       style : function(states)
@@ -109,7 +128,7 @@ qx.Theme.define("logbuch.theme.Appearance",
           font          : "logbuch-indexcard-tab",
           width         : 50,
           minWidth      : 50,
-          maxWidth      : 150,
+          maxWidth      : 250,
           maxHeight     : 30,
           minHeight     : 30,
           paddingLeft   : 10,
@@ -159,7 +178,7 @@ qx.Theme.define("logbuch.theme.Appearance",
         
     "logbuch-inputfield/input" : 
     {
-      style : function(states)
+      style : function(states) // FIXME INHERIT
       {
         return {
           font            : "logbuch-inputfield-input",
@@ -168,10 +187,90 @@ qx.Theme.define("logbuch.theme.Appearance",
           paddingRight    : 8,
           paddingTop      : 3,
           paddingBottom   : 3,
-          backgroundColor : "logbuch-inputfield-background",
-          decorator       : "logbuch-inputfield-input"
+          backgroundColor : states.disabled ? "logbuch-widget-background" : "logbuch-field-background",
+          decorator       : "logbuch-field-border"
+        };
+      }
+    },
+    
+    /*
+     * message item
+     */
+    "logbuch-messageitem" :
+    {
+      style : function(states)
+      {
+        return {
+          decorator     : "separator-vertical",
+          paddingTop    : 10,
+          paddingBottom : 10
+        };
+      }
+    },    
+    "logbuch-messageitem/date" :
+    {
+      style : function(states)
+      {
+        return {
+          font : "small"
+        };
+      }
+    },
+    "logbuch-messageitem/creator" :
+    {
+      style : function(states)
+      {
+        return {
+          font : "small"
+        };
+      }
+    },
+    "logbuch-messageitem/title" :
+    {
+      style : function(states)
+      {
+        return {
+          font : "bold"
+        };
+      }
+    },
+    
+    "logbuch-field" :
+    {
+      style : function(states) 
+      {
+        return {
+          font            : "logbuch-inputfield-input",
+          minHeight       : 30,
+          paddingLeft     : 8,
+          paddingRight    : 8,
+          paddingTop      : 3,
+          paddingBottom   : 3,
+          backgroundColor : states.disabled ? "logbuch-widget-background" : "logbuch-field-background",
+          decorator       : "logbuch-field-border"
+        };
+      }
+    },
+    
+    'token' : 'combobox',
+
+    'tokenitem' :
+    {
+      include : 'listitem',
+
+      style : function(states)
+      {
+        return {
+          decorator : 'group',
+          textColor : states.hovered ? '#314a6e' : states.head? '#FF0000' : '#000000',
+          height    : 18,
+          padding   : [ 1, 6, 1, 6 ],
+          margin    : 0,
+          icon      : states.close ? "decoration/window/close-active.png" : "decoration/window/close-inactive.png"
         };
       }
     }
+    
+    //"datefield/textfield" : "logbuch-field"
   }
 });

@@ -108,7 +108,11 @@
        // Upload widget
        {
          "manifest" : "${CONTRIB_LIB}/UploadWidget/0.3/Manifest.json"
-       }                              
+       },
+       // Token Field
+       {
+         "manifest" : "${CONTRIB_LIB}/TokenField/trunk/Manifest.json"
+       }                                      
       ]
     },
     

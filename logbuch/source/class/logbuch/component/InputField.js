@@ -83,15 +83,8 @@ qx.Class.define("logbuch.component.InputField",
       nullable  : true,
       apply     : "_applyValue",
       event     : "changeValue"
-    },
-    
-    liveUpdate :
-    {
-      check     : "Boolean",
-      init      : false,
-      apply     : "_applyLiveUpdate"
     }
-    
+        
     
   },
 
@@ -129,6 +122,10 @@ qx.Class.define("logbuch.component.InputField",
               control = new qx.ui.form.PasswordField();
               break;
               
+            case "textarea":
+              control = new qx.ui.form.TextArea();
+              break;
+              
             default:
               control = new qx.ui.form.TextField();
               break;
@@ -162,12 +159,7 @@ qx.Class.define("logbuch.component.InputField",
     
     _applyValue : function( value, old )
     {
-      this.getInputControl().setValue( value );
-    },
-    
-    _applyLiveUpdate : function( value, old )
-    {
-      this.getInputControl().setLiveUpdate( value );
+      this.getFormElement().setValue( value );
     },
     
     /*
@@ -175,6 +167,16 @@ qx.Class.define("logbuch.component.InputField",
        API
     ---------------------------------------------------------------------------
     */
+    
+    /**
+     * Returns the element that can be used in a form widget 
+     * Usually the same as the input control. 
+     * @return {qx.ui.form.AbstractField}
+     */    
+    getFormElement : function()
+    {
+      return this.getInputControl();
+    },
     
     /**
      * Returns the input control
@@ -192,7 +194,38 @@ qx.Class.define("logbuch.component.InputField",
     getLabelControl : function()
     {
       return this.getChildControl("label");
-    }    
+    },
+    
+    addToForm : function( form, name, validator, context )
+    {
+      form.add( this.getFormElement(), null, validator || null, name, context )
+      // item, label, validator, name, validatorContext
+    },
+    
+    setRequired : function( value )
+    {
+      this.getFormElement().setRequired( value );
+    },
+    
+    setReadOnly : function( value )
+    {
+      this.getFormElement().setReadOnly( value );
+    },
+    
+    setLiveUpdate : function( value )
+    {
+      this.getFormElement().setLiveUpdate( value );
+    },
+    
+    setValid : function( value )
+    {
+      this.getFormElement().setValid( value );
+    },
+    
+    setInvalidMessage : function( value )
+    {
+      this.getFormElement().setInvalidMessage( value );
+    }
     
   }
 });
