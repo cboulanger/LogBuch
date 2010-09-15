@@ -131,7 +131,7 @@ qx.Class.define("logbuch.component.InputField",
               break;
           }
           control.bind( "value", this, "value" );
-          this._add(control, {flex : 1});
+          this._add( control, {flex : 1} );
           break;
       }
 
@@ -199,7 +199,6 @@ qx.Class.define("logbuch.component.InputField",
     addToForm : function( form, name, validator, context )
     {
       form.add( this.getFormElement(), null, validator || null, name, context )
-      // item, label, validator, name, validatorContext
     },
     
     setRequired : function( value )

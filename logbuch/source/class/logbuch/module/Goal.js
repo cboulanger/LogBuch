@@ -1,9 +1,9 @@
 /* ************************************************************************
 
-   LogBUCH - Plattform für kreatives Projektmanagement
+   logBuch: Software zur online-Dokumentation von Beratungsprozessen
    
    Copyright: Konzeption:     Jürgen Breiter
-              Programmierung: Chritian Boulanger 
+              Programmierung: Christian Boulanger 
 
    Lizenz: GPL v.2
 
@@ -21,7 +21,7 @@
  */
 qx.Class.define("logbuch.module.Goal",
 {
-  extend : logbuch.module.AbstractCategoryModule,
+  extend : logbuch.module.Event,
   
   /*
   *****************************************************************************
@@ -66,16 +66,6 @@ qx.Class.define("logbuch.module.Goal",
     ---------------------------------------------------------------------------
     */    
     
-
-    /**
-     * Builds the UI
-     */
-	  build : function()
-	  {
-      this.base(arguments);
-      this.add( new qx.ui.basic.Label("Hier kommt die Zielplanung hin" ));  
-    },
- 
     
     /*
     ---------------------------------------------------------------------------
@@ -90,14 +80,10 @@ qx.Class.define("logbuch.module.Goal",
     ---------------------------------------------------------------------------
     */
     
-    _applyDate : function( date, old )
-    {
-      
-    },    
     
     /*
     ---------------------------------------------------------------------------
-       APIT
+       API
     ---------------------------------------------------------------------------
     */    
     
@@ -111,17 +97,15 @@ qx.Class.define("logbuch.module.Goal",
     },
 
     
+    /**
+     * Returns the category module's translated item type
+     * @return {String}
+     */
+    getItemType : function()
+    {
+      return this.tr("Goal");
+    },       
+    
     dummy : null
-  },
-
-  /*
-   *****************************************************************************
-      DESTRUCT
-   *****************************************************************************
-   */
-
-  destruct : function()
-  {
-
   }
 });

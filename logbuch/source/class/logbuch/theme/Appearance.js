@@ -269,8 +269,10 @@ qx.Theme.define("logbuch.theme.Appearance",
           icon      : states.close ? "decoration/window/close-active.png" : "decoration/window/close-inactive.png"
         };
       }
-    }
+    },
     
-    //"datefield/textfield" : "logbuch-field"
+    //"datefield/textfield" : "logbuch-field",
+    
+    "logbuch-access-control" : "logbuch-field"
   }
 });

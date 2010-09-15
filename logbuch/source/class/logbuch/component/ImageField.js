@@ -34,6 +34,7 @@ qx.Class.define("logbuch.component.ImageField",
   {
   
     __iframeSrc : "../html/fancyupload/single.html",
+    __iframeBody : null,    
     
     /*
     ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 /* ************************************************************************
 
-   LogBUCH - Plattform für kreatives Projektmanagement
+   logBuch: Software zur online-Dokumentation von Beratungsprozessen
    
    Copyright: Konzeption:     Jürgen Breiter
               Programmierung: Christian Boulanger 
@@ -40,6 +40,15 @@ qx.Class.define("logbuch.module.PersonForm",
   
     /*
     ---------------------------------------------------------------------------
+       PRIVATE MEMBERS
+    ---------------------------------------------------------------------------
+    */       
+
+    __form : null,
+    __controller : null,
+    
+    /*
+    ---------------------------------------------------------------------------
        INTERFACE METHODS
     ---------------------------------------------------------------------------
     */   
@@ -60,7 +69,7 @@ qx.Class.define("logbuch.module.PersonForm",
     {
       this.getChildrenContainer().setLayout( new qx.ui.layout.VBox(5) );
       
-      var form = new qx.ui.form.Form(); 
+      var form = this.__form = new qx.ui.form.Form(); 
       this.__controller = new qx.data.controller.Form( null, form );
       
       var field, hbox, vbox;

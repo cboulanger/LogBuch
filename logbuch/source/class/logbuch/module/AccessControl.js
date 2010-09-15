@@ -17,11 +17,13 @@
 ************************************************************************ */
 
 /**
- * A category module for the editing of events
+ * 
  */
-qx.Class.define("logbuch.module.Event",
+qx.Class.define("logbuch.module.AccessControl",
 {
   extend : logbuch.module.AbstractCategoryModule,
+  
+  type : "singleton",
  
   
   /*
@@ -31,27 +33,7 @@ qx.Class.define("logbuch.module.Event",
   */  
   properties :
   {
-    /**
-     * The date the event starts 
-     * @type Date
-     */
-    dateStart :
-    {
-      check    : "Date",
-      nullable : true,
-      event    : "changeDate"
-    },
     
-    /**
-     * The date the event starts 
-     * @type Date
-     */
-    dateEnd :
-    {
-      check    : "Date",
-      nullable : true,
-      event    : "changeDate"
-    }       
   },
   
   /*
@@ -62,7 +44,9 @@ qx.Class.define("logbuch.module.Event",
 
   construct : function()
   {
-    this.base(arguments, "event" );
+    this.base(arguments, "accessControl" );
+    
+    
   },    
   
   /*
@@ -73,7 +57,7 @@ qx.Class.define("logbuch.module.Event",
 
   events : 
   {
-    "focusRow" : "qx.event.type.Data"
+    
   },    
   
   /*
@@ -91,6 +75,9 @@ qx.Class.define("logbuch.module.Event",
     ---------------------------------------------------------------------------
     */       
 
+    __form : null,
+    __controller : null,    
+    __allowed : null,
     
     /*
     ---------------------------------------------------------------------------
@@ -115,60 +102,72 @@ qx.Class.define("logbuch.module.Event",
 	  {
       this.base(arguments);
       
-      var form = new qx.ui.form.Form(); 
+      this.hide();
+      this.setLayout(new qx.ui.layout.VBox(5));
+      this.setAppearance("logbuch-access-control");
+
+      this.add( new qx.ui.basic.Label( this.tr("Entry visible for") ).set({
+        textAlign    : "center",
+        font         : "bold",
+        marginBottom : 5
+      }));
+      
+      var form = this.__form = new qx.ui.form.Form(); 
       this.__controller = new qx.data.controller.Form( null, form );
       
-      var lc = this.__sandbox.getLayoutConfig();
-      var rowHeight         = lc.getEvent().getRowHeight();
-      var leftColumnWidth   = lc.getEvent().getLeftColumnWidth();
-      var rightColumnWidth  = lc.getEvent().getRightColumnWidth();
+      var field = new qx.ui.form.CheckBox( this.tr("Author") ).set({
+        value : true,
+        enabled : false
+      });
+      this.add( field );
+      form.add( field, null, null, "author" );
       
-      var grid = new qx.ui.container.Composite( 
-        new qx.ui.layout.Grid(20,5)
-          .setColumnWidth(0, leftColumnWidth )
-          .setColumnFlex(1,1)
-          .setColumnFlex(2,1)
-          .setColumnFlex(3,1)
-          .setColumnWidth(4, rightColumnWidth )
-      );
+      var field = new qx.ui.form.CheckBox( this.tr("Own company") );
+      this.add( field );
+      form.add( field, null, null, "ownCompany" );
       
-      this.add(grid);
+      var field = new qx.ui.form.CheckBox( this.tr("Own Consultant") );
+      this.add( field );
+      form.add( field, null, null, "ownConsultant" );
+      
+      var field = new qx.ui.form.CheckBox( this.tr("All Consultants") );
+      this.add( field );
+      form.add( field, null, null, "allConsultants" );
+      
+      var field = new qx.ui.form.CheckBox( this.tr("All portal members") );
+      this.add( field );
+      form.add( field, null, null, "allMembers" );
+      
+      this.add( new qx.ui.basic.Label( this.tr("Individual access for") ).set({
+        textAlign   : "center",
+        font        : "bold",
+        marginTop   : 10
+      }));      
       
       /*
-       * labels in first column
+       * more viewers
        */
-      var labels = [
-        this.tr("what?"),
-        this.tr("when?"),
-        this.tr("where?"),
-        this.tr("who?"),
-        this.tr("Notes")
-      ];
-      
-      
-      for( var i=0; i< labels.length; i++) 
-      {
-        var label = new qx.ui.basic.Label(labels[i]).set({
-          height     : rowHeight,
-          width      : leftColumnWidth,
-          paddingTop : Math.floor( rowHeight-20 ),
-          textAlign  : "right",
-          appearance : "logbuch-field" 
-        });
-        this.addListener("focusRow",function(row,label){ 
-          return function(e){
-	          if( e.getData() == row )
-	          {
-	            label.setBackgroundColor( "logbuch-category-event" );  
-	          }
-	          else
-	          {
-	            label.resetBackgroundColor();
-	          }
-	        }
-        }(i,label)); // to get the variables into the closure, see http://www.mennovanslooten.nl/blog/post/62
-        grid.add( label, { row : i, column : 0 } );
-      }
+      var t = this.__allowed = new tokenfield.Token().set({
+        backgroundColor   : "logbuch-field-background",
+        decorator         : "logbuch-field-border",
+        height            : 200,
+        selectionMode     : "multi",
+        style             : "",
+        hintText          : this.tr("Enter the first letters of the person, or * for all of them, or an email address to add a person")
+      });
+      t.addListener("loadData", function(e){
+        var str = e.getData();
+        var data = [];
+        for( var i=0; i<(Math.floor(Math.random()*10)+3);i++ )
+        {
+          data.push( { label: str + " " + i } );
+        }
+        qx.util.TimerManager.getInstance().start(function(){
+          t.populateList( str, data );
+        },null,this,null,500);
+      },this); 
+      this.add( t, {flex:1} );
+      form.add( field, null, null, "moreMembers" );
       
       /*
        * save and invite buttons
@@ -180,131 +179,10 @@ qx.Class.define("logbuch.module.Event",
       var button = new qx.ui.form.Button(this.tr("Save"));
       button.addListener("execute",this.save,this);
       hbox.add(button,{flex:1});
-      var button = new qx.ui.form.Button(this.tr("Invite"));
-      button.addListener("execute",this.invite,this);
+      var button = new qx.ui.form.Button(this.tr("Cancel"));
+      button.addListener("execute",this.cancel,this);
       hbox.add(button,{flex:1});
-      grid.add( hbox, { row : 5, column : 0 } );
-      
-      /*
-       * center column with text entry
-       * 
-       * event title
-       */
-      var field = new qx.ui.form.TextArea().set({
-        appearance  : "logbuch-field",
-        placeholder : this.tr("Topic, Occation, Goal"),
-        height      : rowHeight        
-      });
-      field.addListener("focus",function(){
-        this.fireDataEvent("focusRow",0);
-      },this);
-      form.add( field, null, null, "title" );
-      grid.add( field, { row: 0, column : 1, colSpan : 2 });
-      
-      /*
-       * date start 
-       */
-      var vbox = new qx.ui.container.Composite( new qx.ui.layout.VBox(5) ).set({
-        appearance  : "logbuch-field",
-        height      : rowHeight        
-      });
-      var field = new qx.ui.form.DateField().set({
-        value       : new Date()
-      });
-      field.addListener("focus",function(){
-        this.fireDataEvent("focusRow",1);
-      },this);      
-      form.add( field, null, null, "dateStart" );
-      vbox.add( field );
-      grid.add( vbox, { row: 1, column : 1 });
-      
-      /*
-       * date end
-       */
-      var vbox = new qx.ui.container.Composite( new qx.ui.layout.VBox(5) ).set({
-        appearance  : "logbuch-field",
-        height      : rowHeight        
-      });      
-      var field = new qx.ui.form.DateField().set({
-        value       : new Date()
-      });
-      field.addListener("focus",function(){
-        this.fireDataEvent("focusRow",1);
-      },this);         
-      form.add( field, null, null, "dateEnd" );
-      vbox.add( field );
-      grid.add( vbox, { row: 1, column : 2 });
-             
-      
-      /*
-       * location
-       */
-      var field = new qx.ui.form.TextArea().set({
-        appearance  : "logbuch-field",
-        placeholder : this.tr("Location, building, floor, room ..."),
-        height      : rowHeight        
-      });
-      field.addListener("focus",function(){
-        this.fireDataEvent("focusRow",2);
-      },this);   
-      form.add( field, null, null, "location" );
-      grid.add( field, { row: 2, column : 1, colSpan : 2 });      
-      
-      /*
-       * participants
-       */
-      var t = new tokenfield.Token().set({
-        backgroundColor   : "logbuch-field-background",
-        decorator         : "logbuch-field-border",
-        height            : rowHeight,
-        selectionMode     : "multi"
-      });
-      t.addListener("focus",function(){
-        this.fireDataEvent("focusRow",3);
-      },this);   
-      t.addListener("loadData", function(e){
-        var str = e.getData();
-        var data = [];
-        for( var i=0; i<(Math.floor(Math.random()*10)+3);i++ )
-        {
-          data.push( { label: str + " " + i } );
-        }
-        qx.util.TimerManager.getInstance().start(function(){
-          t.populateList( str, data );
-        },null,this,null,500);
-      },this);      
-      
-      form.add( t, null, null, "participants" );
-      grid.add( t, { row: 3, column : 1, colSpan : 2 });       
-      
-      /*
-       * notes
-       */
-      var field = new qx.ui.form.TextArea().set({
-        appearance  : "logbuch-field",
-        height      : rowHeight * 2
-      });
-      field.addListener("focus",function(){
-        this.fireDataEvent("focusRow",4);
-      },this);   
-      form.add( field, null, null, "notes" );
-      grid.add( field, { row: 4, column : 1, colSpan : 2, rowSpan : 2 });       
-
-      /*
-       * photos
-       */
-      var vbox = new qx.ui.container.Composite( new qx.ui.layout.VBox(5) ).set({
-			  width      : rightColumnWidth,
-			  appearance : "logbuch-field" 
-			});
-      field =  new logbuch.component.ImageField( this.tr("Photo 1" ) ).set({
-        value     : "empty.png",
-        height    : 100
-      });
-      form.add( field.getFormElement(), null, null, "photo1" );
-      vbox.add( field );
-			grid.add( vbox, { row : 0, column : 3, rowSpan : 6 } );
-      
+      this.add(hbox);
       
     },
     
@@ -324,34 +202,46 @@ qx.Class.define("logbuch.module.Event",
     ---------------------------------------------------------------------------
     */
     
-    _applyDate : function( date, old )
-    {
-      
-    },    
+
     
     /*
     ---------------------------------------------------------------------------
        API
     ---------------------------------------------------------------------------
-    */    
+    */
     
-    /**
-     * Returns the category module's (translated) label
-     * @return {String}
-     */
-    getLabel : function()
+    
+    // overridden
+    show : function()
     {
-      return this.tr("Events");
+      this.__form.reset();
+      this.base(arguments);
     },
     
     save : function()
     {
-      
+      this.fireEvent("completed");
+      this.hide();
     },
     
-    invite : function()
+    cancel : function()
     {
-      
+      this.hide();
+    },
+    
+    /**
+     * Add to the list of the users authorized to see the module 
+     * @param itemArr {qx.ui.form.ListItem[]} An array of list items 
+     */
+    _addAllowedItems : function( itemArr )
+    {
+      if( ! itemArr instanceof Array ) 
+      {
+        this.error("Invalid parameter, array expected");
+      }
+      itemArr.forEach( function( item ){
+        this.__allowed._selectItem( item );
+      },this);
     },
 
     

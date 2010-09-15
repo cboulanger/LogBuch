@@ -1,9 +1,9 @@
 /* ************************************************************************
 
-   LogBUCH - Plattform für kreatives Projektmanagement
+   logBuch: Software zur online-Dokumentation von Beratungsprozessen
    
    Copyright: Konzeption:     Jürgen Breiter
-              Programmierung: Chritian Boulanger 
+              Programmierung: Christian Boulanger 
 
    Lizenz: GPL v.2
 
@@ -13,7 +13,7 @@
 ************************************************************************ */
 
 /* ************************************************************************
-
+#require(logbuch.module.AccessControl)
 ************************************************************************ */
 
 /**
@@ -60,21 +60,11 @@ qx.Class.define("logbuch.module.Event",
   *****************************************************************************
   */    
 
-  construct : function()
+  construct : function( name )
   {
-    this.base(arguments, "event" );
+    this.base(arguments, name || "event" );
   },    
-  
-  /*
-  *****************************************************************************
-     EVENTS
-  *****************************************************************************
-  */    
-
-  events : 
-  {
-    "focusRow" : "qx.event.type.Data"
-  },    
+ 
   
   /*
   *****************************************************************************
@@ -90,6 +80,9 @@ qx.Class.define("logbuch.module.Event",
        PRIVATE MEMBERS
     ---------------------------------------------------------------------------
     */       
+    
+    __form : null,
+    __controller : null,
 
     
     /*
@@ -115,7 +108,7 @@ qx.Class.define("logbuch.module.Event",
 	  {
       this.base(arguments);
       
-      var form = new qx.ui.form.Form(); 
+      var form = this.__form = new qx.ui.form.Form(); 
       this.__controller = new qx.data.controller.Form( null, form );
       
       var lc = this.__sandbox.getLayoutConfig();
@@ -145,7 +138,7 @@ qx.Class.define("logbuch.module.Event",
         this.tr("Notes")
       ];
       
-      
+      var _this = this;
       for( var i=0; i< labels.length; i++) 
       {
         var label = new qx.ui.basic.Label(labels[i]).set({
@@ -159,7 +152,7 @@ qx.Class.define("logbuch.module.Event",
           return function(e){
 	          if( e.getData() == row )
 	          {
-	            label.setBackgroundColor( "logbuch-category-event" );  
+	            label.setBackgroundColor( this.getColor() );  
 	          }
 	          else
 	          {
@@ -167,6 +160,15 @@ qx.Class.define("logbuch.module.Event",
 	          }
 	        }
         }(i,label)); // to get the variables into the closure, see http://www.mennovanslooten.nl/blog/post/62
+        
+        // listens for click on label
+        label.addListener("click",function(row){
+          return function(){
+            _this.fireDataEvent("focusRow", row );
+          }   
+        }(i), this);        
+        
+        
         grid.add( label, { row : i, column : 0 } );
       }
       
@@ -190,65 +192,101 @@ qx.Class.define("logbuch.module.Event",
        * 
        * event title
        */
-      var field = new qx.ui.form.TextArea().set({
+      var field1 = new qx.ui.form.TextArea().set({
         appearance  : "logbuch-field",
         placeholder : this.tr("Topic, Occation, Goal"),
         height      : rowHeight        
       });
-      field.addListener("focus",function(){
+      field1.addListener("focus",function(){
         this.fireDataEvent("focusRow",0);
       },this);
-      form.add( field, null, null, "title" );
-      grid.add( field, { row: 0, column : 1, colSpan : 2 });
+      this.addListener("focusRow",function(e){
+        if( e.getData() == 0 ) 
+        { 
+          field1.focus(); 
+        }
+      },this);
+      form.add( field1, null, null, "title" );
+      grid.add( field1, { row: 0, column : 1, colSpan : 2 });
+
+      var vbox = new qx.ui.container.Composite( new qx.ui.layout.VBox(5) ).set({
+        appearance  : "logbuch-field",
+        height      : rowHeight        
+      });
       
       /*
        * date start 
        */
+      var field2 = new qx.ui.form.DateField().set({
+        value       : new Date() // FIXME
+      });
+      field2.addListener("focus",function(){
+        this.fireDataEvent("focusRow",1);
+      },this);      
+      this.addListener("focusRow",function(e){
+        if( e.getData() == 1 ) { field2.focus(); }
+      },this);      
+      form.add( field2, null, null, "dateStart" );
+      vbox.add( field2 );
+      
+      /*
+       * time start 
+       */
+      var field3 = new logbuch.component.TimeChooser();
+      field3.addListener("focus",function(){
+        this.fireDataEvent("focusRow",1);
+      },this);      
+      form.add( field3, null, null, "timeStart" );
+      vbox.add( field3 );      
+      
+      grid.add( vbox, { row: 1, column : 1 });
+      
       var vbox = new qx.ui.container.Composite( new qx.ui.layout.VBox(5) ).set({
         appearance  : "logbuch-field",
         height      : rowHeight        
-      });
-      var field = new qx.ui.form.DateField().set({
-        value       : new Date()
-      });
-      field.addListener("focus",function(){
-        this.fireDataEvent("focusRow",1);
-      },this);      
-      form.add( field, null, null, "dateStart" );
-      vbox.add( field );
-      grid.add( vbox, { row: 1, column : 1 });
+      });     
       
       /*
        * date end
        */
-      var vbox = new qx.ui.container.Composite( new qx.ui.layout.VBox(5) ).set({
-        appearance  : "logbuch-field",
-        height      : rowHeight        
-      });      
-      var field = new qx.ui.form.DateField().set({
-        value       : new Date()
+      var field4 = new qx.ui.form.DateField().set({
+        value       : new Date() // FIXME
       });
-      field.addListener("focus",function(){
+      field4.addListener("focus",function(){
         this.fireDataEvent("focusRow",1);
       },this);         
-      form.add( field, null, null, "dateEnd" );
-      vbox.add( field );
+      form.add( field4, null, null, "dateEnd" );
+      vbox.add( field4 );
+      
+      /*
+       * time start 
+       */
+      var field5 = new logbuch.component.TimeChooser();
+      field5.addListener("focus",function(){
+        this.fireDataEvent("focusRow",1);
+      },this);      
+      form.add( field5, null, null, "timeEnd" );
+      vbox.add( field5 );      
+      
       grid.add( vbox, { row: 1, column : 2 });
              
       
       /*
        * location
        */
-      var field = new qx.ui.form.TextArea().set({
+      var field6 = new qx.ui.form.TextArea().set({
         appearance  : "logbuch-field",
         placeholder : this.tr("Location, building, floor, room ..."),
         height      : rowHeight        
       });
-      field.addListener("focus",function(){
+      field6.addListener("focus",function(){
         this.fireDataEvent("focusRow",2);
       },this);   
-      form.add( field, null, null, "location" );
-      grid.add( field, { row: 2, column : 1, colSpan : 2 });      
+      this.addListener("focusRow",function(e){
+        if( e.getData() == 2 ) { field6.focus(); }
+      },this);      
+      form.add( field6, null, null, "location" );
+      grid.add( field6, { row: 2, column : 1, colSpan : 2 });      
       
       /*
        * participants
@@ -261,7 +299,10 @@ qx.Class.define("logbuch.module.Event",
       });
       t.addListener("focus",function(){
         this.fireDataEvent("focusRow",3);
-      },this);   
+      },this);
+      this.addListener("focusRow",function(e){
+        if( e.getData() == 3 ) { t.focus() }
+      },this);       
       t.addListener("loadData", function(e){
         var str = e.getData();
         var data = [];
@@ -280,15 +321,18 @@ qx.Class.define("logbuch.module.Event",
       /*
        * notes
        */
-      var field = new qx.ui.form.TextArea().set({
+      var field7 = new qx.ui.form.TextArea().set({
         appearance  : "logbuch-field",
         height      : rowHeight * 2
       });
-      field.addListener("focus",function(){
+      field7.addListener("focus",function(){
         this.fireDataEvent("focusRow",4);
       },this);   
-      form.add( field, null, null, "notes" );
-      grid.add( field, { row: 4, column : 1, colSpan : 2, rowSpan : 2 });       
+      this.addListener("focusRow",function(e){
+        if( e.getData() == 4 ) { field7.focus(); }
+      },this);       
+      form.add( field7, null, null, "notes" );
+      grid.add( field7, { row: 4, column : 1, colSpan : 2, rowSpan : 2 });       
 
       /*
        * photos
@@ -297,13 +341,22 @@ qx.Class.define("logbuch.module.Event",
 			  width      : rightColumnWidth,
 			  appearance : "logbuch-field" 
 			});
-      field =  new logbuch.component.ImageField( this.tr("Photo 1" ) ).set({
-        value     : "empty.png",
-        height    : 100
+			grid.add( vbox, { row : 0, column : 3, rowSpan : 5 } );
+      
+      /*
+       * buttons
+       */
+      var hbox = new qx.ui.container.Composite( new qx.ui.layout.HBox(5) ).set({
+        marginTop    : 30,
+        maxHeight    : 30
       });
-      form.add( field.getFormElement(), null, null, "photo1" );
-      vbox.add( field );
-			grid.add( vbox, { row : 0, column : 3, rowSpan : 6 } );
+      var button = new qx.ui.form.Button(this.tr("Upload Files"));
+      button.addListener("execute",this.uploadPhotos,this);
+      hbox.add(button,{flex:1});
+      var button = new qx.ui.form.Button(this.tr("Photo Gallery"));
+      button.addListener("execute",this.showPhotoGallery,this);
+      hbox.add(button,{flex:1});
+      grid.add( hbox, { row : 5, column : 3 } );      
       
       
     },
@@ -336,7 +389,7 @@ qx.Class.define("logbuch.module.Event",
     */    
     
     /**
-     * Returns the category module's (translated) label
+     * Returns the category module's translated label
      * @return {String}
      */
     getLabel : function()
@@ -344,10 +397,14 @@ qx.Class.define("logbuch.module.Event",
       return this.tr("Events");
     },
     
-    save : function()
+    /**
+     * Returns the category module's translated item type
+     * @return {String}
+     */
+    getItemType : function()
     {
-      
-    },
+      return this.tr("Event");
+    },    
     
     invite : function()
     {
