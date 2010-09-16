@@ -66,10 +66,22 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
     
     /*
     ---------------------------------------------------------------------------
-       PRIVATE MEMBERS
+       "PROTECTED"
     ---------------------------------------------------------------------------
     */       
 
+    /**
+     * The form object
+     * @type qx.ui.form.Form
+     */
+    _form : null,
+    
+    /**
+     * The form controller
+     * @type qx.data.controller.Form
+     */
+    _controller : null,
+       
         
     /*
     ---------------------------------------------------------------------------
@@ -94,6 +106,9 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
 	  build : function( defaultLayout )
 	  {
       this.base( arguments );
+      
+      this._form       = new qx.ui.form.Form(); 
+      this._controller = new qx.data.controller.Form( null, this._form );
       
       var lc = this.__sandbox.getLayoutConfig();
       
@@ -154,7 +169,7 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
      */
     _onSandboxActivateCategory : function(e)
     {
-      if ( e.getData() == this.__name )
+      if ( e.getData() == this.__name ) 
       {
         this.show();  
       }
@@ -177,9 +192,9 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       
       if ( ! this.__extendedFields[name] )
       {
-        var ef = new logbuch.component.ExtendedField( field, name, this.__form, label ).set({
+        var ef = new logbuch.component.ExtendedField( field, name, this._form, label ).set({
           width  : field.getBounds().width + 40, // FIXME
-          height : this.getBounds().height - 20// FIXME
+          height : this.getBounds().height - 55// FIXME
         });
       
         this.getLayoutParent().add( ef, {
@@ -264,15 +279,49 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
     
     _createAuthorLabel : function()
     {
+      var hbox = new qx.ui.container.Composite( new qx.ui.layout.HBox() );
       var label =  new qx.ui.basic.Label().set({
-        textColor : "background-application",
+        textColor : "logbuch-text-grey",
         rich      : true,
-        font      : "bold"
+        alignY    : "bottom"
+      });
+      label.setValue("Eintragung von: <b>Max Mustermann</b>, Oberammergauer Altmetallverarbeitungs GmbH");
+      hbox.add( label, {flex:1} );
+      return hbox;
+    },
+    
+    /**
+     * Creates panel with Save, Send, and Cancel buttons
+     * @return {qx.ui.container.Composite}
+     */
+    _createItemActionButtonPanel : function()
+    {
+      var hbox = new qx.ui.container.Composite( new qx.ui.layout.HBox(5) ).set({
+        height    : 30  // FIXME
       });
       
-      label.setValue("Eintragung von: Max Mustermann, Oberammergauer Altmetallverarbeitungs GmbH");
+      // save 
+      var button = new qx.ui.form.Button(null,"resource/logbuch/icon/24/save.png").set({
+        toolTipText : this.tr("Save")
+      });
+      button.addListener("execute",this.save,this);
+      hbox.add(button,{flex:1});
       
-      return label;
+      // invite/Send
+      var button = new qx.ui.form.Button(null,"resource/logbuch/icon/24/mail.png").set({
+        toolTipText : this.tr("Invite")
+      });
+      button.addListener("execute",this.send,this);
+      hbox.add(button,{flex:1});
+      
+      // cancel
+      var button = new qx.ui.form.Button(null,"resource/logbuch/icon/24/cancel.png").set({
+        toolTipText : this.tr("Cancel")
+      });
+      button.addListener("execute",this.cancel,this);
+      hbox.add(button,{flex:1});
+      
+      return hbox;
     },
     
 
@@ -309,6 +358,12 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       return "logbuch-category-" + this.getName();
     },
     
+    cancel : function()
+    {
+      this.__sandbox.publish("activate-category",null);
+      this.hide();
+    },
+    
     /**
      * Saves the 
      */
@@ -318,8 +373,13 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       
       var acl = logbuch.module.AccessControl.getInstance();
       
-      acl.addListenerOnce("completed",function(){
-        // save event
+      acl.addListenerOnce("ok",function(){
+        
+        // @todo save event on server
+        
+        var message = this.createMessage();
+        this.__sandbox.publish( "message", message );
+        
         dialog.Dialog.alert( this.tr("%1 saved.",  this.getItemType() ), function(){
           this.__sandbox.publish("activate-category",null);
         },this );
@@ -327,10 +387,25 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       
       acl.show();
       
-//      var selection= this.__form.getItems()['participants'].getSelection();
+//      var selection= this._form.getItems()['participants'].getSelection();
 //      console.log(selection);
 //      acl._addAllowedItems( selection );
-    },    
+    },
+    
+    getModel : function()
+    {
+      return this._controller.getModel() || this._controller.createModel();
+    },
+    
+    setModel : function()
+    {
+      return this._controller.setModel(model);
+    },
+    
+    createMessage : function()
+    {
+      this.error("Not implemented in category " + this.getName() );
+    }, 
     
     send : function()
     {

@@ -78,11 +78,8 @@ qx.Class.define("logbuch.module.Documentation",
 	  build : function()
 	  {
       this.base(arguments);
-      
-      var form = this.__form = new qx.ui.form.Form(); 
-      this.__controller = new qx.data.controller.Form( null, form );
+       
       this.__extendedFields = {};
-      
       var lc = this.__sandbox.getLayoutConfig();
       var rowHeight         = lc.getDocumentation().getRowHeight();
       var leftColumnWidth   = lc.getEvent().getLeftColumnWidth();
@@ -95,6 +92,8 @@ qx.Class.define("logbuch.module.Documentation",
       var grid = new qx.ui.container.Composite( layout);
       
       this.add(grid);
+      
+      var form = this._form;
       
       /*
        * labels in first column
@@ -131,7 +130,6 @@ qx.Class.define("logbuch.module.Documentation",
         }(i,label)); 
         
         // @todo focus on first field
-        
         
         grid.add( label, { row : i, column : 0 } );
         
@@ -188,26 +186,14 @@ qx.Class.define("logbuch.module.Documentation",
       }
       
       /*
-       * save and invite buttons
-       */
-      var hbox = new qx.ui.container.Composite( new qx.ui.layout.HBox(5) ).set({
-        marginTop : 10, // FIXME
-        height    : 30  // FIXME
-      });
-      var button1 = new qx.ui.form.Button(this.tr("Save"));
-      button1.addListener("execute",this.save,this);
-      hbox.add(button1,{flex:1});
-      var button2 = new qx.ui.form.Button(this.tr("Send"));
-      button2.addListener("execute",this.send,this);
-      hbox.add(button2,{flex:1});      
-
-      grid.add( hbox, { row : 6, column : 0 } );
+       * Item actions
+       */   
+      grid.add( this._createItemActionButtonPanel(), { row : 6, column : 0 } );
            
       /*
        * author label
        */
       grid.add( this._createAuthorLabel(), { row : 6, column : 1 } );
-      
       
       /*
        * right column
@@ -256,7 +242,16 @@ qx.Class.define("logbuch.module.Documentation",
     getItemType : function()
     {
       return this.tr("Documentation entry");
-    },       
+    },
+    
+    /**
+     * Creates a message from the event data
+     */
+    createMessage : function()
+    {
+      var data = qx.util.Serializer.toJson( this.getModel() );
+      console.log( data );
+    },     
     
     dummy : null
   }

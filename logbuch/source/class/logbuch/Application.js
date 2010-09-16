@@ -34,6 +34,52 @@ qx.Class.define("logbuch.Application",
 {
   extend : qx.application.Standalone,
   
+  /*
+  *****************************************************************************
+     MEMBERS
+  *****************************************************************************
+  */
+
+  properties :
+  {
+    
+    /**
+     * The current view of the application
+     * @type String
+     */
+    view :
+    {
+      check     : "String",
+      nullable  : true,
+      event     : "changeView",
+      apply     : "_applyView"
+    },
+    
+    /**
+     * The current category
+     * @type String
+     */
+    category :
+    {
+      check     : "String",
+      nullable  : true,
+      event     : "changeCategory",
+      apply     : "_applyCategory"
+    },
+    
+    /**
+     * The current date, as an integer value
+     * @type String
+     */
+    date :
+    {
+      check     : "Integer",
+      nullable  : true,
+      event     : "changeData",
+      apply     : "_applyDate"
+    }    
+    
+  },
   
   /*
   *****************************************************************************
@@ -50,11 +96,6 @@ qx.Class.define("logbuch.Application",
     ---------------------------------------------------------------------------
     */       
     
-    /**
-     * The core application library 
-     * @type {qcl.application.Core}
-     */
-    __core : null,
     
     /**
      * An object containing values for the application layout
@@ -109,12 +150,9 @@ qx.Class.define("logbuch.Application",
       }
     },
     
-    
-    
-    
     /*
     ---------------------------------------------------------------------------
-       INTERFACE METHODS
+       INITIALIZATION
     ---------------------------------------------------------------------------
     */         
     
@@ -155,48 +193,12 @@ qx.Class.define("logbuch.Application",
       this.__layoutConfig = qx.data.marshal.Json.createModel( this.__layoutConfigInit, true);
       
       /*
-       * create main ui
+       * visual modules
        */
-      var ui = this._createUI();
-      
-      /*
-       * message modules
-       */
-      var messageModules = this._createMessageModule();
-      
-      /*
-       * setup modules
-       */
-      var setupDialog = this._createSetupDialog();
-      
-      /*
-       * registration dialog
-       */
-      var registrationDialog = this._createRegistrationDialog();
-      
-      /*
-       * determine ui changes on authentication state change
-       */
-      core.subscribe("authenticated",function(e){
-        if ( e.getData() )
-        {
-          registrationDialog.show();
-          setupDialog.show();
-//          messageModules.show();
-          core.getModuleById("sidebar").show();
-          core.getModuleById("footer").show();
-          ui.getUserData( "workspace").show();
-        }
-        else
-        {
-//          registrationDialog.hide();
-//          setupDialog.hide();
-//          messageModules.hide();
-          core.getModuleById("sidebar").hide();
-          core.getModuleById("footer").hide();
-          ui.getUserData("workspace").hide();
-        }
-      }, this );
+      this.__mainWorkspace = this._createMainWorkspace();
+      this.__messageModules = this._createMessageModule();
+      this.__setupDialog = this._createSetupDialog();
+      this.__registrationDialog = this._createRegistrationDialog();
       
       /*
        * build and start all modules 
@@ -207,10 +209,10 @@ qx.Class.define("logbuch.Application",
       /*
        * add widgets to the document
        */
-      this.getRoot().add( ui, { edge: 0 } );
-      //this.getRoot().add( messageModules, { top: 100, left : 100 } );
-      //this.getRoot().add( setupDialog, { top: 100, left : 100 } );
-      //this.getRoot().add( registrationDialog, { top: 100, left : 100 } );
+      this.getRoot().add( this.__mainWorkspace, { edge: 0 } );
+      this.getRoot().add( this.__messageModules, { top: 100, left : 100 } );
+      this.getRoot().add( this.__setupDialog, { top: 100, left : 100 } );
+      this.getRoot().add( this.__registrationDialog, { top: 100, left : 100 } );
       
       /*
        * add login dialog
@@ -219,16 +221,17 @@ qx.Class.define("logbuch.Application",
       this.getRoot().add( loginDialog, { left : 100, top : 100 } ); 
       core.subscribe("authenticated",function(e){
         e.getData() ? this.hide() : this.show();
-      }, loginDialog );      
+      }, loginDialog ); 
       
       /*
-       * initalize server communication
+       * determine ui changes on authentication state change
+       */
+      core.subscribe("authenticated",this._updateView, this );      
+      
+      /*
+       * initalize server communication, access and config
        */
       core.setServerUrl("../services/server.php");
-      
-      /*
-       * access and config
-       */
       core.setAccessService("logbuch.access");
       core.setConfigService("logbuch.config");
       
@@ -245,6 +248,29 @@ qx.Class.define("logbuch.Application",
       },this);      
       
       /*
+       * save the current date in the application state
+       */
+      core.subscribe("change-date",function(e){
+        core.getStateManager().setState("date", e.getData().getTime() );
+      },this);
+      
+      /*
+       * save the current category in the application state
+       */
+      core.subscribe("activate-category",function(e){
+        var category = e.getData();
+        if ( category )
+        {
+          core.getStateManager().setState("category", category );
+        }
+        else
+        {
+          core.getStateManager().removeState("category");
+        }
+      },this);
+      
+      
+      /*
        * run setup, then authenticate
        */
       this.info("Setting up application...");
@@ -255,12 +281,139 @@ qx.Class.define("logbuch.Application",
       );      
     },
     
+    
+    /**
+     * Connect to the server: authenticate and laod configuration
+     */
+    _connect : function()
+    {
+      this.info("Connecting ...");
+      
+      /*
+       * (re-) authenticate
+       */
+      core.showPopup( this.tr("Connecting with server...") );
+      core.connect(function()
+      {
+        /*
+         * add logout event
+         */
+        core.subscribe("logout", function(){
+          core.showPopup( this.tr("Logging out ...") );
+          core.logout( function(){
+            core.hidePopup();
+          },this);
+        },this);
+        
+        /*
+         * load config values and continue 
+         */
+        core.showPopup( this.tr( "Loading configuration ...") );
+        core.getConfigManager().load(this._initializeState, this );
+        
+      },this);
+    },
+        
+    /**
+     * Initializes the application state
+     */
+    _initializeState : function()
+    {
+      this.info("Initializing application state ...");
+      /*
+       * initialize application state
+       */
+      core.getStateManager().setHistorySupport(true);
+      core.getStateManager().updateState();
+      
+      this._finalize();
+    },    
+    
+    
+    /**
+     * Finalizes the application 
+     */
+    _finalize :  function() 
+    {
+      /*
+       * reset popup to remove splash screen
+       */
+      core.hidePopup();
+      core.createPopup();
+      core.publish("ready");
+      this.info("Application ready.");
+    },       
+    
+
+    /*
+    ---------------------------------------------------------------------------
+       APPLY METHODS
+    ---------------------------------------------------------------------------
+    */
+    
+    _applyView : function( value, old )
+    {
+      this._updateView();
+    },
+    
+    _applyCategory : function( value, old )
+    {
+      //core.publish("activate-category", value);
+    },
+    
+    
+    _applyDate : function( value, old )
+    {
+      core.publish("change-date", new Date( value ) );
+    },    
+    
+    /*
+    ---------------------------------------------------------------------------
+       INTERNAL (HELPER) METHODS
+    ---------------------------------------------------------------------------
+    */
+    
+    /**
+     * Return true if the current user has been authenticated as a registered
+     * user.
+     * @return {Boolean}
+     */
+    _isRegisteredUser : function()
+    {
+      return core.getActiveUser() !== null && ! core.getActiveUser().isAnonymous(); 
+    },
+    
+    /**
+     * Updates the current UI state
+     */
+    _updateView : function()
+    {
+      if ( this._isRegisteredUser() )
+      {
+//        this.__registrationDialog.show();
+//        this.__setupDialog.show();
+//          messageModules.show();
+        core.getModuleById("sidebar").show();
+        core.getModuleById("footer").show();
+        this.__mainWorkspace.getUserData( "workspace").show();
+      }
+      else
+      {
+//          registrationDialog.hide();
+//          setupDialog.hide();
+//          messageModules.hide();
+        core.getModuleById("sidebar").hide();
+        core.getModuleById("footer").hide();
+        this.__mainWorkspace.getUserData("workspace").hide();
+      }
+    },
+    
     /**
      * create main layout, register modules with core and add 
      * uninitialized module ui to the layout.
      * @return {qx.ui.container.Composite}
      */
-    _createUI : function()
+    _createMainWorkspace : function()
     {
       var ui = new qx.ui.container.Composite( new qx.ui.layout.Dock() );
       ui.set( this.__layoutConfigInit.viewport );
@@ -299,14 +452,17 @@ qx.Class.define("logbuch.Application",
        * calendar
        */
       var calendarModule = new logbuch.module.Calendar();
-      core.register( "main", calendarModule );
+      core.register( "main", calendarModule ); // FIXM
       workspace.add( calendarModule, { edge: 0 } );
 
+      var categories =[];
+      
       /*
        * events
        */
       var eventModule = new logbuch.module.Event();
-      core.register( "event", eventModule );
+      categories.push( eventModule.getName() );
+      core.register( eventModule.getName(), eventModule );
       sidebar.addModule( eventModule );
       workspace.add( eventModule, { edge: 0 } );
       
@@ -314,7 +470,8 @@ qx.Class.define("logbuch.Application",
        * goals
        */
       var goalModule = new logbuch.module.Goal();
-      core.register( "goal", goalModule );
+      categories.push( goalModule.getName() );
+      core.register( goalModule.getName(), goalModule );
       sidebar.addModule( goalModule );
       workspace.add( goalModule, { edge: 0 } );
 
@@ -322,7 +479,8 @@ qx.Class.define("logbuch.Application",
        * documentation
        */
       var docModule = new logbuch.module.Documentation();
-      core.register( "documentation", docModule );
+      categories.push( docModule.getName() );
+      core.register(  docModule.getName(), docModule );
       sidebar.addModule( docModule );
       workspace.add( docModule, { edge: 0 } );      
 
@@ -330,7 +488,8 @@ qx.Class.define("logbuch.Application",
        * diary
        */
       var diaryModule = new logbuch.module.Diary();
-      core.register( "diary", diaryModule );
+      categories.push( diaryModule.getName() );
+      core.register( diaryModule.getName(), diaryModule );
       sidebar.addModule( diaryModule );
       workspace.add( diaryModule, { edge: 0 } );       
       
@@ -338,9 +497,26 @@ qx.Class.define("logbuch.Application",
        * inspiration
        */
       var inspirationModule = new logbuch.module.Inspiration();
-      core.register( "inspiration", inspirationModule );
+      categories.push( inspirationModule.getName() );
+      core.register( inspirationModule.getName(), inspirationModule );
       sidebar.addModule( inspirationModule );
       workspace.add( inspirationModule, { edge: 0 } ); 
+      
+      /*
+       * create new entry
+       */
+      core.subscribe("activate-calender-cell",function(e){
+        var data = e.getData();
+        var category = categories[Math.abs(data.row-1)];
+        if( category )
+        {
+          core.publish("activate-category",category);
+        }
+        else
+        {
+          this.warn("No category associated to row number");
+        }
+      },this );      
       
       return ui;
       
@@ -419,67 +595,11 @@ qx.Class.define("logbuch.Application",
       return hbox;
     },    
     
-    /**
-     * Connect to the server: authenticate and laod configuration
-     */
-    _connect : function()
-    {
-      this.info("Connecting ...");
-      
-      /*
-       * (re-) authenticate
-       */
-      core.showPopup( this.tr("Connecting with server...") );
-      core.connect(function()
-      {
-        /*
-         * add logout event
-         */
-        core.subscribe("logout", function(){
-          core.showPopup( this.tr("Logging out ...") );
-          core.logout( function(){
-            core.hidePopup();
-          },this);
-        },this);
-        
-        /*
-         * load config values and continue 
-         */
-        core.showPopup( this.tr( "Loading configuration ...") );
-        core.getConfigManager().load(this._initializeState, this );
-        
-      },this);
-    },
-        
-    /**
-     * Initializes the application state
-     */
-    _initializeState : function()
-    {
-      this.info("Initializing application state ...");
-      /*
-       * initialize application state
-       */
-      core.getStateManager().setHistorySupport(true);
-      core.getStateManager().updateState();
-      
-      this._finalize();
-    },    
-    
-    
-    /**
-     * Finalizes the application 
-     */
-    _finalize :  function() 
-    {
-      /*
-       * reset popup to remove splash screen
-       */
-      core.hidePopup();
-      core.createPopup();
-      core.publish("ready");
-      this.info("Application ready.");
-    },    
+     /*
+    ---------------------------------------------------------------------------
+      API
+    ---------------------------------------------------------------------------
+    */
     
     /**
      * Returns qx.core.Object with values used for application layout

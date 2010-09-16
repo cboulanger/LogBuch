@@ -23,6 +23,7 @@ qx.Theme.define("logbuch.theme.Color",
     "logbuch-widget-background"                 : "#CCCCCC",
     "logbuch-field-border"                      : "#999999",
     "logbuch-field-background"                  : "white",
+    "logbuch-text-grey"                         : "#555555",
  
     // label box
     "logbuch-label-box"                         : "white",

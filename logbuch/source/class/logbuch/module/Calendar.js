@@ -291,7 +291,7 @@ qx.Class.define("logbuch.module.Calendar",
       }      
       
       /*
-       * display data
+       * display date
        */
       if ( ! old || date < this.getFirstDateVisible() || date > this.getLastDateVisible() )
       {
@@ -393,16 +393,21 @@ qx.Class.define("logbuch.module.Calendar",
      */
     _onCellDblclick : function(e)
     {
-      var text, row, col;
-      text = prompt("Bitte Text eingeben");
-      row = e.getRow();
-      col = e.getColumn();
+      this.__sandbox.publish( "activate-calender-cell", {
+        date : this.getDateFromColumn( e.getColumn() ),
+        row  : e.getRow()
+      });
+    },
+    
+    //FIXME
+    setCellData : function( row, col, text )
+    {
       if ( ! this.__data[row] ) 
       {
         this.__data[row] = [];
       }
       this.__data[row][col] = text;
-      this.__scroller.getPane().fullUpdate();
+      this.__scroller.getPane().fullUpdate();      
     },
     
     /**

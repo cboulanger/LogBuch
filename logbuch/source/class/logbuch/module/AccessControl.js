@@ -33,7 +33,11 @@ qx.Class.define("logbuch.module.AccessControl",
   */  
   properties :
   {
-    
+//    blockerColor : 
+//    {
+//      refine : true,
+//      init   : "white"
+//    }
   },
   
   /*
@@ -203,9 +207,6 @@ qx.Class.define("logbuch.module.AccessControl",
        API
     ---------------------------------------------------------------------------
     */
-    
-    
-   
     
     /**
      * Add to the list of the users authorized to see the module 

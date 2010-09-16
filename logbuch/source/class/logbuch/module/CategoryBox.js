@@ -75,15 +75,7 @@ qx.Class.define("logbuch.module.CategoryBox",
     });
     
     this.add( label );      
-    
-    
-    /*
-     * when clicked, activate the given category. When already
-     * activated, de-activate the category.
-     */
-    this.addListener("click",function(){
-      this.__sandbox.publish("activate-category", this.getActivated() ? null : this.__name );
-    },this);
+   
     
     /*
      * listen or activate message

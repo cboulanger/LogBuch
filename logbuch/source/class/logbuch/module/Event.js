@@ -61,17 +61,7 @@ qx.Class.define("logbuch.module.Event",
     ---------------------------------------------------------------------------
     */       
     
-    /**
-     * The form object
-     * @type qx.ui.form.Form
-     */
-    __form : null,
-    
-    /**
-     * The form controller
-     * @type qx.data.controller.Form
-     */
-    __controller : null,
+
     
     /**
      * The sandbox instance
@@ -103,9 +93,6 @@ qx.Class.define("logbuch.module.Event",
 	  {
       this.base(arguments);
       
-      var form = this.__form = new qx.ui.form.Form(); 
-      this.__controller = new qx.data.controller.Form( null, form );
-      
       var lc = this.__sandbox.getLayoutConfig();
       var rowHeight         = lc.getEvent().getRowHeight();
       var leftColumnWidth   = lc.getEvent().getLeftColumnWidth();
@@ -133,6 +120,8 @@ qx.Class.define("logbuch.module.Event",
       ];
       
       var _this = this;
+      var form  = this._form;
+      
       for( var i=0; i< labels.length; i++) 
       {
         var label = new qx.ui.basic.Label(labels[i]).set({
@@ -167,23 +156,9 @@ qx.Class.define("logbuch.module.Event",
       }
       
       /*
-       * save and invite buttons
-       */
-      var hbox = new qx.ui.container.Composite( new qx.ui.layout.HBox(5) ).set({
-        marginTop : 20, // FIXME
-        height    : 30  // FIXME
-      });
-      
-      // save 
-      var button = new qx.ui.form.Button(this.tr("Save"));
-      button.addListener("execute",this.save,this);
-      hbox.add(button,{flex:1});
-      
-      // invite
-      var button = new qx.ui.form.Button(this.tr("Invite"));
-      button.addListener("execute",this.invite,this);
-      hbox.add(button,{flex:1});
-      grid.add( hbox, { row : 5, column : 0 } );
+       * Item actions
+       */   
+      grid.add( this._createItemActionButtonPanel().set({marginTop:10}), { row : 5, column : 0 } );
       
       /*
        * center column with text entry
@@ -353,26 +328,17 @@ qx.Class.define("logbuch.module.Event",
 
     },
     
-
- 
-    
     /*
     ---------------------------------------------------------------------------
        APPLY METHODS
     ---------------------------------------------------------------------------
     */    
-
-    
-    /*
-    ---------------------------------------------------------------------------
-       EVENT HANDLERS
-    ---------------------------------------------------------------------------
-    */
-    
     _applyDate : function( date, old )
     {
       
     },    
+
+    
     
     /*
     ---------------------------------------------------------------------------
@@ -402,6 +368,15 @@ qx.Class.define("logbuch.module.Event",
     {
       
     },
+    
+    /**
+     * Creates a message from the event data
+     */
+    createMessage : function()
+    {
+      var data = qx.util.Serializer.toJson( this.getModel() );
+      console.log( data );
+    }, 
 
     
     dummy : null
