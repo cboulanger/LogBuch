@@ -29,7 +29,15 @@ qx.Class.define("logbuch.component.ExtendedField",
      CONSTRUCTOR
   *****************************************************************************
   */    
-  construct : function( field, name, form )
+  
+  /**
+   * Creates an extended field from an existing form field
+   * @param field {qx.ui.form.AbstractField}
+   * @param name {String} Name in the form
+   * @param form {qx.ui.form.Form} 
+   * @param label{String} The label of the field
+   */
+  construct : function( field, name, form, label )
   {
     this.base(arguments);
     
@@ -37,10 +45,21 @@ qx.Class.define("logbuch.component.ExtendedField",
     this.setLayout(new qx.ui.layout.VBox(5));
     this.setAppearance("logbuch-category-page");
     
+    var hbox = new qx.ui.container.Composite( new qx.ui.layout.HBox(5) );
+    
+    hbox.add( new qx.ui.basic.Label(label).set({
+      font : "bold"
+    }));
+    
+    hbox.add( new qx.ui.core.Spacer(), {flex:1} );
+    var img = new qx.ui.basic.Image( "resource/logbuch/icon/16/cancel.png" );
+    img.setOpacity(0.5);
+    hbox.add(img);
+    this.add( hbox );
+    
     /*
      * short field
      */
-    
     var shortfield = new logbuch.component.InputField( this.tr("Summary" ),null,"textarea" ).set({
       minHeight : 55 // FIXME
     });

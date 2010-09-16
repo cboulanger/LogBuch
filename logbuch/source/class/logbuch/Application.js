@@ -99,9 +99,9 @@ qx.Class.define("logbuch.Application",
       },
       event :
       {
-        rowHeight         : 62,
+        rowHeight         : 65,
         leftColumnWidth   : 150,
-        rightColumnWidth  : 150 
+        rightColumnWidth  : 250 
       },
       documentation :
       {
@@ -341,13 +341,6 @@ qx.Class.define("logbuch.Application",
       core.register( "inspiration", inspirationModule );
       sidebar.addModule( inspirationModule );
       workspace.add( inspirationModule, { edge: 0 } ); 
-      
-      /*
-       * access control
-       */
-      var acl = logbuch.module.AccessControl.getInstance();
-      workspace.add(acl);
-      core.register( "accessControl", acl);
       
       return ui;
       

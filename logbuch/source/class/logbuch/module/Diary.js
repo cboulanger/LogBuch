@@ -49,6 +49,23 @@ qx.Class.define("logbuch.module.Diary",
     ---------------------------------------------------------------------------
     */    
     
+    
+   /**
+     * Returns the data from which to construct the different fields
+     * in the module
+     * @return {Array}
+     */
+    getFieldData : function()
+    {
+      return [
+        { label : this.tr("Heureka!"), name : "heureka" },
+        { label : this.tr("Encounters"), name : "encounters" },
+        { label : this.tr("Stumbling block"), name : "stumblingBlock" },
+        { label : this.tr("Incentive"), name : "incentive" },
+        { label : this.tr("Miscellaneous"), name : "miscellaneous" }
+      ];          
+    },       
+    
     /**
      * Returns the category module's (translated) label
      * @return {String}

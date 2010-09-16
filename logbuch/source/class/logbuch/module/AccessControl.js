@@ -21,7 +21,7 @@
  */
 qx.Class.define("logbuch.module.AccessControl",
 {
-  extend : logbuch.module.AbstractCategoryModule,
+  extend : dialog.Dialog,
   
   type : "singleton",
  
@@ -44,21 +44,10 @@ qx.Class.define("logbuch.module.AccessControl",
 
   construct : function()
   {
-    this.base(arguments, "accessControl" );
-    
-    
+    this.base(arguments );
   },    
   
-  /*
-  *****************************************************************************
-     EVENTS
-  *****************************************************************************
-  */    
-
-  events : 
-  {
-    
-  },    
+   
   
   /*
   *****************************************************************************
@@ -81,81 +70,79 @@ qx.Class.define("logbuch.module.AccessControl",
     
     /*
     ---------------------------------------------------------------------------
-       INTERFACE METHODS
+       OVERRIDDEN METHODS
     ---------------------------------------------------------------------------
     */    
-    
-    /**
-     * Initializes the module
-     * @param sandbox {qcl.application.Sandbox}
-     */
-    init : function( sandbox )
-    {
-      this.base( arguments, sandbox );
-      this.__sandbox = sandbox;
-    },    
 
     /**
      * Builds the UI
      */
-	  build : function()
+	  _createWidgetContent : function()
 	  {
-      this.base(arguments);
-      
-      this.hide();
-      this.setLayout(new qx.ui.layout.VBox(5));
-      this.setAppearance("logbuch-access-control");
+     
+      var container = this.getDialogContainer();
 
-      this.add( new qx.ui.basic.Label( this.tr("Entry visible for") ).set({
+      container.add( new qx.ui.basic.Label( this.tr("Entry visible for") ).set({
         textAlign    : "center",
         font         : "bold",
         marginBottom : 5
       }));
-      
+
       var form = this.__form = new qx.ui.form.Form(); 
       this.__controller = new qx.data.controller.Form( null, form );
       
-      var field = new qx.ui.form.CheckBox( this.tr("Author") ).set({
-        value : true,
-        enabled : false
+      var field1 = new qx.ui.form.CheckBox( this.tr("Author") ).set({
+        value : true
       });
-      this.add( field );
-      form.add( field, null, null, "author" );
+      field1.addListener("changeValue",function(e){
+        if( e.getData() == false )
+        {
+          field1.setValue(true);
+        }
+      },this);
       
-      var field = new qx.ui.form.CheckBox( this.tr("Own company") );
-      this.add( field );
-      form.add( field, null, null, "ownCompany" );
+      container.add( field1 );
+      form.add( field1, null, null, "author" );
       
-      var field = new qx.ui.form.CheckBox( this.tr("Own Consultant") );
-      this.add( field );
-      form.add( field, null, null, "ownConsultant" );
       
-      var field = new qx.ui.form.CheckBox( this.tr("All Consultants") );
-      this.add( field );
-      form.add( field, null, null, "allConsultants" );
+      var field2 = new qx.ui.form.CheckBox( this.tr("Own company") );
+      container.add( field2 );
+      form.add( field2, null, null, "ownCompany" );
       
-      var field = new qx.ui.form.CheckBox( this.tr("All portal members") );
-      this.add( field );
-      form.add( field, null, null, "allMembers" );
+      var field3 = new qx.ui.form.CheckBox( this.tr("Own Consultant") );
+      container.add( field3 );
+      form.add( field3, null, null, "ownConsultant" );
       
-      this.add( new qx.ui.basic.Label( this.tr("Individual access for") ).set({
-        textAlign   : "center",
-        font        : "bold",
-        marginTop   : 10
-      }));      
+      var field4 = new qx.ui.form.CheckBox( this.tr("All Consultants") );
+      container.add( field4 );
+      form.add( field4, null, null, "allConsultants" );
+      
+      var field5 = new qx.ui.form.CheckBox( this.tr("All portal members") );
+      container.add( field5 );
+      form.add( field5, null, null, "allMembers" );
+      
+      var field6 = new qx.ui.form.CheckBox( this.tr("Individual access for") );
+      container.add( field6 );
+      field6.addListener("changeValue",function(e){
+        var selection = field7.getSelection();
+        if( e.getData() != ( selection.length > 0) )
+        {
+          field6.setValue( selection.length > 0 );  
+        }
+      },this);
       
       /*
        * more viewers
        */
-      var t = this.__allowed = new tokenfield.Token().set({
+      var field7 = this.__allowed = new tokenfield.Token().set({
         backgroundColor   : "logbuch-field-background",
         decorator         : "logbuch-field-border",
-        height            : 200,
+        height            : 100,
         selectionMode     : "multi",
         style             : "",
         hintText          : this.tr("Enter the first letters of the person, or * for all of them, or an email address to add a person")
       });
-      t.addListener("loadData", function(e){
+      field7.addListener("loadData", function(e){
         var str = e.getData();
         var data = [];
         for( var i=0; i<(Math.floor(Math.random()*10)+3);i++ )
@@ -163,31 +150,38 @@ qx.Class.define("logbuch.module.AccessControl",
           data.push( { label: str + " " + i } );
         }
         qx.util.TimerManager.getInstance().start(function(){
-          t.populateList( str, data );
+          field7.populateList( str, data );
         },null,this,null,500);
       },this); 
-      this.add( t, {flex:1} );
-      form.add( field, null, null, "moreMembers" );
+      container.add( field7, {flex:1} );
+      form.add( field7, null, null, "moreMembers" );
+      
+      // update "Individual access for" dependent on selection
+      field7.addListener("changeSelection",function(e){
+        field6.setValue( e.getData().length > 0);
+      },this);      
       
       /*
-       * save and invite buttons
+       * buttons pane
        */
-      var hbox = new qx.ui.container.Composite( new qx.ui.layout.HBox(5) ).set({
-        marginTop : 30,
-        height    : 30
-      });
-      var button = new qx.ui.form.Button(this.tr("Save"));
-      button.addListener("execute",this.save,this);
-      hbox.add(button,{flex:1});
-      var button = new qx.ui.form.Button(this.tr("Cancel"));
-      button.addListener("execute",this.cancel,this);
-      hbox.add(button,{flex:1});
-      this.add(hbox);
+      var buttonPane = new qx.ui.container.Composite;
+      var bpLayout = new qx.ui.layout.HBox(5);
+      bpLayout.setAlignX("center");
+      buttonPane.setLayout( bpLayout );
+      container.add(buttonPane);
       
+      /* 
+       * Ok Button 
+       */
+      var okButton = this._createOkButton();
+      buttonPane.add( okButton );   
+      
+      /* 
+       * Cancel Button 
+       */
+      var cancelButton = this._createCancelButton();
+      buttonPane.add( cancelButton );
     },
-    
-
- 
     
     /*
     ---------------------------------------------------------------------------
@@ -211,23 +205,7 @@ qx.Class.define("logbuch.module.AccessControl",
     */
     
     
-    // overridden
-    show : function()
-    {
-      this.__form.reset();
-      this.base(arguments);
-    },
-    
-    save : function()
-    {
-      this.fireEvent("completed");
-      this.hide();
-    },
-    
-    cancel : function()
-    {
-      this.hide();
-    },
+   
     
     /**
      * Add to the list of the users authorized to see the module 
@@ -256,6 +234,6 @@ qx.Class.define("logbuch.module.AccessControl",
 
   destruct : function()
   {
-
+    // FIXME add destruct
   }
 });

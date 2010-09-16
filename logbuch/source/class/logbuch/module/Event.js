@@ -31,27 +31,7 @@ qx.Class.define("logbuch.module.Event",
   */  
   properties :
   {
-    /**
-     * The date the event starts 
-     * @type Date
-     */
-    dateStart :
-    {
-      check    : "Date",
-      nullable : true,
-      event    : "changeDate"
-    },
-    
-    /**
-     * The date the event starts 
-     * @type Date
-     */
-    dateEnd :
-    {
-      check    : "Date",
-      nullable : true,
-      event    : "changeDate"
-    }       
+   
   },
   
   /*
@@ -77,12 +57,27 @@ qx.Class.define("logbuch.module.Event",
     
     /*
     ---------------------------------------------------------------------------
-       PRIVATE MEMBERS
+       "PRIVATES"
     ---------------------------------------------------------------------------
     */       
     
+    /**
+     * The form object
+     * @type qx.ui.form.Form
+     */
     __form : null,
+    
+    /**
+     * The form controller
+     * @type qx.data.controller.Form
+     */
     __controller : null,
+    
+    /**
+     * The sandbox instance
+     * @type qcl.application.Sandbox 
+     */
+    __sandbox : null,
 
     
     /*
@@ -121,8 +116,7 @@ qx.Class.define("logbuch.module.Event",
           .setColumnWidth(0, leftColumnWidth )
           .setColumnFlex(1,1)
           .setColumnFlex(2,1)
-          .setColumnFlex(3,1)
-          .setColumnWidth(4, rightColumnWidth )
+          .setColumnWidth(3, rightColumnWidth )
       );
       
       this.add(grid);
@@ -176,12 +170,16 @@ qx.Class.define("logbuch.module.Event",
        * save and invite buttons
        */
       var hbox = new qx.ui.container.Composite( new qx.ui.layout.HBox(5) ).set({
-        marginTop : 30,
-        height    : 30
+        marginTop : 20, // FIXME
+        height    : 30  // FIXME
       });
+      
+      // save 
       var button = new qx.ui.form.Button(this.tr("Save"));
       button.addListener("execute",this.save,this);
       hbox.add(button,{flex:1});
+      
+      // invite
       var button = new qx.ui.form.Button(this.tr("Invite"));
       button.addListener("execute",this.invite,this);
       hbox.add(button,{flex:1});
@@ -213,6 +211,12 @@ qx.Class.define("logbuch.module.Event",
         appearance  : "logbuch-field",
         height      : rowHeight        
       });
+      
+      // on first appear, focus on first input field
+      this.addListener("appear",function(){
+        field1.focus();
+      },this);
+      
       
       /*
        * date start 
@@ -323,7 +327,7 @@ qx.Class.define("logbuch.module.Event",
        */
       var field7 = new qx.ui.form.TextArea().set({
         appearance  : "logbuch-field",
-        height      : rowHeight * 2
+        height      : rowHeight
       });
       field7.addListener("focus",function(){
         this.fireDataEvent("focusRow",4);
@@ -332,33 +336,21 @@ qx.Class.define("logbuch.module.Event",
         if( e.getData() == 4 ) { field7.focus(); }
       },this);       
       form.add( field7, null, null, "notes" );
-      grid.add( field7, { row: 4, column : 1, colSpan : 2, rowSpan : 2 });       
+      grid.add( field7, { row: 4, column : 1, colSpan : 2 })
+      
+      /* 
+       * author label
+       */
+      var authorLabel = this._createAuthorLabel();
+      grid.add( authorLabel, { row: 5, column : 1, colSpan : 2 })
+      
+      ;       
 
       /*
-       * photos
+       * right column
        */
-      var vbox = new qx.ui.container.Composite( new qx.ui.layout.VBox(5) ).set({
-			  width      : rightColumnWidth,
-			  appearance : "logbuch-field" 
-			});
-			grid.add( vbox, { row : 0, column : 3, rowSpan : 5 } );
-      
-      /*
-       * buttons
-       */
-      var hbox = new qx.ui.container.Composite( new qx.ui.layout.HBox(5) ).set({
-        marginTop    : 30,
-        maxHeight    : 30
-      });
-      var button = new qx.ui.form.Button(this.tr("Upload Files"));
-      button.addListener("execute",this.uploadPhotos,this);
-      hbox.add(button,{flex:1});
-      var button = new qx.ui.form.Button(this.tr("Photo Gallery"));
-      button.addListener("execute",this.showPhotoGallery,this);
-      hbox.add(button,{flex:1});
-      grid.add( hbox, { row : 5, column : 3 } );      
-      
-      
+      this._createRightColumn( grid, 6 ); 
+
     },
     
 

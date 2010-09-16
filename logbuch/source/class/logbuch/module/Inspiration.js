@@ -21,17 +21,7 @@
  */
 qx.Class.define("logbuch.module.Inspiration",
 {
-  extend : logbuch.module.AbstractCategoryModule,
-  
-  /*
-  *****************************************************************************
-     PROPERTIES
-  *****************************************************************************
-  */  
-  properties :
-  {
-
-  },
+  extend : logbuch.module.Documentation,
   
   /*
   *****************************************************************************
@@ -55,51 +45,23 @@ qx.Class.define("logbuch.module.Inspiration",
     
     /*
     ---------------------------------------------------------------------------
-       PRIVATE MEMBERS
-    ---------------------------------------------------------------------------
-    */       
-
-    
-    /*
-    ---------------------------------------------------------------------------
-       INTERFACE METHODS
+       API
     ---------------------------------------------------------------------------
     */    
     
-
-    /**
-     * Builds the UI
+   /**
+     * Returns the data from which to construct the different fields
+     * in the module
+     * @return {Array}
      */
-	  build : function()
-	  {
-      this.base(arguments);
-      this.add( new qx.ui.basic.Label("Hier kommt die Inspiration hin" ));  
-    },
- 
-    
-    /*
-    ---------------------------------------------------------------------------
-       APPLY METHODS
-    ---------------------------------------------------------------------------
-    */    
-
-    
-    /*
-    ---------------------------------------------------------------------------
-       EVENT HANDLERS
-    ---------------------------------------------------------------------------
-    */
-    
-    _applyDate : function( date, old )
+    getFieldData : function()
     {
-      
+      return [
+        { label : this.tr("idea!"), name : "idea" },
+        { label : this.tr("Inspiration source"), name : "source" },
+        { label : this.tr("Internet links"), name : "links" }
+      ];          
     },    
-    
-    /*
-    ---------------------------------------------------------------------------
-       APIT
-    ---------------------------------------------------------------------------
-    */    
     
     /**
      * Returns the category module's (translated) label
@@ -109,19 +71,17 @@ qx.Class.define("logbuch.module.Inspiration",
     {
       return this.tr("Inspiration");
     },
+    
+    /**
+     * Returns the category module's translated item type
+     * @return {String}
+     */
+    getItemType : function()
+    {
+      return this.tr("Inspiration");
+    },        
 
     
     dummy : null
-  },
-
-  /*
-   *****************************************************************************
-      DESTRUCT
-   *****************************************************************************
-   */
-
-  destruct : function()
-  {
-
   }
 });

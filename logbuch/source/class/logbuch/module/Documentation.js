@@ -87,45 +87,24 @@ qx.Class.define("logbuch.module.Documentation",
       var rowHeight         = lc.getDocumentation().getRowHeight();
       var leftColumnWidth   = lc.getEvent().getLeftColumnWidth();
       var rightColumnWidth  = lc.getEvent().getRightColumnWidth();
-      
-      var grid = new qx.ui.container.Composite( 
-        new qx.ui.layout.Grid(20,5)
+      var layout = new qx.ui.layout.Grid(20,5)
           .setColumnWidth(0, leftColumnWidth )
           .setColumnFlex(1,1)
           .setColumnFlex(2,1)
-          .setColumnFlex(3,1)
-          .setColumnWidth(4, rightColumnWidth )
-      );
+          .setColumnWidth(3, rightColumnWidth );
+      var grid = new qx.ui.container.Composite( layout);
       
       this.add(grid);
       
       /*
        * labels in first column
        */
-      if ( this.getName() == "documentation" )
+      var fields = this.getFieldData();
+      for( var i=0; i< 6; i++) // FIXME
       {
-	      var fields = [
-	        { label : this.tr("Consultancy process"), name : "process" },
-	        { label : this.tr("Result"), name : "result" },
-	        { label : this.tr("Heureka!"), name : "heureka" },
-	        { label : this.tr("Stumbling block"), name : "stumblingBlock" },
-	        { label : this.tr("Incentive"), name : "incentive" },
-	        { label : this.tr("Miscellaneous"), name : "miscellaneous" }
-	      ];
-      }
-      else
-      {
-        var fields = [
-          { label : this.tr("Heureka!"), name : "heureka" },
-          { label : this.tr("Encounters"), name : "encounters" },
-          { label : this.tr("Stumbling block"), name : "stumblingBlock" },
-          { label : this.tr("Incentive"), name : "incentive" },
-          { label : this.tr("Miscellaneous"), name : "miscellaneous" }
-        ];        
-      }
-      
-      for( var i=0; i< fields.length; i++) 
-      {
+        layout.setRowHeight( i, rowHeight );
+        if ( ! fields[i] ) continue;
+        
         /*
          * label
          */
@@ -149,7 +128,10 @@ qx.Class.define("logbuch.module.Documentation",
               label.resetBackgroundColor();
             }
           }
-        }(i,label)); // to get the variables into the closure, see http://www.mennovanslooten.nl/blog/post/62       
+        }(i,label)); 
+        
+        // @todo focus on first field
+        
         
         grid.add( label, { row : i, column : 0 } );
         
@@ -171,11 +153,18 @@ qx.Class.define("logbuch.module.Documentation",
           }         
 	      }(i),this);   
         
+        // listens for double-click on field to extend it
+        field.addListener("dblclick",function(field,name,label){
+          return function(){
+            _this._extendField(field, name, label);
+          };
+        }(field,fields[i].name,fields[i].label),this);
+        
         // listens for click on label
         label.addListener("click",function(field){
           return function(){
             field.focus();
-          }   
+          };
         }(field), this);
         
 	      form.add( field, null, null, fields[i].name );
@@ -184,16 +173,16 @@ qx.Class.define("logbuch.module.Documentation",
          * "fullscreen"-button
          */
         var img = new qx.ui.basic.Image( "resource/logbuch/icon/16/full-screen.png" );
-        img.setOpacity(0.5)
+        img.setOpacity(0.5);
         hbox.add(img);
         
         // on click, extend the editor field
-        img.addListener("click",function(field,name){
+        img.addListener("click",function(field,name,label){
           return function(){
             field.focus();
-			      _this._extendField(field, name);
-          }
-        }(field,fields[i].name),this);
+			      _this._extendField(field, name,label);
+          };
+        }(field,fields[i].name,fields[i].label),this);
         
 	      grid.add( hbox, { row: i, column : 1, colSpan : 2 }); 
       }
@@ -202,48 +191,54 @@ qx.Class.define("logbuch.module.Documentation",
        * save and invite buttons
        */
       var hbox = new qx.ui.container.Composite( new qx.ui.layout.HBox(5) ).set({
-//        marginTop : 30,
-        height    : 30
+        marginTop : 10, // FIXME
+        height    : 30  // FIXME
       });
-      var button = new qx.ui.form.Button(this.tr("Save"));
-      button.addListener("execute",this.save,this);
-      hbox.add(button,{flex:1});
+      var button1 = new qx.ui.form.Button(this.tr("Save"));
+      button1.addListener("execute",this.save,this);
+      hbox.add(button1,{flex:1});
+      var button2 = new qx.ui.form.Button(this.tr("Send"));
+      button2.addListener("execute",this.send,this);
+      hbox.add(button2,{flex:1});      
 
       grid.add( hbox, { row : 6, column : 0 } );
            
-
       /*
-       * photos
+       * author label
        */
-      var vbox = new qx.ui.container.Composite( new qx.ui.layout.VBox(5) ).set({
-        width      : rightColumnWidth,
-        appearance : "logbuch-field" 
-      });
-      field =  new logbuch.component.ImageField( this.tr("Photo 1" ) ).set({
-        value     : "empty.png",
-        height    : 100
-      });
-      form.add( field.getFormElement(), null, null, "photo1" );
-      vbox.add( field );
-      grid.add( vbox, { row : 0, column : 3, rowSpan : 6 } );
+      grid.add( this._createAuthorLabel(), { row : 6, column : 1 } );
+      
+      
+      /*
+       * right column
+       */
+      this._createRightColumn( grid, 7 );  
         
     },
  
-    
+        
     /*
     ---------------------------------------------------------------------------
-       APPLY METHODS
+       API
     ---------------------------------------------------------------------------
     */    
-
     
-
-    
-    /*
-    ---------------------------------------------------------------------------
-       APIT
-    ---------------------------------------------------------------------------
-    */    
+    /**
+     * Returns the data from which to construct the different fields
+     * in the module
+     * @return {Array}
+     */
+    getFieldData : function()
+    {
+      return [
+        { label : this.tr("Consultancy process"), name : "process" },
+        { label : this.tr("Result"), name : "result" },
+        { label : this.tr("Heureka!"), name : "heureka" },
+        { label : this.tr("Stumbling block"), name : "stumblingBlock" },
+        { label : this.tr("Incentive"), name : "incentive" },
+        { label : this.tr("Miscellaneous"), name : "miscellaneous" }
+      ];    
+    },
     
     /**
      * Returns the category module's (translated) label
