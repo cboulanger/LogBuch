@@ -1,0 +1,358 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: logbuch\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2010-10-10 15:09+0100\n"
+"PO-Revision-Date: 2010-10-10 15:10+0100\n"
+"Last-Translator: Christian Boulanger <c.boulanger@qxtransformer.org>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-KeywordsList: _;gettext;gettext_noop;tr;trn;marktr\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-Language: de\n"
+"X-Poedit-SearchPath-0: ../../..\n"
+
+#: ../../../service/ACLTool.php:47
+#: ../../../service/ACLTool.php:91
+msgid "Users"
+msgstr "Benutzer/innen"
+
+#: ../../../service/ACLTool.php:53
+#: ../../../service/ACLTool.php:96
+msgid "Roles"
+msgstr "Rollen"
+
+#: ../../../service/ACLTool.php:59
+#: ../../../service/ACLTool.php:101
+msgid "Groups"
+msgstr "Gruppen"
+
+#: ../../../service/ACLTool.php:65
+#: ../../../service/ACLTool.php:106
+msgid "Permissions"
+msgstr "Erlaubnisse"
+
+#: ../../../service/ACLTool.php:71
+#: ../../../service/ACLTool.php:111
+msgid "Datasources"
+msgstr "Datenquellen"
+
+#: ../../../service/ACLTool.php:92
+msgid "user"
+msgstr "Benutzer/in"
+
+#: ../../../service/ACLTool.php:97
+msgid "role"
+msgstr "Rolle"
+
+#: ../../../service/ACLTool.php:102
+msgid "group"
+msgstr "Gruppe"
+
+#: ../../../service/ACLTool.php:107
+msgid "permission"
+msgstr "Erlaubnis"
+
+#: ../../../service/ACLTool.php:112
+msgid "datasource"
+msgstr "Datenquelle"
+
+#: ../../../service/ACLTool.php:237
+msgid "Relations"
+msgstr "Beziehungen"
+
+#: ../../../service/ACLTool.php:310
+msgid "in"
+msgstr "in"
+
+#: ../../../service/ACLTool.php:348
+msgid "In all groups"
+msgstr "In allen Gruppen"
+
+#: ../../../service/ACLTool.php:461
+msgid "Do you want to remove only the datasource entry or all associated data?"
+msgstr "Wollen Sie nur den Datenquellen-Eintrag löschen oder auch die zugehörigen Daten?"
+
+#: ../../../service/ACLTool.php:462
+msgid "All data"
+msgstr "Alle Daten"
+
+#: ../../../service/ACLTool.php:462
+msgid "Entry only"
+msgstr "Nur den Eintrag"
+
+#: ../../../service/ACLTool.php:506
+#, php-format
+msgid "Deleting datasource '%s' failed... "
+msgstr "Das Löschen der Datenquelle '%s' war nicht erfolgreich ..."
+
+#: ../../../service/ACLTool.php:509
+#, php-format
+msgid "Datasource '%s' successfully deleted ... "
+msgstr "Datenquelle '%s' wurde gelöscht ..."
+
+#: ../../../service/ACLTool.php:680
+msgid "Passwords do not match. Please try again"
+msgstr "Die Passwörter stimmen nicht überein"
+
+#: ../../../service/ACLTool.php:708
+#, php-format
+msgid "An email has been sent to %s (%s) with information on the registration."
+msgstr "Eine Email mit Informationen zur Registrierung wurde an %s (%s) gesendet."
+
+#: ../../../service/ACLTool.php:716
+#, php-format
+msgid "An email has been sent to %s (%s) to inform about the change of password."
+msgstr "%s (%s) wurde über die Änderung des Passworts per E-Mail informiert. "
+
+#: ../../../service/ACLTool.php:743
+#, php-format
+msgid "Your registration at %s"
+msgstr "Ihre Registrierung bei %s"
+
+#: ../../../service/ACLTool.php:753
+#: ../../../service/ACLTool.php:792
+#, php-format
+msgid "Dear %s,"
+msgstr "Sehr geehrte/r %s,"
+
+#: ../../../service/ACLTool.php:754
+#, php-format
+msgid "You have been registered as a user at  '%s'."
+msgstr "Sie wurden auf bei '%s' als Benutzer/in registriert."
+
+#: ../../../service/ACLTool.php:755
+#: ../../../service/ACLTool.php:794
+#, php-format
+msgid "Your username is '%s' and your password is '%s'"
+msgstr "Ihr Benutzername ist '%s' und Ihr Passwort ist '%s'. Nach dem Einloggen können Sie das Passwort verändern."
+
+#: ../../../service/ACLTool.php:756
+msgid "Please confirm your account by visiting the following link:"
+msgstr "Bitte bestätigen Sie Ihr Konto, in dem Sie den folgenden Link besuchen:"
+
+#: ../../../service/ACLTool.php:758
+msgid "Thank you."
+msgstr "Vielen Dank."
+
+#: ../../../service/ACLTool.php:787
+#, php-format
+msgid "Password change at %s"
+msgstr "Passwortänderung %s"
+
+#: ../../../service/ACLTool.php:793
+#, php-format
+msgid "This is to inform you that your password has changed at '%s'."
+msgstr "Hiermit möchten wir Sie darüber benachrichtigen, dass Ihr Passwort bei '%s' geändert wurde."
+
+#: ../../../service/ACLTool.php:826
+#, php-format
+msgid "Thank you, %s, your email address has been confirmed."
+msgstr "Vielen Dank, %s, Ihre E-Mailadresse wurde bestätigt."
+
+#: ../../../service/ACLTool.php:827
+#, php-format
+msgid "You can now log in at <a href='%s'>this link</a>"
+msgstr "Sie können sich nun unter <a href='%s'>diesem Link</a> einloggen. "
+
+#: ../../../service/Record.php:247
+msgid "E-Mail"
+msgstr "E-Mail"
+
+#: ../../../service/Record.php:248
+msgid "Family name"
+msgstr "Nachname"
+
+#: ../../../service/Record.php:249
+msgid "Given Name"
+msgstr "Vorname"
+
+#: ../../../service/Record.php:255
+#, php-format
+msgid "You need to enter a value in field '%s'."
+msgstr "Sie müssen einen Wert im Feld '%s' eingeben"
+
+#: ../../../service/Record.php:277
+msgid "You need to select an organization."
+msgstr "Sie müssen eine Organisation auswählen"
+
+#: ../../../service/Record.php:408
+msgid "Employee"
+msgstr "Mitarbeiter/in"
+
+#: ../../../service/Record.php:409
+msgid "External employee"
+msgstr "Externe/r Mitarbeiter/in"
+
+#: ../../../service/Record.php:410
+msgid "Consultant"
+msgstr "Berater/in"
+
+#: ../../../service/Record.php:411
+msgid "Academic consultant"
+msgstr "Wissenschaftliche Begleitung"
+
+#: ../../../service/Record.php:412
+msgid "Project Leader"
+msgstr "Projektleitung"
+
+#: ../../../service/Registration.php:55
+msgid "Your logBuch registration"
+msgstr "Ihre Registrierung beim LogBuch"
+
+#: ../../../service/Registration.php:66
+msgid "You have been registered as a user in the LogBuch."
+msgstr "Sie wurden im LogBuch als Benutzer/in registriert."
+
+#: ../../../service/Registration.php:67
+#, php-format
+msgid "Your start password is '%s'"
+msgstr "Ihr Startpasswort ist '%s' (Ohne die Anführungszeichen)."
+
+#: ../../../service/Registration.php:69
+msgid "Please visit the following link and enter this password there:"
+msgstr "Bitte besuchen Sie den folgenden Link und geben Sie dieses Passwort dort ein:"
+
+#: ../../../service/Registration.php:88
+#, php-format
+msgid "A registration email has been sent to %s."
+msgstr "Eine Registrierungs-Email wurde an %s gesendet."
+
+#: ../../../service/Registration.php:119
+msgid "Invalid email or username."
+msgstr "Ungültiger Benutzer/innen/name"
+
+#: ../../../service/Registration.php:123
+msgid "Unknown error."
+msgstr "Unbekannter Fehler"
+
+#: ../../../service/Registration.php:189
+msgid "Invalid password."
+msgstr "Ungültiges Passwort"
+
+#~ msgid "Problem"
+#~ msgstr "Problem"
+
+#~ msgid "The email address %s is invalid"
+#~ msgstr "Die E-Mailadresse %s ist ungültig."
+
+#~ msgid "Do you really want to reset/upgrade the '%s' data?"
+#~ msgstr "Wollen Sie wirklich die Daten '%s' zurücksetzen/aktualisieren?"
+
+#~ msgid "'%s' data reset."
+#~ msgstr "'%s' - Daten aktualisiert/zurückgesetzt."
+
+#~ msgid "Do you really want to export the '%s' data to the filesystem?"
+#~ msgstr "Wollen Sie wirklich die '%'-Daten exportieren?"
+
+#~ msgid "'%s' data exported to '%s'."
+#~ msgstr "'%s' wurde nach '%s' exportiert."
+
+#~ msgid ""
+#~ "Authentication must be done through a secure connection, using the "
+#~ "https:// protocol."
+#~ msgstr "Die Anmeldung muss über eine sichere Verbindung erfolgen (https:)."
+
+#~ msgid "No valid session."
+#~ msgstr "Ungültige Sitzung."
+
+#~ msgid "Name"
+#~ msgstr "Name"
+
+#~ msgid "Description"
+#~ msgstr "Beschreibung"
+
+#~ msgid "Default role for new users"
+#~ msgstr "Standardrolle für neue Benutzer/innen"
+
+#~ msgid "No role"
+#~ msgstr "Keine Rolle"
+
+#~ msgid "Email address"
+#~ msgstr "E-Mailadresse"
+
+#~ msgid "Enter a valid Email address"
+#~ msgstr "Geben Sie eine gültige E-Mailadresse ein"
+
+#~ msgid "Password"
+#~ msgstr "Passwort"
+
+#~ msgid "Leave blank if you don't want to change the password"
+#~ msgstr "Bitte leer lassen, wenn Sie das Passwort nicht ändern möchten"
+
+#~ msgid "Repeat password"
+#~ msgstr "Passwort wiederholen"
+
+#~ msgid "Anonymous User"
+#~ msgstr "Anonyme/r Benutzer/in"
+
+#~ msgid "Plugin is not installed"
+#~ msgstr "Plugin nicht installiert"
+
+#~ msgid "Install plugin"
+#~ msgstr "Plugin installieren"
+
+#~ msgid "Plugin is installed"
+#~ msgstr "Plugin ist installiert"
+
+#~ msgid "Uninstall plugin"
+#~ msgstr "Plugin deinstallieren"
+
+#~ msgid "Reinstall plugin"
+#~ msgstr "Plugin reinstallieren"
+
+#~ msgid "Please configure the plugins"
+#~ msgstr "Bitte konfigurieren sie die Plugins"
+
+#~ msgid "Log file deleted."
+#~ msgstr "Die Logdatei wurde gelöscht"
+
+#~ msgid "You don't have access to '%s'"
+#~ msgstr "Sie haben keinen Zugang zu '%s'"
+
+#~ msgid "%s records"
+#~ msgstr "%s Datensätze"
+
+#~ msgid "Schema"
+#~ msgstr "Schema"
+
+#~ msgid "Type"
+#~ msgstr "Typ"
+
+#~ msgid "Server host"
+#~ msgstr "Server Host"
+
+#~ msgid "Server port"
+#~ msgstr "Server-Port"
+
+#~ msgid "Database name"
+#~ msgstr "Name der Datenbank"
+
+#~ msgid "Database user name"
+#~ msgstr "Benutzername für die Datenbank"
+
+#~ msgid "Database user password"
+#~ msgstr "Passwort für die Datenbank"
+
+#~ msgid "Database encoding"
+#~ msgstr "Kodierung"
+
+#~ msgid "Datasource prefix"
+#~ msgstr "Datenquellen-Präfix"
+
+#~ msgid "Resource path"
+#~ msgstr "Ressourcenpfad"
+
+#~ msgid "Status"
+#~ msgstr "Status"
+
+#~ msgid "File '%s' does not exist in datasource '%s'"
+#~ msgstr "Datei '%s' existiert nicht in Datenquelle '%s'"
+
+#~ msgid "Yes"
+#~ msgstr "Ja"
+
+#~ msgid "No"
+#~ msgstr "Nein"

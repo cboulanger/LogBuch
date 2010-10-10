@@ -13,12 +13,7 @@
 ************************************************************************ */
 
 /* ************************************************************************
-#asset(qx/icon/${qx.icontheme}/16/places/*)
-#asset(qx/icon/${qx.icontheme}/22/places/*)
-#asset(qx/icon/${qx.icontheme}/32/places/*)
-#asset(qx/icon/${qx.icontheme}/48/places/*)
-#asset(qx/icon/${qx.icontheme}/64/places/*)
-#asset(qx/icon/${qx.icontheme}/128/places/*)
+#asset(qx/icon/${qx.icontheme}/32/mimetypes/*)
 
 ************************************************************************ */
 
@@ -106,7 +101,7 @@ qx.Class.define("logbuch.module.Attachments",
       
       this.itemHeight = 60;
       this.itemWidth = 60;
-      this.itemCount = 431;
+      this.itemCount = Math.floor( Math.random() * 10 );
       this.itemPerLine = 1;
       this.items = this._generateItems(this.itemCount);      
 
@@ -193,11 +188,12 @@ qx.Class.define("logbuch.module.Attachments",
     {
       var items = [];
       var iconImages = [
-        "folder.png",
-        "user-trash.png",
-        "network-server.png",
-        "network-workgroup.png",
-        "user-desktop.png"
+        "media-video.png",
+        "media-image.png",
+        "office-document.png",
+        "office-presentation.png",
+        "office-spreadsheet.png",
+        "office-contact.png"
       ];
 
       var aliasManager = qx.util.AliasManager.getInstance();
@@ -205,12 +201,12 @@ qx.Class.define("logbuch.module.Attachments",
 
       for (var i=0; i<count; i++)
       {
-        var icon = "icon/32/places/" + iconImages[Math.floor(Math.random() * iconImages.length)];
+        var icon = "icon/32/mimetypes/" + iconImages[Math.floor(Math.random() * iconImages.length)];
         var resolved = aliasManager.resolve(icon);
         var url = resourceManager.toUri(resolved);
 
         items[i] = {
-          label: "Icon #" + (i+1),
+          label: "Dok " + (i+1),
           icon: icon,
           resolvedIcon: url
         };

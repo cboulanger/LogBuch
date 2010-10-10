@@ -83,10 +83,39 @@ qx.Class.define("logbuch.module.Sidebar",
 			this.set({
 			  layout      : new qx.ui.layout.VBox(lc.getCalendar().getHGridLineWidth()),
 			  width       : lc.getSidebar().getWidth(), 
-			  marginTop   : lc.getSidebar().getMarginTop(), 
+			  marginTop   : lc.getWorkspace().getMarginTop()-2,
 			  marginRight : lc.getCalendar().getHGridLineWidth(),
 			  marginLeft  : lc.getSidebar().getMarginLeft()
 			});
+      
+	    var yearBox = new qx.ui.container.Composite().set({
+	      layout      : new qx.ui.layout.HBox(1),
+	      appearance  : "logbuch-label-box",
+	      height      : lc.getCalendar().getDateRowHeight()
+	    }); 
+      yearBox.add( new qx.ui.core.Spacer(), {flex:1});
+      this.addBefore( yearBox, this.getChildren()[0] );
+      
+      this.__sandbox.subscribe("activate-category",function(e){
+        if ( e.getData() !== null )
+        {
+          yearBox.addState("disabled");
+        }
+        else
+        {
+          yearBox.removeState("disabled");
+        }
+      },this );
+      
+	    var yearLabel = new qx.ui.basic.Label().set({
+	      font        : "logbuch-label-box",
+        alignY      : "middle"
+	    });
+      yearBox.add(yearLabel);
+      
+      this.__sandbox.subscribe("change-date",function(e){
+        yearLabel.setValue( "" + e.getData().getFullYear() );
+      },this );
 	  },
     
     start : function(){},

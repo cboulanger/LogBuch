@@ -13,7 +13,7 @@
 ************************************************************************ */
 
 /* ************************************************************************
-
+#asset(qx/icon/${qx.icontheme}/16/actions/dialog-close.png)
 ************************************************************************ */
 
 /**
@@ -40,41 +40,142 @@ qx.Class.define("logbuch.component.Message",
   /**
    * Constructor
    * @param date {Date}
-   * @param creator {String}
-   * @param title {String}
-   * @param message {String} HTML to display in the message
+   * @param sender {String}
+   * @param subject {String}
+   * @param body {String} HTML to display in the message
    */
-  construct : function( date, creator, title, message )
+  construct : function( date, sender, subject, body, category, itemId )
   {
     this.base(arguments);
+    
     this.setAppearance("logbuch-messageitem");
+    this.set({
+      date      : date,
+      sender    : sender,
+      subject   : subject,
+      body      : body,
+      category  : category,
+      itemId    : itemId
+    });
     
-    if ( date instanceof Date )
-    {
-      var formatter = logbuch.component.Message.getFormatter();
-      this.__date = formatter.format( date );
-    }
-    else
-    {
-      this.__date = date;      
-    }
-
-    this.__creator = creator;
-    this.__title = title;
-    this.__message = message;
+    this._setLayout(new qx.ui.layout.HBox(3));
     
-    this._setLayout(new qx.ui.layout.VBox(3));
+    var hbox1 = new qx.ui.container.Composite( new qx.ui.layout.HBox(5) );
+    var vbox  = new qx.ui.container.Composite( new qx.ui.layout.VBox(5) );
     
-    var hbox = new qx.ui.container.Composite( new qx.ui.layout.HBox(5) );
-    hbox.add( this.getChildControl("date") );
-    hbox.add( this.getChildControl("creator") );
-    this.add(hbox);
-    this.add( this.getChildControl("title") );
-    this.add( this.getChildControl("message") ); 
+    hbox1.add( this.getChildControl("date") );
+    hbox1.add( this.getChildControl("sender") );
+    
+    vbox.add(hbox1);
+    vbox.add( this.getChildControl("subject") );
+    vbox.add( this.getChildControl("body") ); 
+    
+    this.add(vbox,{flex:1});
+    this.add( this.getChildControl("deleteButton").set({
+      alignY : "middle"
+    }) );
   },
   
+  /*
+  *****************************************************************************
+     PROPERTIES
+  *****************************************************************************
+  */
 
+  properties :
+  {
+    category :
+    {
+      check : "String",
+      nullable : true
+    },
+    
+    itemId :
+    {
+      check : "String",
+      nullable : true
+    },
+    
+    /**
+     * The date of a message
+     * @type String
+     */
+    date : 
+    {
+      check    : "Date",
+      nullable : true,
+      event    : "changeDate"
+    },
+    
+    /**
+     * The sender of the message
+     * @type String
+     */
+    sender : 
+    {
+      check    : "String",
+      nullable : true,
+      event    : "changeSender"
+    },
+    
+    /**
+     * The message subject
+     * @type String
+     */
+    subject : 
+    {
+      check    : "String",
+      nullable : true,
+      event    : "changeSubject"
+    },
+    
+    /**
+     * The body of a message
+     * @type String
+     */
+    body : 
+    {
+      check    : "String",
+      nullable : true,
+      event    : "changeBody"
+    },
+    
+    /**
+     * The tags attached to a message
+     * @type String[]
+     */
+    tags : 
+    {
+      check    : "Array",
+      nullable : true,
+      event    : "changeTags"
+    },
+    
+    model :
+    {
+      check     : "qx.core.Object",
+      nullable  : true,
+      event     : "changeData"
+    },
+    
+    allowDelete :
+    {
+      check     : "Boolean",
+      init      : false
+    }
+  },
+  
+  /*
+  *****************************************************************************
+     EVENTS
+  *****************************************************************************
+  */
 
+  events :  
+  {
+    "delete" : "qx.event.type.Event"
+  },
+  
   /*
   *****************************************************************************
      MEMBERS
@@ -98,26 +199,47 @@ qx.Class.define("logbuch.component.Message",
       switch(id)
       {
         case "date":
-          control = new qx.ui.basic.Label( this.__date );
+          control = new qx.ui.basic.Label();
+          this.bind( "date", control, "value", {
+            converter : function(value){
+              return logbuch.component.Message.getFormatter().format( value )
+            }
+          });
           break;
           
-        case "creator":
-          control = new qx.ui.basic.Label( this.__creator );
+        case "sender":
+          control = new qx.ui.basic.Label();
+          this.bind( "sender", control, "value" );
           break;
           
-        case "title":
-          control = new qx.ui.basic.Label( this.__title );
+        case "subject":
+          control = new qx.ui.basic.Label();
+          this.bind( "subject", control, "value" );
           break;          
           
-        case "message":
-          control = new qx.ui.basic.Label( this.__message );
+        case "body":
+          control = new qx.ui.basic.Label();
           control.setRich(true);
-          break;                    
+          this.bind( "body", control, "value" );
+          break;
+          
+        case "deleteButton":
+          control = new qx.ui.basic.Image("icon/16/actions/dialog-close.png").set({
+            visibility : "hidden"
+          });
+          this.addListener("mouseover",function(){
+            control.setVisibility("visible");
+          },this);
+          this.addListener("mouseout",function(){
+            control.setVisibility("hidden");
+          },this);
+          control.addListener("click",function(){
+            this.fireEvent("delete");
+          },this);
+          break;
 
       }
-
       return control || this.base(arguments, id);
     }
-    
   }
 });

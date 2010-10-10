@@ -13,7 +13,7 @@
 ************************************************************************ */
 
 /* ************************************************************************
-
+#asset(logbuch/*)
 ************************************************************************ */
 
 /**
@@ -28,6 +28,29 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
   implement : [  
     qcl.application.IFormModule
   ],    
+  
+ /*
+  *****************************************************************************
+     PROPERTIES
+  *****************************************************************************
+  */
+  
+  properties : 
+  {
+    dateStart :
+    {
+      check    : "Date",
+      nullable : true,
+      event    : "changeDateStart"
+    },
+    
+    dateEnd :
+    {
+      check    : "Date",
+      nullable : true,
+      event    : "changeDateEnd"
+    }
+  },
   
  /*
   *****************************************************************************
@@ -134,7 +157,14 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
      */
     start : function()
     {
+      this.__sandbox.subscribe("new-category-item", this._onSandboxNewCategoryItem, this);
       this.__sandbox.subscribe("activate-category", this._onSandboxActivateCategory, this);
+      this.__sandbox.subscribe("load-category-item", this._onSandboxLoadCategoryItem, this);
+      
+      this.__sandbox.subscribe("change-date", function(e){
+        this.setDateStart( e.getData() );
+        this.setDateEnd( e.getData() );
+      }, this);
     },
     
     /**
@@ -142,7 +172,9 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
      */    
     stop : function()
     {
+      this.__sandbox.unsubscribe("new-category-item", this._onSandboxNewCategoryItem, this);
       this.__sandbox.unsubscribe("activate-category", this._onSandboxActivateCategory, this);
+      this.__sandbox.unsubscribe("load-category-item", this._onSandboxLoadCategoryItem, this);
     },
     
     /**
@@ -169,14 +201,50 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
      */
     _onSandboxActivateCategory : function(e)
     {
-      if ( e.getData() == this.__name ) 
-      {
-        this.show();  
-      }
-      else
+      if ( e.getData() != this.getName() )
       {
         this.hide();
       }
+    },
+    
+    /**
+     * Called when the "new-category-item" message is received
+     * @param e {qx.event.type.Data}
+     */
+    _onSandboxNewCategoryItem : function(e)
+    {
+      var data = e.getData();
+      if ( data.category != this.getName() )
+      {
+        return;
+      }
+      this._form.reset();
+      this.set({
+        dateStart : data.dateStart || data.date,
+        dateEnd   : data.dateEnd   || data.date
+      });
+      this.show();
+    },
+    
+    _onSandboxLoadCategoryItem  : function(e)
+    {
+      var data = e.getData();
+      if ( data.category != this.getName() )
+      {
+        return;
+      }
+      this._form.reset();
+      this.__sandbox.showNotification(this.tr("Loading record ..."));
+      this.__sandbox.publish("activate-category", this.getName() );
+      this.__sandbox.rpcRequest(
+        "logbuch.category","read",[this.getName(),data.id],
+        function(data){
+          this.__sandbox.hideNotification();
+          this._controller.setModel( qx.data.marshal.Json.createModel( data ) ); //FIXME
+          this.show();
+          this.__sandbox.publish("activate-category", this.getName() );
+        },this
+      );  
     },
     
     /*
@@ -243,21 +311,21 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       
       
       // documents
-      var button4 = new qx.ui.form.Button( null, "resource/logbuch/icon/24/documents.png" ).set({
+      var button4 = new qx.ui.form.Button( null, "logbuch/icon/24/documents.png" ).set({
         toolTipText :this.tr("Documents")
       });
       button4.addListener("execute",this.showAttachments,this);
       hbox.add(button4);      
       
       // photos
-      var button2 = new qx.ui.form.Button( null, "resource/logbuch/icon/24/photo.png" ).set({
+      var button2 = new qx.ui.form.Button( null, "logbuch/icon/24/photo.png" ).set({
         toolTipText :this.tr("Photo Gallery")
       });
       button2.addListener("execute",this.showPhotoGallery,this);
       hbox.add(button2);
       
       // discussion
-      var button3 = new qx.ui.form.Button( null, "resource/logbuch/icon/24/cloud.png" ).set({
+      var button3 = new qx.ui.form.Button( null, "logbuch/icon/24/cloud.png" ).set({
         toolTipText :this.tr("Discussion")
       });
       button3.addListener("execute",this.showDiscussion,this);
@@ -267,7 +335,7 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       hbox.add( new qx.ui.core.Spacer(), {flex:1});
       
       // upload
-      var button1 = new qx.ui.form.Button( null, "resource/logbuch/icon/24/arrow-up.png").set({
+      var button1 = new qx.ui.form.Button( null, "logbuch/icon/24/arrow-up.png").set({
         toolTipText : this.tr("Upload Files")
       });
       button1.addListener("execute",this.uploadPhotos,this);
@@ -285,7 +353,11 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
         rich      : true,
         alignY    : "bottom"
       });
-      label.setValue("Eintragung von: <b>Max Mustermann</b>, Oberammergauer Altmetallverarbeitungs GmbH");
+      this.__sandbox.subscribe("authenticated",function(){
+        label.setValue( 
+          this.tr("Created by %1", this.__sandbox.getActiveUserData().fullname ) // FIXME !! 
+        ); 
+      },this);
       hbox.add( label, {flex:1} );
       return hbox;
     },
@@ -301,27 +373,41 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       });
       
       // save 
-      var button = new qx.ui.form.Button(null,"resource/logbuch/icon/24/save.png").set({
+      var button = new qx.ui.form.Button(null,"logbuch/icon/24/save.png").set({
         toolTipText : this.tr("Save")
       });
       button.addListener("execute",this.save,this);
       hbox.add(button,{flex:1});
       
       // invite/Send
-      var button = new qx.ui.form.Button(null,"resource/logbuch/icon/24/mail.png").set({
+      var button = new qx.ui.form.Button(null,"logbuch/icon/24/mail.png").set({
         toolTipText : this.tr("Invite")
       });
       button.addListener("execute",this.send,this);
       hbox.add(button,{flex:1});
       
       // cancel
-      var button = new qx.ui.form.Button(null,"resource/logbuch/icon/24/cancel.png").set({
+      var button = new qx.ui.form.Button(null,"logbuch/icon/24/cancel.png").set({
         toolTipText : this.tr("Cancel")
       });
       button.addListener("execute",this.cancel,this);
       hbox.add(button,{flex:1});
       
       return hbox;
+    },
+    
+    
+    /**
+     * Takes a date object and a string time and returns a new date with the
+     * given time
+     * @param date {Date} A date object which must be at 00:00
+     * @param time {String} A string of the format HH:mm
+     * @return {Date}
+     */
+    _getDateTime : function( date, time )
+    {
+      var t = time.split(":");
+      return new Date( date.getTime() + ( parseInt(t[0]) * 1000 * 60 * 60 ) + ( parseInt(t[1]) * 1000 * 60 ) ); 
     },
     
 
@@ -360,7 +446,9 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
     
     cancel : function()
     {
+      this._form.reset();        
       this.__sandbox.publish("activate-category",null);
+      
       this.hide();
     },
     
@@ -372,24 +460,84 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       this.fireDataEvent("focusRow",null);
       
       var acl = logbuch.module.AccessControl.getInstance();
-      
-      acl.addListenerOnce("ok",function(){
-        
-        // @todo save event on server
-        
-        var message = this.createMessage();
-        this.__sandbox.publish( "message", message );
-        
-        dialog.Dialog.alert( this.tr("%1 saved.",  this.getItemType() ), function(){
-          this.__sandbox.publish("activate-category",null);
-        },this );
-      },this);
+      acl.set({
+        callback : this._save,
+        context  : this
+      });
       
       acl.show();
       
 //      var selection= this._form.getItems()['participants'].getSelection();
 //      console.log(selection);
 //      acl._addAllowedItems( selection );
+    },
+    
+    _save : function (result)
+    {
+      if( ! result ) return;
+      
+      if ( this._controller.getModel() && this._controller.getModel().getId )
+      {
+        //this._update(); FIXME!ar
+        this._create();
+      }
+      else
+      {
+        this._create();
+      }
+    },
+    
+    _update : function()
+    {
+      var data  = this.getData();
+      
+      /*
+       * get the access scope 
+       */
+      var scope = logbuch.module.AccessControl.getInstance().getData();
+
+      //this.__sandbox.publish("activate-category",null);
+      
+      this.__sandbox.showNotification(this.tr("Updating %1", this.getLabel() ) );
+      this.__sandbox.rpcRequest(
+        "logbuch.category", "update", 
+        [ this.getName(), this._controller.getModel().getId(), data, scope ], 
+        function(){
+          this.__sandbox.hideNotification();           
+        }, this
+      );
+
+    },    
+    
+    _create : function()
+    {
+      var data  = this.getData();
+      
+      /*
+       * add start and end time if not set by form
+       */
+      if ( ! data.dateStart )
+      {
+        data.dateStart = this.getDateStart().toDateString();
+        data.dateEnd   = this.getDateStart().toDateString();
+      }
+      
+      /*
+       * get the access scope 
+       */
+      var scope = logbuch.module.AccessControl.getInstance().getData();
+
+      //this.__sandbox.publish("activate-category",null);
+      
+      this.__sandbox.showNotification(this.tr("Creating %1", this.getLabel() ) );
+      this.__sandbox.rpcRequest(
+        "logbuch.category", "create", 
+        [ this.getName(),data, scope ], 
+        function(){
+          this.__sandbox.hideNotification();           
+        }, this
+      );
+
     },
     
     getModel : function()
@@ -402,14 +550,28 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       return this._controller.setModel(model);
     },
     
-    createMessage : function()
+    getData : function()
+    {
+       return qx.util.Serializer.toNativeObject( this.getModel() );
+    },   
+    
+    getRpcSafeData : function()
+    {
+      return qx.util.Json.parse( qx.util.Serializer.toJson( this.getModel() ) );      
+    },
+    
+    /**
+     * Creates messages from the category data
+     * @return {Array}
+     */
+    createMessages : function()
     {
       this.error("Not implemented in category " + this.getName() );
     }, 
     
     send : function()
     {
-      dialog.Dialog.alert("Ich tu jetzt so, als würde ich was senden.");
+      dialog.Dialog.alert("Senden noch nicht implementiert");
     },
     
     uploadPhotos : function()

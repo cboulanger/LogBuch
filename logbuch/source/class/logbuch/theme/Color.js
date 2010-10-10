@@ -30,18 +30,18 @@ qx.Theme.define("logbuch.theme.Color",
     "logbuch-label-box-disabled"                : "gray", // FIXME
     
     // backgrounds @todo rename
-    "logbuch-background-calendar"               : "#CCCCCC",
-    "logbuch-background-calendar-current-date"  : "#EEEEEE",
-    "logbuch-background-calendar-selected"      : "#AAAAAA",
-    "logbuch-background-calendar-weekend"       : "#FFCCCC",
+    "logbuch-background-calendar"               : "#D0D2D3",
+    "logbuch-background-calendar-current-date"  : "#FFFFFF",
+    "logbuch-background-calendar-selected"      : "#D0EAA4",
+    "logbuch-background-calendar-weekend"       : "#B8BABC",
     "logbuch-background-category-page"          : "#CCCCCC",
     
     // categories
-    "logbuch-category-event"                    : "#CC6633",
-    "logbuch-category-goal"                     : "#CC9933",
-    "logbuch-category-documentation"            : "#99CCFF",
-    "logbuch-category-diary"                    : "#99CC33",
-    "logbuch-category-inspiration"              : "#CCCC33"
+    "logbuch-category-event"                    : "#47a1b4",
+    "logbuch-category-goal"                     : [194,128,24], //"#d38923",
+    "logbuch-category-documentation"            : "#68b400",
+    "logbuch-category-diary"                    : "#9b66e6",
+    "logbuch-category-inspiration"              : "#cdc000"
     
   }
 });

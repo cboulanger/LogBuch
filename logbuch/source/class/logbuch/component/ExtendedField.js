@@ -7,7 +7,7 @@
 
    Lizenz: GPL v.2
 
-   Authoren:
+   Autoren:
      * Christian Boulanger (cboulanger)
 
 ************************************************************************ */
@@ -23,6 +23,13 @@ qx.Class.define("logbuch.component.ExtendedField",
 {
   extend : qx.ui.container.Composite,
   
+  statics :
+  {
+    getExtendedFieldName : function( name )
+    {
+      return name + "_extended";
+    }
+  },
   
   /*
   *****************************************************************************
@@ -89,7 +96,7 @@ qx.Class.define("logbuch.component.ExtendedField",
     var longfield = new logbuch.component.InputField( this.tr("Extended Description" ),null,"textarea" );
     
     // add to form 
-    longfield.addToForm( form, name + "_long" );
+    longfield.addToForm( form, logbuch.component.ExtendedField.getExtendedFieldName( name ) );
     
     this.add( longfield, { flex : 1 } );     
     

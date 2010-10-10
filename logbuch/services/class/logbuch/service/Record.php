@@ -1,0 +1,424 @@
+<?php
+/* ************************************************************************
+
+   logBuch: Software zur online-Dokumentation von Beratungsprozessen
+   
+   Copyright: Konzeption:     JŸrgen Breiter
+              Programmierung: Christian Boulanger 
+
+   Lizenz: GPL v.2
+
+   Authoren:
+     * Christian Boulanger (cboulanger)
+
+************************************************************************ */
+
+qcl_import("qcl_data_controller_Controller");
+
+/**
+ * A classical CRUD controller which also features a list item generator 
+ */
+class logbuch_service_Record
+  extends qcl_data_controller_Controller
+{
+	
+	/**
+   * Class-based access control list. 
+   * Determines what role has access to what kind of model data.
+   * @var array
+   */
+  private $modelAcl = array(
+
+    array(
+      /*
+       * this ruleset
+       */
+      'datasource'  => "demo",
+      'modelType'   => array("person","organization","attachment"),
+
+      /*
+       * only registered users have access
+       */
+      'roles'       => array(QCL_ROLE_USER),
+
+      /*
+       * record-level access rules not used here since we're
+       * going to use permissions to do that. 
+       */
+      'rules'         => array()
+    ),
+    
+    array(
+      /*
+       * this ruleset
+       */
+      'datasource'  => "demo",
+      'modelType'   => array("organization"),
+
+      /*
+       * organization data can be accessed by anonymous
+       */
+      'roles'       => array(QCL_ROLE_ANONYMOUS),
+
+      /*
+       * record-level access rules not used here since we're
+       * going to use permissions to do that. 
+       */
+      'rules'         => array()
+    )    
+  );	
+
+  /**
+   * Constructor. Adds the ACL for this controller
+   */
+  function __construct()
+  {
+    $this->addModelAcl( $this->modelAcl );
+  }  
+  
+  /**
+   * Convenience function returning the user model
+   * @return qcl_access_model_User
+   */
+  private function getUserModel()
+  {
+  	return $this->getApplication()
+								->getAccessController()
+								->getUserModel();
+  }
+  
+  /**
+   * Convenience function returning the role model
+   * @return qcl_access_model_Role
+   */
+  private function getRoleModel()
+  {
+  	return $this->getApplication()
+								->getAccessController()
+								->getRoleModel();
+  }  
+
+  /**
+   * Convenience function returning the group model
+   * @return qcl_access_model_Group
+   */
+  private function getGroupModel()
+  {
+  	return $this->getApplication()
+								->getAccessController()
+								->getGroupModel();
+  }
+    
+	/**
+	 * Creates a model record on the server and returns the 
+	 * UI element model of it. 
+	 * @param string $datasource
+	 * @param $modelType
+	 * @return array
+	 */
+	function method_create( $datasource, $modelType )
+	{
+		$model = $this->getModel("demo", $modelType);
+		$model->create();
+			
+		switch( $modelType )
+		{
+			case "person":
+				/*
+				 * Create new user
+				 */
+				$userModel = $this->getUserModel();
+				$userModel->create( "person/" . $model->id() );
+				$roleModel = $this->getRoleModel();
+				$roleModel->load( QCL_ROLE_USER );
+				$userModel->linkModel( $roleModel );
+				$model->set( "userId", $userModel->id() );
+				$model->save();
+				break;
+				
+			case "organization":
+				$groupModel = $this->getGroupModel();
+				$groupModel->create( "organization/" . $model->id() );
+				$model->set( "groupId", $groupModel->id() );
+				$model->save();
+				break;
+		}
+		
+		return $model->uiElementModel("value");
+	}
+	
+	/**
+	 * Returns the model record as json data
+	 * @param string $datasource
+	 * @param string $modelType
+	 * @param int|string $recordId
+	 */
+	function method_read( $datasource, $modelType, $recordId )
+	{
+		$model = $this->getModel("demo", $modelType);
+		$model->load( $recordId );
+		$data = $model->data( array(
+			'exclude'	=> array('created','modified','id','initialPassword','userId')
+		));
+		
+		if( $modelType == "person" )
+		{
+			$data['editable']  = 
+				( $this->hasPermission("logbuch.members.manage") 
+					or $this->getActiveUser()->id() == $model->get("userId") );
+		}
+		
+		return $data;
+	}
+	
+	/**
+	 * Updates the model record. Returns the record's UI element model.
+	 * @param string $datasource
+	 * @param string $modelType
+	 * @param int|string $recordId
+	 * @return array
+	 */
+	function method_update( $datasource, $modelType, $recordId, $data )
+	{
+		$model = $this->getModel("demo", $modelType);
+		$model->load( $recordId );
+	
+		/*
+		 * manage image attachments
+		 */
+		if( $data->image )
+		{
+			$attachmentModel = $this->getModel( "demo", "attachment" );
+			$oldImage = $model->getImage();
+			$newImage = $data->image;
+			$sizes = array( 16, 64, 80 );
+			
+			if( $oldImage != $newImage )
+			{
+				/*
+				 * delete the old image
+				 */
+				if ( $oldImage )
+				{
+					try 
+					{
+						$attachmentModel->findLinked( $model );
+						while( $attachmentModel->loadNext() )
+						{
+							if ( $attachmentModel->getFilename() == $oldImage )
+							{
+								$attachmentModel->delete();
+							}
+						}	
+					} 
+					catch (qcl_data_model_RecordNotFoundException $e) {}
+				}
+	
+				$newImagePath = LOGBUCH_UPLOADS_PATH . $newImage;
+				
+				if ( ! file_exists( $newImagePath ) )
+				{
+					$this->raiseError( "Image does not exist : $newImagePath" );
+				}
+				
+				/*
+				 * create thumbnails
+				 */
+				require_once 'qcl/lib/img/Image.php';
+				foreach( $sizes as $size )
+				{
+					$img = new Image( $newImagePath );
+					$img->resize($size, $size);
+					$img->save( LOGBUCH_UPLOADS_PATH . "$size/" . $newImage);
+				}
+				
+				/*
+				 * attach new image
+				 */			
+				$attachmentModel->create(array(
+					'filename' 	=> $newImage,
+					'mime'			=> $img->getMimeType()
+				));
+				$attachmentModel->linkModel( $model );
+			}
+		}
+
+		/*
+		 * person
+		 */
+		if ( $modelType == "person" )
+		{
+			/*
+			 * check necessary information
+			 */
+			$requiredFields = array( 
+				"email" 			=>  $this->tr("E-Mail"),
+				"familyName" 	=> 	$this->tr("Family name"),
+				"givenName"		=>  $this->tr("Given Name" )
+			);
+			foreach( $requiredFields as $key => $label )
+			{
+				if ( ! $data->$key )
+				{
+					throw new InvalidJsonRpcArgumentException( $this->tr( "You need to enter a value in field '%s'.", $label ) );
+				}
+			}
+			
+			/*
+			 * update the corresponding user 
+			 */
+			$userModel = $this->getUserModel();
+			$userModel->load( $model->get("userId") );
+			$userModel->set( array(
+				'name' 	=> $data->givenName . " " . $data->familyName,
+				'email'	=> $data->email 
+			));
+			$userModel->save();
+				
+			/*
+			 * A person's organization is linked through the
+			 * user/group association
+			 */			
+			$organizationId = $data->organizationId;
+			if ( ! $organizationId )
+			{
+				throw new InvalidJsonRpcArgumentException( $this->tr( "You need to select an organization.") );
+			}
+			if ( $model->get("organizationId") != $organizationId )
+			{
+				$orgModel = $this->getModel("demo", "organization");
+				$orgModel->load( $organizationId );
+				$groupModel = $this->getGroupModel();
+				
+				/*
+				 * unlink all group model associations and link 
+				 * only the current one
+				 */
+				$userModel->unlinkAll( $groupModel );
+				$groupModel->load( $orgModel->get("groupId") );
+				$userModel->linkModel( $groupModel );
+			}
+		}
+		elseif ( $modelType == "organization" )
+		{
+			/*
+			 * update the corresponding group 
+			 */
+			$groupModel = $this->getGroupModel();
+			$groupModel->load( $model->get("groupId") );
+			$groupModel->set( array(
+				'name' => $model->label()
+			));
+			$groupModel->save();
+		}
+		
+		/*
+		 * clean data
+		 */
+		foreach( $data as $key => $value )
+		{
+			if ( is_string( $data->$key ) )
+			{
+				$data->$key = trim( $data->$key );
+			}
+		}
+		
+		/*
+		 * set properties and save
+		 */
+		$model->set( $data );
+		$model->save();
+		
+		/*
+		 * send registration mail
+		 */
+		if ( $modelType == "person" and $model->get("initialPassword") == false )
+		{
+			qcl_import("logbuch_service_Registration");
+			$service = new logbuch_service_Registration;
+			$service->sendRegistrationEmail( $userModel, $model );
+			$model->set("initialPassword",true);
+			$model->save();
+		}		
+		
+		return $model->uiElementModel("value");
+	}	
+
+	/**
+	 * Deletes a model record.
+	 * @param string $datasource
+	 * @param string $modelType
+	 * @param int|string $recordId
+	 * @return "OK"
+	 */
+	function method_delete( $datasource, $modelType, $recordId )
+	{
+		$model = $this->getModel("demo", $modelType);
+		$model->load( $recordId );
+		
+		switch( $modelType )
+		{
+			case "person":
+				$userModel = $this->getUserModel();
+				$userModel->load( $model->get("userId") );
+				$userModel->delete();
+				break;
+
+			case "organization":
+				$groupModel = $this->getGroupModel();
+				$groupModel->load( $model->get("groupId") );
+				$groupModel->delete();
+				break;
+		}		
+		
+		$model->delete();
+		return "OK";
+	}
+	
+	/**
+	 * Returns the list model of the given model type.
+	 * @param string $datasource
+	 * 		The name of the datasource
+	 * @param string $modelType
+	 * 		The type of the model
+	 * @param array|null $where
+	 * 		An optional where query condition
+	 * @param string|null $orderBy 
+	 * 		An optional order by information
+	 * @param strign $modelKey 
+	 * 		The key of the model data value in the json data. Defaults
+	 * 		to "value"
+	 */
+	function method_list( $datasource, $modelType, $where=null, $orderBy=null, $modelKey="value" )
+	{
+		$model = $this->getModel("demo", $modelType );
+		if ( $where ) 
+		{
+			$model->findWhere( $where, $orderBy );
+		}
+		else 
+		{
+			$model->findAll();	
+		}
+		$listModel = array();
+		while( $model->loadNext() )
+		{
+			$listModel[] = $model->uiElementModel( $modelKey );
+		}
+		return $listModel;
+	}	
+	
+	// FIXME
+	function method_getRoleList()
+	{
+		return array(
+			array( 'value' => "employee", 	'label' => "Mitarbeiter/in" ), // 'label' => $this->tr("Employee") ), // 
+			array( 'value' => "external", 	'label' => "Externe Mitarbeiter/in" ), // 'label' => $this->tr("External employee") ), // 
+			array( 'value' => "consultant", 'label' => "Berater/in" ), // 'label' => $this->tr("Consultant") ),
+			array( 'value' => "academic", 	'label' => "Wissenschaftliche Begleitung" ), // 'label' => $this->tr("Academic consultant") ),
+			array( 'value' => "leader", 		'label' => "Projektleitung" ) // 'label' => $this->tr("Project Leader") )
+		);
+	}
+
+}
+?>

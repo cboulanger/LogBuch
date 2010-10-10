@@ -28,7 +28,7 @@ window.addEvent('domready', function() {
 		instantStart  : true,
 		
     typeFilter    : {
-											'Images (*.jpg, *.jpeg, *.gif, *.png)': '*.jpg; *.jpeg; *.gif; *.png'
+											'Images (*.jpg, *.jpeg, *.png)': '*.jpg; *.jpeg; *.png'
 										},
 		
     fileSizeMax   : 2 * 1024 * 1024,
@@ -58,13 +58,16 @@ window.addEvent('domready', function() {
 			if (file.response.error) 
       {
         //console.log(file.response)
-				dialog.alert( 'Uploading <em>' + this.fileList[0].name + '</em> failed, please try again. (Error: #' + this.fileList[0].response.code + ' ' + this.fileList[0].response.error + ')');
+				top.dialog.alert( 'Uploading <em>' + this.fileList[0].name + '</em> failed, please try again. (Error: #' + this.fileList[0].response.code + ' ' + this.fileList[0].response.error + ')');
 			} 
       else 
       {
-				var name = file.name;
+        var data = top.qx.util.Json.parse(file.response.text);
+        //console.log(data)
+				var name = data.name;
         //console.log('Successful Upload of ' + name );
         document.body.__imageField.setValue(name);
+        
 			}
 			
 			file.remove();

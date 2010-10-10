@@ -67,6 +67,7 @@ qx.Class.define("logbuch.module.Setup",
       field = new logbuch.component.InputField( this.tr("Project title" ) );
       field.setRequired(true);
       field.addToForm( form, "projectTitle" );
+      //this.__sandbox.bindConfigKey("project.title", field, "value", true );
       this.add( field );
       
       hbox = new qx.ui.container.Composite( new qx.ui.layout.HBox(5) );
@@ -98,7 +99,9 @@ qx.Class.define("logbuch.module.Setup",
       field.addToForm( form, "logo" );
       hbox.add( field  );
       
-      this.add( new qx.ui.basic.Label( this.tr("label_setup_project") ), {flex : 1} );
+      this.add( new qx.ui.basic.Label( this.tr("label_setup_project") ).set({
+        rich : true
+      }));
     },
     
     start : function(){},

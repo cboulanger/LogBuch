@@ -13,14 +13,14 @@
      * Chritian Boulanger (cboulanger)
 
 ************************************************************************ */
-
-qcl_import( "qcl_data_model_db_ActiveRecord" );
+		
+qcl_import( "logbuch_model_Model" );
 
 /**
- * 
+ * Enter description here ...
  */
 class logbuch_model_DiaryEntry
-  extends qcl_data_model_db_ActiveRecord
+extends logbuch_model_Model
 {
 
   /*
@@ -29,11 +29,10 @@ class logbuch_model_DiaryEntry
   *****************************************************************************
   */
 
-	/**
-	 * The name of the table of this model
-	 * @var string
-	 */
-  protected $tableName = "data_Diary";
+  /**
+   * The name of the table of this model
+   */
+  protected $tableName = "data_DiaryEntry";
   
   /**
    * The foreign key of this model
@@ -41,18 +40,101 @@ class logbuch_model_DiaryEntry
   protected $foreignKey = "DiaryEntryId";  
 
   /**
-   * model properties
+   * The model properties
    */
   private $properties = array(
 
- );
-
-  /**
-   * Relations
-   */
-  private $relations = array(
+    /**
+     * Enter description here ...
+     */
+    'heureka' => array (
+      'check' => 'string',
+      'sqltype' => 'varchar(255)',
+      'nullable' => true,
+    ),
     
+    /**
+     * Enter description here ...
+     */
+    'encounters' => array (
+      'check' => 'string',
+      'sqltype' => 'varchar(255)',
+      'nullable' => true,
+    ),
+    
+    /**
+     * Enter description here ...
+     */
+    'stumblingBlock' => array (
+      'check' => 'string',
+      'sqltype' => 'varchar(255)',
+      'nullable' => true,
+    ),
+    
+    /**
+     * Enter description here ...
+     */
+    'incentive' => array (
+      'check' => 'string',
+      'sqltype' => 'varchar(255)',
+      'nullable' => true,
+    ),
+    
+    /**
+     * Enter description here ...
+     */
+    'miscellaneous' => array (
+      'check' => 'string',
+      'sqltype' => 'varchar(255)',
+      'nullable' => true,
+    ),
+    
+    /**
+     * Enter description here ...
+     */
+    'heureka_extended' => array (
+      'check' => 'string',
+      'sqltype' => 'text',
+      'nullable' => true,
+    ),
+    
+    /**
+     * Enter description here ...
+     */
+    'encounters_extended' => array (
+      'check' => 'string',
+      'sqltype' => 'text',
+      'nullable' => true,
+    ),
+    
+    /**
+     * Enter description here ...
+     */
+    'stumblingBlock_extended' => array (
+      'check' => 'string',
+      'sqltype' => 'text',
+      'nullable' => true,
+    ),
+    
+    /**
+     * Enter description here ...
+     */
+    'incentive_extended' => array (
+      'check' => 'string',
+      'sqltype' => 'text',
+      'nullable' => true,
+    ),
+    
+    /**
+     * Enter description here ...
+     */
+    'miscellaneous_extended' => array (
+      'check' => 'string',
+      'sqltype' => 'text',
+      'nullable' => true,
+    )
   );
+
 
   /*
   *****************************************************************************
@@ -60,10 +142,10 @@ class logbuch_model_DiaryEntry
   *****************************************************************************
   */
 
-  function __construct( $datasourceModel )
+  function __construct( $datasourceModel=null )
   {
     parent::__construct( $datasourceModel );
-    //$this->addProperties( $this->properties );
+    $this->addProperties( $this->properties );
     //$this->addRelations( $this->relations, __CLASS__ );
 
   }
@@ -73,6 +155,28 @@ class logbuch_model_DiaryEntry
      API
   *****************************************************************************
   */
-
+  function createMessage()
+  {
+  	$activeUser = $this->getApplication()->getAccessController()->getActiveUser();
+  	$fields = array( "heureka", "encounters", "stumblingBlock", "incentive", "miscellaneous" );
+  	$data = $this->data();
+  	
+  	foreach( $fields as $field )
+  	{
+  		if( ! trim( $data[$field] ) ) continue;
+  			
+	  	$message = array(
+	  		'date'					=> date("D M d Y H:i:s \G\M\TO (T)"),
+	  		'sender'				=> $activeUser->getName(),
+	  		'subject'				=> $field . ": " . $data[$field],
+	  		'body'					=> $data[ $field . '_extended' ],
+	  		'category'			=> "diary",
+	  		'itemId'				=> "diary/" . $this->id(),
+	  		'itemDateStart'	=> date("D M d Y H:i:s \G\M\TO (T)", strtotime( $data['dateStart']) ), 
+	  		'itemDateEnd'		=> date("D M d Y H:i:s \G\M\TO (T)", strtotime( $data['dateEnd']) )
+	  	);
+	  	return $message;
+  	}
+  }  
 }
 ?>

@@ -1,13 +1,13 @@
 /* ************************************************************************
 
-   LogBUCH - Plattform für kreatives Projektmanagement
+   logBuch: Software zur online-Dokumentation von Beratungsprozessen
    
    Copyright: Konzeption:     Jürgen Breiter
-              Programmierung: Chritian Boulanger 
+              Programmierung: Christian Boulanger 
 
    Lizenz: GPL v.2
 
-   Authoren:
+   Autoren:
      * Christian Boulanger (cboulanger)
 
 ************************************************************************ */
@@ -221,6 +221,21 @@ qx.Class.define("logbuch.module.AccessControl",
       itemArr.forEach( function( item ){
         this.__allowed._selectItem( item );
       },this);
+    },
+    
+    reset : function()
+    {
+      this.__form.reset();
+    },
+    
+    getModel : function()
+    {
+      return this.__controller.getModel() || this.__controller.createModel();
+    },    
+    
+    getData : function()
+    {
+       return qx.util.Serializer.toNativeObject( this.getModel() );
     },
 
     

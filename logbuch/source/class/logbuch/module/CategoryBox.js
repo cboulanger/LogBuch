@@ -23,21 +23,7 @@ qx.Class.define("logbuch.module.CategoryBox",
 {
   extend : qx.ui.container.Composite,
   
-  /*
-  *****************************************************************************
-     PROPERTIES
-  *****************************************************************************
-  */  
-  properties :
-  {
-    activated : 
-    {
-      check : "Boolean",
-      init  : false,
-      event : "changeActivated",
-      apply : "_applyActivated"
-    }
-  },  
+ 
   
   /*
   *****************************************************************************
@@ -74,8 +60,17 @@ qx.Class.define("logbuch.module.CategoryBox",
       alignX      : "right"
     });
     
-    this.add( label );      
-   
+    this.add( label );    
+    
+    /*
+     * mouseover effect
+     */
+    this.addListener("mouseover", function(){
+      this.setBackgroundColor( this.__color );
+    },this);
+    this.addListener("mouseout", function(){
+      this.resetBackgroundColor();
+    },this);
     
     /*
      * listen or activate message
@@ -112,6 +107,22 @@ qx.Class.define("logbuch.module.CategoryBox",
       
     },this);
   },
+  
+  /*
+   *****************************************************************************
+      PROPERTIES
+   *****************************************************************************
+   */  
+  properties :
+  {
+    activated : 
+    {
+      check : "Boolean",
+      init  : false,
+      event : "changeActivated",
+      apply : "_applyActivated"
+    }
+  },    
   
   /*
   *****************************************************************************

@@ -1,10 +1,14 @@
 /* ************************************************************************
 
-   Copyright:
+   logBuch: Software zur online-Dokumentation von Beratungsprozessen
+   
+   Copyright: Konzeption:     Jürgen Breiter
+              Programmierung: Christian Boulanger 
 
-   License:
+   Lizenz: GPL v.2
 
-   Authors:
+   Autoren:
+     * Christian Boulanger (cboulanger)
 
 ************************************************************************ */
 
@@ -201,9 +205,9 @@ qx.Theme.define("logbuch.theme.Appearance",
       style : function(states)
       {
         return {
-          decorator     : "separator-vertical",
-          paddingTop    : 10,
-          paddingBottom : 10
+          decorator       : "separator-vertical",
+          padding         : 10,
+          backgroundColor : states.selected ? "logbuch-background-calendar-selected" : "transparent"
         };
       }
     },    
@@ -216,7 +220,7 @@ qx.Theme.define("logbuch.theme.Appearance",
         };
       }
     },
-    "logbuch-messageitem/creator" :
+    "logbuch-messageitem/sender" :
     {
       style : function(states)
       {
@@ -225,7 +229,7 @@ qx.Theme.define("logbuch.theme.Appearance",
         };
       }
     },
-    "logbuch-messageitem/title" :
+    "logbuch-messageitem/subject" :
     {
       style : function(states)
       {
@@ -234,6 +238,15 @@ qx.Theme.define("logbuch.theme.Appearance",
         };
       }
     },
+    "logbuch-messageitem/body" :
+    {
+      style : function(states)
+      {
+        return {
+          font : "small"
+        };
+      }
+    },    
     
     "logbuch-field" :
     {

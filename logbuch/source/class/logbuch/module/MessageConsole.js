@@ -64,7 +64,16 @@ qx.Class.define("logbuch.module.MessageConsole",
       
       var hbox = new qx.ui.container.Composite( new qx.ui.layout.HBox(5) );
       var sendButton = new qx.ui.form.Button( this.tr("Send" ) );
+      sendButton.addListener("execute",function(){
+        dialog.Dialog.alert("Sende Nachricht ...");
+      },this);      
+      
       var cancelButton = new qx.ui.form.Button( this.tr("Cancel" ) );
+      cancelButton.addListener("execute",function(){
+        this.__sandbox.setApplicationState("view","main");
+      },this);
+      
+      
       hbox.add( sendButton );
       hbox.add( cancelButton );
       this.add( hbox );

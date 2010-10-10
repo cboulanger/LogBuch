@@ -5,9 +5,6 @@
   [
     {
       "path" : "${QOOXDOO_PATH}/tool/data/config/application.json"
-    },
-    {
-      "path" : "${QXTRANSFORMER_PATH}/bin/qxtransformer.json"
     }
   ],
 
@@ -39,13 +36,13 @@
   
     // qooxdoo
     "APPLICATION"    : "logbuch", 
-    "QOOXDOO_PATH"   : "../../qooxdoo-contrib/qooxdoo/1.2",
-    //"QOOXDOO_PATH"   : "../../qooxdoo-contrib/qooxdoo/1.3-pre",
+    //"QOOXDOO_PATH"   : "../../qooxdoo-contrib/qooxdoo/1.2",
+    "QOOXDOO_PATH"   : "../../qooxdoo-contrib/qooxdoo/1.3-pre",
     "QXTHEME"        : "logbuch.theme.Theme",
     "LOCALES"        : [ "en","de" ],
     "ROOT"           : ".",
-    "CACHE"          : "${TMPDIR}/cache/1.2",
-    //"CACHE"          : "${TMPDIR}/cache/1.3-pre",
+    //"CACHE"          : "${TMPDIR}/cache/1.2",
+    "CACHE"          : "${TMPDIR}/cache/1.3-pre",
     "OPTIMIZE"       : ["variables", "basecalls", "strings"],
 
     // Contributions: download them from the repository (a)
@@ -59,11 +56,7 @@
     
     // API Viewer
     "API_INCLUDE" : [ "qx.*","${APPLICATION}.*", "qcl.*" ], 
-    "API_EXCLUDE" : ["qx.legacy.*","qx.test.*","htmleditor.*"],
-    
-    // QxTransformer
-    "PYTHON"            : "/opt/local/bin/python2.5",
-    "QXTRANSFORMER_PATH": "/Users/bibliograph/Sites/helios/qooxdoo-contrib/QxTransformer/trunk/tool"
+    "API_EXCLUDE" : ["qx.legacy.*","qx.test.*","htmleditor.*"]
   },
   
   "jobs" :
@@ -122,9 +115,9 @@
       "add-script" :
       [
         // persist library: http://pablotron.org/software/persist-js/
-        { "uri" : "../build/resource/persist/persist-all-min.js" },
+        //{ "uri" : "../build/resource/persist/persist-all-min.js" },
         // promise library  
-        { "uri" : "resource/logbuch/script/promise.js" }
+        //{ "uri" : "resource/logbuch/script/promise.js" }
       ]
     },
     

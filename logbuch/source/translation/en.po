@@ -11,7 +11,7 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: logbuch/Application.js:150
+#: logbuch/Application.js:127
 msgid "Starting application..."
 msgstr ""
 
@@ -19,47 +19,116 @@ msgstr ""
 msgid "Setting up application..."
 msgstr ""
 
-#: logbuch/Application.js:357
-msgid "logBUCH Messages"
-msgstr ""
-
-#: logbuch/Application.js:361
-msgid "Message"
-msgstr ""
-
-#: logbuch/Application.js:387
-msgid "Setup project"
-msgstr ""
-
-#: logbuch/Application.js:391
-msgid "Administrator"
-msgstr ""
-
-#: logbuch/Application.js:406
-msgid "Registration"
-msgstr ""
-
-#: logbuch/Application.js:410
-msgid "Personal Information"
-msgstr ""
-
-#: logbuch/Application.js:432
+#: logbuch/Application.js:269
 msgid "Connecting with server..."
 msgstr ""
 
-#: logbuch/Application.js:439
+#: logbuch/Application.js:276
 msgid "Logging out ..."
 msgstr ""
 
-#: logbuch/Application.js:448
+#: logbuch/Application.js:285
 msgid "Loading configuration ..."
 msgstr ""
 
-#: logbuch/component/ExtendedField.js:63
+#: logbuch/Application.js:348 logbuch/module/Event.js:428
+msgid "Event"
+msgstr ""
+
+#: logbuch/Application.js:350 logbuch/Application.js:359
+msgid "Subject"
+msgstr ""
+
+#: logbuch/Application.js:351 logbuch/Application.js:360
+msgid "Location"
+msgstr ""
+
+#: logbuch/Application.js:352 logbuch/Application.js:361
+msgid "Participants"
+msgstr ""
+
+#: logbuch/Application.js:357 logbuch/module/Goal.js:79
+msgid "Goal"
+msgstr ""
+
+#: logbuch/Application.js:377 logbuch/module/Diary.js:75
+msgid "Diary"
+msgstr ""
+
+#: logbuch/Application.js:380 logbuch/module/Diary.js:62
+msgid "Encounters"
+msgstr ""
+
+#: logbuch/Application.js:387 logbuch/module/Inspiration.js:72
+#: logbuch/module/Inspiration.js:81
+msgid "Inspiration"
+msgstr ""
+
+#: logbuch/Application.js:389
+msgid "Idea"
+msgstr ""
+
+#: logbuch/Application.js:390 logbuch/module/Inspiration.js:61
+msgid "Inspiration source"
+msgstr ""
+
+#: logbuch/Application.js:391
+msgid "Links"
+msgstr ""
+
+#: logbuch/Application.js:596
+msgid "logBUCH Messages"
+msgstr ""
+
+#: logbuch/Application.js:600
+msgid "Message"
+msgstr ""
+
+#: logbuch/Application.js:618
+msgid "Setup project"
+msgstr ""
+
+#: logbuch/Application.js:624
+msgid "Administrator"
+msgstr ""
+
+#: logbuch/Application.js:649
+msgid "Registration"
+msgstr ""
+
+#: logbuch/Application.js:655
+msgid "Personal Information"
+msgstr ""
+
+#: logbuch/Application.js:693
+msgid "Users"
+msgstr ""
+
+#: logbuch/Application.js:699
+msgid "User data"
+msgstr ""
+
+#: logbuch/Application.js:725
+msgid "Organizations"
+msgstr ""
+
+#: logbuch/Application.js:731
+msgid "Organization data"
+msgstr ""
+
+#: logbuch/component/AccessControl.js:139
+msgid "Please enter the ID of the new %1"
+msgstr ""
+
+#: logbuch/component/AccessControl.js:155
+msgid "Are you sure you would like to delete the selected item(s)?"
+msgstr ""
+
+#: logbuch/component/ExtendedField.js:70
 msgid "Summary"
 msgstr ""
 
-#: logbuch/component/ExtendedField.js:89
+#: logbuch/component/ExtendedField.js:96
 msgid "Extended Description"
 msgstr ""
 
@@ -79,188 +148,172 @@ msgstr ""
 msgid "Logging in ..."
 msgstr ""
 
-#: logbuch/module/AbstractCategoryModule.js:254
-msgid "%1 saved."
+#: logbuch/component/Login.js:104
+msgid "Register"
 msgstr ""
 
-#: logbuch/module/AbstractCategoryModule.js:273
+#: logbuch/module/AbstractCategoryModule.js:237
+msgid "Loading record ..."
+msgstr ""
+
+#: logbuch/module/AbstractCategoryModule.js:315
+msgid "Documents"
+msgstr ""
+
+#: logbuch/module/AbstractCategoryModule.js:322
+msgid "Photo Gallery"
+msgstr ""
+
+#: logbuch/module/AbstractCategoryModule.js:329
+msgid "Discussion"
+msgstr ""
+
+#: logbuch/module/AbstractCategoryModule.js:339
+msgid "Upload Files"
+msgstr ""
+
+#: logbuch/module/AbstractCategoryModule.js:358
+msgid "Created by %1"
+msgstr ""
+
+#: logbuch/module/AbstractCategoryModule.js:377
+msgid "Save"
+msgstr ""
+
+#: logbuch/module/AbstractCategoryModule.js:384
+msgid "Invite"
+msgstr ""
+
+#: logbuch/module/AbstractCategoryModule.js:501
+msgid "Updating %1"
+msgstr ""
+
+#: logbuch/module/AbstractCategoryModule.js:532
+msgid "Creating %1"
+msgstr ""
+
+#: logbuch/module/AbstractCategoryModule.js:579
 msgid "Upload photos"
 msgstr ""
 
-#: logbuch/module/AbstractCategoryModule.js:287
+#: logbuch/module/AbstractCategoryModule.js:594
 msgid "Gallery"
 msgstr ""
 
-#: logbuch/module/AccessControl.js:85
-msgid "Entry visible for"
+#: logbuch/module/Calendar.js:300
+msgid "Loading LogBuch data ..."
 msgstr ""
 
-#: logbuch/module/AccessControl.js:94
-msgid "Author"
-msgstr ""
-
-#: logbuch/module/AccessControl.js:108
-msgid "Own company"
-msgstr ""
-
-#: logbuch/module/AccessControl.js:112
-msgid "Own Consultant"
-msgstr ""
-
-#: logbuch/module/AccessControl.js:116
-msgid "All Consultants"
-msgstr ""
-
-#: logbuch/module/AccessControl.js:120
-msgid "All portal members"
-msgstr ""
-
-#: logbuch/module/AccessControl.js:124
-msgid "Individual access for"
-msgstr ""
-
-#: logbuch/module/AccessControl.js:143
-msgid "Enter the first letters of the person, or * for all of them, or an email address to add a person"
-msgstr ""
-
-#: logbuch/module/Diary.js:62
-msgid "Encounters"
-msgstr ""
-
-#: logbuch/module/Diary.js:75
-msgid "Diary"
+#: logbuch/module/Calendar.js:950
+msgid "New entry ..."
 msgstr ""
 
 #: logbuch/module/Diary.js:84
 msgid "Diary entry"
 msgstr ""
 
-#: logbuch/module/Documentation.js:197 logbuch/module/Event.js:181
-msgid "Save"
-msgstr ""
-
-#: logbuch/module/Documentation.js:200 logbuch/module/MessageConsole.js:66
-msgid "Send"
-msgstr ""
-
-#: logbuch/module/Documentation.js:226 logbuch/module/Event.js:361
-msgid "Upload Files"
-msgstr ""
-
-#: logbuch/module/Documentation.js:229 logbuch/module/Event.js:364
-msgid "Photo Gallery"
-msgstr ""
-
-#: logbuch/module/Documentation.js:251
+#: logbuch/module/Documentation.js:221 logbuch/Application.js:368
 msgid "Consultancy process"
 msgstr ""
 
-#: logbuch/module/Documentation.js:252
+#: logbuch/module/Documentation.js:222 logbuch/Application.js:369
 msgid "Result"
 msgstr ""
 
-#: logbuch/module/Documentation.js:253 logbuch/module/Diary.js:61
+#: logbuch/module/Documentation.js:223 logbuch/Application.js:370
+#: logbuch/Application.js:379 logbuch/module/Diary.js:61
 msgid "Heureka!"
 msgstr ""
 
-#: logbuch/module/Documentation.js:254 logbuch/module/Diary.js:63
+#: logbuch/module/Documentation.js:224 logbuch/Application.js:371
+#: logbuch/Application.js:381 logbuch/module/Diary.js:63
 msgid "Stumbling block"
 msgstr ""
 
-#: logbuch/module/Documentation.js:255 logbuch/module/Diary.js:64
+#: logbuch/module/Documentation.js:225 logbuch/Application.js:372
+#: logbuch/Application.js:382 logbuch/module/Diary.js:64
 msgid "Incentive"
 msgstr ""
 
-#: logbuch/module/Documentation.js:256 logbuch/module/Diary.js:65
+#: logbuch/module/Documentation.js:226 logbuch/Application.js:373
+#: logbuch/Application.js:383 logbuch/module/Diary.js:65
 msgid "Miscellaneous"
 msgstr ""
 
-#: logbuch/module/Documentation.js:266
+#: logbuch/module/Documentation.js:236 logbuch/Application.js:366
 msgid "Documentation"
 msgstr ""
 
-#: logbuch/module/Documentation.js:275
+#: logbuch/module/Documentation.js:245
 msgid "Documentation entry"
 msgstr ""
 
-#: logbuch/module/Event.js:133
+#: logbuch/module/Event.js:115
 msgid "what?"
 msgstr ""
 
-#: logbuch/module/Event.js:134
+#: logbuch/module/Event.js:116
 msgid "when?"
 msgstr ""
 
-#: logbuch/module/Event.js:135
+#: logbuch/module/Event.js:117
 msgid "where?"
 msgstr ""
 
-#: logbuch/module/Event.js:136
+#: logbuch/module/Event.js:118
 msgid "who?"
 msgstr ""
 
-#: logbuch/module/Event.js:137
-msgid "Notes"
-msgstr ""
-
-#: logbuch/module/Event.js:184
-msgid "Invite"
-msgstr ""
-
-#: logbuch/module/Event.js:196
+#: logbuch/module/Event.js:170
 msgid "Topic, Occation, Goal"
 msgstr ""
 
-#: logbuch/module/Event.js:284
+#: logbuch/module/Event.js:278
 msgid "Location, building, floor, room ..."
 msgstr ""
 
-#: logbuch/module/Event.js:405
+#: logbuch/module/Event.js:419
 msgid "Events"
 msgstr ""
 
-#: logbuch/module/Event.js:414
-msgid "Event"
-msgstr ""
-
-#: logbuch/module/Footer.js:93
-msgid "Calendar"
-msgstr ""
-
-#: logbuch/module/Footer.js:144
+#: logbuch/module/Footer.js:137
 msgid "Today"
 msgstr ""
 
-#: logbuch/module/Footer.js:188
-msgid "Print"
+#: logbuch/module/Footer.js:183
+msgid "Messages"
 msgstr ""
 
-#: logbuch/module/Footer.js:200
+#: logbuch/module/Footer.js:197
 msgid "Admin"
 msgstr ""
 
-#: logbuch/module/Goal.js:96
-msgid "Goals"
+#: logbuch/module/Footer.js:215
+msgid "User management"
 msgstr ""
 
-#: logbuch/module/Goal.js:106
-msgid "Goal"
+#: logbuch/module/Footer.js:227
+msgid "Organization management"
+msgstr ""
+
+#: logbuch/module/Footer.js:239
+msgid "Setup Project"
+msgstr ""
+
+#: logbuch/module/Footer.js:253
+msgid "Advanced user management"
+msgstr ""
+
+#: logbuch/module/Goal.js:69
+msgid "Goals"
 msgstr ""
 
 #: logbuch/module/Inspiration.js:60
 msgid "idea!"
 msgstr ""
 
-#: logbuch/module/Inspiration.js:61
-msgid "Inspiration source"
-msgstr ""
-
 #: logbuch/module/Inspiration.js:62
 msgid "Internet links"
-msgstr ""
-
-#: logbuch/module/Inspiration.js:72 logbuch/module/Inspiration.js:81
-msgid "Inspiration"
 msgstr ""
 
 #: logbuch/module/MessageConsole.js:59
@@ -271,99 +324,224 @@ msgstr ""
 msgid "Message text"
 msgstr ""
 
-#: logbuch/module/MessageConsole.js:67
-msgid "Cancel"
+#: logbuch/module/MessageConsole.js:66
+msgid "Send"
 msgstr ""
 
-#: logbuch/module/PersonForm.js:84
+#: logbuch/module/OrganizationForm.js:81
+msgid "Organization name"
+msgstr ""
+
+#: logbuch/module/OrganizationForm.js:89
+msgid "Internet address"
+msgstr ""
+
+#: logbuch/module/OrganizationForm.js:97 logbuch/Application.js:353
+#: logbuch/Application.js:362 logbuch/module/Event.js:119
+msgid "Notes"
+msgstr ""
+
+#: logbuch/module/OrganizationForm.js:104
+msgid "Logo"
+msgstr ""
+
+#: logbuch/module/PersonForm.js:110
 msgid "Last name"
 msgstr ""
 
-#: logbuch/module/PersonForm.js:92
+#: logbuch/module/PersonForm.js:118
 msgid "First name"
 msgstr ""
 
-#: logbuch/module/PersonForm.js:100
+#: logbuch/module/PersonForm.js:126
 msgid "Portrait"
 msgstr ""
 
-#: logbuch/module/PersonForm.js:113
+#: logbuch/module/PersonForm.js:139
 msgid "Academic title"
 msgstr ""
 
-#: logbuch/module/PersonForm.js:121
+#: logbuch/module/PersonForm.js:146
 msgid "Initials"
 msgstr ""
 
-#: logbuch/module/PersonForm.js:129
+#: logbuch/module/PersonForm.js:153
 msgid "Company/Organization"
 msgstr ""
 
-#: logbuch/module/PersonForm.js:137
+#: logbuch/module/PersonForm.js:167
+msgid "Please select the organization"
+msgstr ""
+
+#: logbuch/module/PersonForm.js:180
 msgid "Position/Responsibility"
 msgstr ""
 
-#: logbuch/module/PersonForm.js:145
+#: logbuch/module/PersonForm.js:187
 msgid "Email"
 msgstr ""
 
-#: logbuch/module/PersonForm.js:147
+#: logbuch/module/PersonForm.js:189
 msgid "No valid email address."
 msgstr ""
 
-#: logbuch/module/PersonForm.js:156
+#: logbuch/module/PersonForm.js:198
 msgid "Telephone"
 msgstr ""
 
-#: logbuch/module/PersonForm.js:164
+#: logbuch/module/PersonForm.js:210
 msgid "Mobile"
 msgstr ""
 
-#: logbuch/module/Registration.js:69
+#: logbuch/module/PersonForm.js:233 logbuch/module/OrganizationForm.js:126
+msgid "Saving ..."
+msgstr ""
+
+#: logbuch/module/PersonForm.js:272 logbuch/module/OrganizationForm.js:165
+msgid "Loading data ..."
+msgstr ""
+
+#: logbuch/module/Registration.js:87
 msgid "registration_greeting"
 msgstr ""
 
-#: logbuch/module/Registration.js:81
+#: logbuch/module/Registration.js:99
 msgid "Enter start passwort"
 msgstr ""
 
-#: logbuch/module/Registration.js:91
+#: logbuch/module/Registration.js:109
 msgid "Enter personal passwort"
 msgstr ""
 
-#: logbuch/module/Registration.js:95
+#: logbuch/module/Registration.js:112
 msgid "Repeat personal passwort"
 msgstr ""
 
-#: logbuch/module/Registration.js:121
+#: logbuch/module/Registration.js:147
 msgid "Wrong password!"
 msgstr ""
 
-#: logbuch/module/Registration.js:135
+#: logbuch/module/Registration.js:175
 msgid "Passwords do not match. Please re-enter your personal password"
+msgstr ""
+
+#: logbuch/module/Report.js:102 logbuch/module/Footer.js:169
+msgid "Report"
+msgstr ""
+
+#: logbuch/module/Report.js:102
+msgid "logBuch"
+msgstr ""
+
+#: logbuch/module/Report.js:141 logbuch/module/AccessControl.js:89
+msgid "Entry visible for"
+msgstr ""
+
+#: logbuch/module/Report.js:146 logbuch/module/AccessControl.js:98
+msgid "Author"
+msgstr ""
+
+#: logbuch/module/Report.js:160 logbuch/module/AccessControl.js:112
+msgid "Own company"
+msgstr ""
+
+#: logbuch/module/Report.js:164 logbuch/module/AccessControl.js:116
+msgid "Own Consultant"
+msgstr ""
+
+#: logbuch/module/Report.js:168 logbuch/module/AccessControl.js:120
+msgid "All Consultants"
+msgstr ""
+
+#: logbuch/module/Report.js:172 logbuch/module/AccessControl.js:124
+msgid "All portal members"
+msgstr ""
+
+#: logbuch/module/Report.js:176 logbuch/module/AccessControl.js:128
+msgid "Individual access for"
+msgstr ""
+
+#: logbuch/module/Report.js:195 logbuch/module/AccessControl.js:147
+msgid "Enter the first letters of the person, or * for all of them, or an email address to add a person"
+msgstr ""
+
+#: logbuch/module/Report.js:226
+msgid "Filter by category"
+msgstr ""
+
+#: logbuch/module/Report.js:297
+msgid "Other preferences"
+msgstr ""
+
+#: logbuch/module/Report.js:302
+msgid "Photos"
+msgstr ""
+
+#: logbuch/module/Report.js:306
+msgid "Discussions"
+msgstr ""
+
+#: logbuch/module/Report.js:310
+msgid "Time"
+msgstr ""
+
+#: logbuch/module/Report.js:321 logbuch/module/AbstractCategoryModule.js:391
+#: logbuch/module/MessageConsole.js:71
+msgid "Cancel"
 msgstr ""
 
 #: logbuch/module/Setup.js:67
 msgid "Project title"
 msgstr ""
 
-#: logbuch/module/Setup.js:80
+#: logbuch/module/Setup.js:81
 msgid "Enter administrator passwort"
 msgstr ""
 
-#: logbuch/module/Setup.js:85
+#: logbuch/module/Setup.js:86
 msgid "Repeat administrator passwort"
 msgstr ""
 
-#: logbuch/module/Setup.js:94
+#: logbuch/module/Setup.js:95
 msgid "Logo hochladen"
 msgstr ""
 
-#: logbuch/module/Setup.js:101
+#: logbuch/module/Setup.js:102
 msgid "label_setup_project"
 msgstr ""
 
+#: logbuch/module/UserList.js:97
+msgid "Loading list ..."
+msgstr ""
+
+#: logbuch/module/UserList.js:160
+msgid "Creating new record ..."
+msgstr ""
+
+#: logbuch/module/UserList.js:188
+msgid "Are you sure you want to remove the selected item(s)?"
+msgstr ""
+
+#: logbuch/module/UserList.js:215
+msgid "Reset Password"
+msgstr ""
+
+#~ msgid "%1 saved."
+#~ msgstr ""
+
+#~ msgid "Bericht"
+#~ msgstr ""
+
+#~ msgid "Calendar"
+#~ msgstr ""
+
+#~ msgid "New %1"
+#~ msgstr ""
+
 #~ msgid "Photo 1"
+#~ msgstr ""
+
+#~ msgid "Print"
 #~ msgstr ""
 
 #~ msgid "event"

@@ -131,7 +131,7 @@ qx.Class.define("logbuch.module.Event",
           textAlign  : "right",
           appearance : "logbuch-field" 
         });
-        this.addListener("focusRow",function(row,label){ 
+        this.addListener("focusRow",function(row,label){ // FIXME appearance!
           return function(e){
 	          if( e.getData() == row )
 	          {
@@ -179,7 +179,7 @@ qx.Class.define("logbuch.module.Event",
           field1.focus(); 
         }
       },this);
-      form.add( field1, null, null, "title" );
+      form.add( field1, null, null, "subject" );
       grid.add( field1, { row: 0, column : 1, colSpan : 2 });
 
       var vbox = new qx.ui.container.Composite( new qx.ui.layout.VBox(5) ).set({
@@ -196,9 +196,8 @@ qx.Class.define("logbuch.module.Event",
       /*
        * date start 
        */
-      var field2 = new qx.ui.form.DateField().set({
-        value       : new Date() // FIXME
-      });
+      var field2 = new qx.ui.form.DateField();
+      this.bind( "dateStart", field2, "value");
       field2.addListener("focus",function(){
         this.fireDataEvent("focusRow",1);
       },this);      
@@ -207,6 +206,17 @@ qx.Class.define("logbuch.module.Event",
       },this);      
       form.add( field2, null, null, "dateStart" );
       vbox.add( field2 );
+      this._controller.addBindingOptions( "dateStart", {
+        // model -> form
+        converter : function(value){
+          return new Date(value);
+        }
+      },{
+        // form -> model
+        converter : function(date){
+          return date ? date.toString() : null;
+        }
+      });      
       
       /*
        * time start 
@@ -228,14 +238,24 @@ qx.Class.define("logbuch.module.Event",
       /*
        * date end
        */
-      var field4 = new qx.ui.form.DateField().set({
-        value       : new Date() // FIXME
-      });
+      var field4 = new qx.ui.form.DateField();
+      this.bind( "dateStart", field4, "value");
       field4.addListener("focus",function(){
         this.fireDataEvent("focusRow",1);
       },this);         
       form.add( field4, null, null, "dateEnd" );
       vbox.add( field4 );
+      this._controller.addBindingOptions( "dateEnd", {
+        // model -> form
+        converter : function(value){
+          return new Date(value );
+        }
+      },{
+        // form -> model
+        converter : function(date){
+          return date ? date.toString() : null;
+        }
+      });            
       
       /*
        * time start 
@@ -270,19 +290,23 @@ qx.Class.define("logbuch.module.Event",
       /*
        * participants
        */
-      var t = new tokenfield.Token().set({
+      var participants = new tokenfield.Token().set({
         backgroundColor   : "logbuch-field-background",
         decorator         : "logbuch-field-border",
         height            : rowHeight,
         selectionMode     : "multi"
       });
-      t.addListener("focus",function(){
+      
+      participants.addListener("focus",function(){
         this.fireDataEvent("focusRow",3);
       },this);
+      
       this.addListener("focusRow",function(e){
-        if( e.getData() == 3 ) { t.focus() }
-      },this);       
-      t.addListener("loadData", function(e){
+        if( e.getData() == 3 ) { participants.focus() }
+      },this);   
+      
+      // FIXME
+      participants.addListener("loadData", function(e){
         var str = e.getData();
         var data = [];
         for( var i=0; i<(Math.floor(Math.random()*10)+3);i++ )
@@ -290,12 +314,56 @@ qx.Class.define("logbuch.module.Event",
           data.push( { label: str + " " + i } );
         }
         qx.util.TimerManager.getInstance().start(function(){
-          t.populateList( str, data );
-        },null,this,null,500);
-      },this);      
+          participants.populateList( str, data );
+        },null,this,null,100);
+      },this);
+      grid.add( participants, { row: 3, column : 1, colSpan : 2 });
       
-      form.add( t, null, null, "participants" );
-      grid.add( t, { row: 3, column : 1, colSpan : 2 });       
+      form.add( participants, null, null, "participants" );
+      
+      this._controller.addBindingOptions( "participants", {
+        // model -> form
+//        converter : function(model){
+//          
+//          console.warn( "model->form: model:");
+//          console.log( model );          
+//          
+//          if ( model === null ) 
+//          {
+//            return [];
+//          }
+//          
+//          if ( ! ( model instanceof qx.data.Array ) ) 
+//          {
+//            model = new qx.data.Array( model );
+//          }
+//          
+//          var selection = [];
+//          for ( var i=0; i < model.getLength(); i++)
+//          {
+//            var item = model.getItem(i);
+//            //participants._selectItem( new qx.ui.form.ListItem( item.getLabel(), null, item) );
+//            selection.push( new qx.ui.form.ListItem( item.getLabel(), null, item) );
+//          }
+//          
+//          return selection;
+//        }
+      },{
+        // form -> model
+//        converter : function(selection){
+//          console.warn( "form->model: selection:");
+//          console.log( selection );
+//          var model = new qx.data.Array();
+//          for ( var i=0; i < selection.length; i++)
+//          {
+//            // selection item is either a TextField (with a value) or a ListItem (with a model)
+//            model.push( selection[i].getModel ? selection[i].getModel() : selection[i].getValue() )
+//          }
+//          return model;
+//        }
+      });
+      participants.setSelection([]);
+      
       
       /*
        * notes
@@ -332,11 +400,7 @@ qx.Class.define("logbuch.module.Event",
     ---------------------------------------------------------------------------
        APPLY METHODS
     ---------------------------------------------------------------------------
-    */    
-    _applyDate : function( date, old )
-    {
-      
-    },    
+    */ 
 
     
     
@@ -369,27 +433,6 @@ qx.Class.define("logbuch.module.Event",
       
     },
     
-    /**
-     * Creates a message from the event data
-     */
-    createMessage : function()
-    {
-      var data = qx.util.Serializer.toJson( this.getModel() );
-      console.log( data );
-    }, 
-
-    
     dummy : null
-  },
-
-  /*
-   *****************************************************************************
-      DESTRUCT
-   *****************************************************************************
-   */
-
-  destruct : function()
-  {
-
   }
 });

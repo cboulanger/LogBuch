@@ -91,12 +91,21 @@ qx.Class.define("logbuch.component.Login",
      */
     loginButton = new qx.ui.form.Button( this.tr("Login") );
     loginButton.addListener("execute", function(){
-      core.showPopup( this.tr("Logging in ...") );
+      core.showNotification( this.tr("Logging in ...") );
       core.authenticate( usernameInput.getValue(), passwordInput.getValue(), function(){
-        core.hidePopup();
+        core.hideNotification();
       },this );
     },this );
     hbox.add( loginButton );
+    
+    /*
+     * register button
+     */
+    registerButton = new qx.ui.form.Button( this.tr("Register") );
+    registerButton.addListener("execute", function(){
+      core.setApplicationState("view","register");
+    },this );
+    hbox.add( registerButton );    
     
     /*
      * cancel

@@ -20,6 +20,8 @@ qcl_import( "qcl_locale_Manager" );
 qcl_import("logbuch_ApplicationCache");
 qcl_import("qcl_util_system_Lock");
 
+define( 'LOGBUCH_UPLOADS_PATH', "../html/fancyupload/uploads/" );
+
 /**
  * Main application class
  * @todo move setup stuff into "call once per loading" service
@@ -101,7 +103,7 @@ class logbuch_Application
      * log filters
      */
     $this->getLogger()->setFilterEnabled( QCL_LOG_SETUP, true );
-    //$this->getLogger()->setFilterEnabled( BIBLIOGRAPH_LOG_APPLICATION, true );
+    $this->getLogger()->setFilterEnabled( LOGBUCH_LOG_APPLICATION, false );
     //$this->getLogger()->setFilterEnabled( QCL_LOG_DB, true );
 
     /*
@@ -112,7 +114,9 @@ class logbuch_Application
       $request = qcl_server_Request::getInstance();
       $this->log( sprintf(
         "Starting LogBuch service: %s.%s( %s ) ...",
-        $request->getService(), $request->getMethod(), json_encode($request->getParams())
+        $request->getService(), 
+        $request->getMethod(), 
+        json_encode($request->getParams())
       ), LOGBUCH_LOG_APPLICATION );
     }
 
@@ -169,26 +173,15 @@ class logbuch_Application
      */
     $this->registerServices( array(
       "logbuch.setup"      		=> "logbuch_service_Setup",
+    	"logbuch.registration" 	=> "logbuch_service_Registration",
     	"logbuch.access"     		=> "logbuch_service_Access",
       "logbuch.config"     		=> "qcl_config_Service",
-      "logbuch.plugin"     		=> "qcl_application_plugin_Service",
-      "logbuch.person"     		=> "logbuch_service_Person",
-      "logbuch.company"    		=> "logbuch_service_Company",
-      "logbuch.event"  		 		=> "logbuch_service_Event",
-      "logbuch.goal"       		=> "logbuch_service_Goal",
-      "logbuch.documentation" => "logbuch_service_Documentation",
-      "logbuch.diary"     		=> "logbuch_service_Diary",
-      "logbuch.inspiration"   => "logbuch_service_inspiration",
-      "logbuch.actool"     		=> "logbuch_service_ACLTool",
-      
-      
+    	"logbuch.data"     			=> "logbuch_service_Data",
+    	"logbuch.message"  			=> "logbuch_service_Message",
+    	"logbuch.category"   		=> "logbuch_service_Category",
+    	"logbuch.record"	   		=> "logbuch_service_Record",
+     	"logbuch.acltool"     	=> "qcl_access_ACLTool"    
     ) );
-
-    /**
-     * Plugins
-     */
-    $this->pluginPath = dirname(__FILE__) . "/plugin/";
-
   }
 
   /**

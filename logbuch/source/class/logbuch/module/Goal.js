@@ -78,6 +78,7 @@ qx.Class.define("logbuch.module.Goal",
     {
       return this.tr("Goal");
     },       
+       
     
     dummy : null
   }

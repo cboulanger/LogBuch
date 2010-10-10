@@ -23,7 +23,7 @@ qcl_import("qcl_data_controller_Controller");
 /**
  * Backend service class for the access control tool widget
  */
-class qcl_access_ACToolController
+class logbuch_service_ACLTool
   extends qcl_data_controller_Controller
 {
 
@@ -81,7 +81,7 @@ class qcl_access_ACToolController
    *
    * @return array
    */
-  public function method_getAccessElementTypes()
+  public function method_getAccessElementTypeModel()
   {
     $this->requirePermission("access.manage");
     $models = $this->modelMap();
@@ -120,7 +120,7 @@ class qcl_access_ACToolController
    * @param $type
    * @return array
    */
-  public function method_getAccessElements( $type )
+  public function method_getAccessElementModel( $type )
   {
     $this->requirePermission("access.manage");
     $activeUser   = $this->getActiveUser();
@@ -163,17 +163,6 @@ class qcl_access_ACToolController
     {
       $value  = $model->namedId();
 
-//      /*
-//       * don't show hidden records
-//       */
-//      if( $model->has("hidden" ) )
-//      {
-//        if( $model->get("hidden") )
-//        {
-//          continue;
-//        }
-//      }
-
       $icon   = $models[$type]['icon'];
       $label  = $model->get($labelProp);
 
@@ -205,7 +194,6 @@ class qcl_access_ACToolController
         'icon'      => $icon,
         'label'     => $label,
         'params'    => $type . "," . $value,
-        'type'      => $type,
         'value'     => $value
       );
     }

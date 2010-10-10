@@ -23,6 +23,15 @@ qx.Class.define("logbuch.component.ImageField",
 {
   extend : logbuch.component.InputField,
   
+  properties :
+  {
+    imageSize :
+    {
+      check : "Integer",
+      nullable : true
+    }
+  },
+  
 
   /*
   *****************************************************************************
@@ -33,8 +42,9 @@ qx.Class.define("logbuch.component.ImageField",
   members :
   {
   
-    __iframeSrc : "../html/fancyupload/single.html",
-    __iframeBody : null,    
+    __iframeSrc : "../html/fancyupload/single.html?323452345",
+    __iframeBody : null,
+    __image : null,
     
     /*
     ---------------------------------------------------------------------------
@@ -67,10 +77,18 @@ qx.Class.define("logbuch.component.ImageField",
 				    qx.bom.element.Style.setStyles(body, font.getStyles());
 				    this.__iframeBody = body;
             body.__imageField = this;
-            body.getElementById("photo").src = "uploads/empty.png";
+            var img = body.getElementById("photo");
+            img.src = "assets/upload.png";
+            img.onerror = function(){
+              img.src = "assets/upload.png";
+            }
 				  }, this);          
-          this.__formElement = new qx.ui.form.TextField();
+          this._formElement = new qx.ui.form.TextField();
           this._add(control, {flex : 1});
+          
+          this.__image = new qx.ui.basic.Image().set({
+            scale : true
+          });
           break;
       }
 
@@ -93,16 +111,34 @@ qx.Class.define("logbuch.component.ImageField",
     
     _applyValue : function( value, old )
     {
-      this.__formElement.setValue( value );
+      this._formElement.setValue( value );
       if ( ! this.__iframeBody )
       {
-        this.getInputControl().addListenerOnce("appear", function(){
+        this.getInputControl().addListenerOnce("load", function(){
           this._applyValue( value, old );
         },this);
       }
       else
       {
-        this.__iframeBody.getElementById("photo").src = "uploads/" + value;  
+        if ( ! value )
+        {
+          var src = "assets/upload.png";
+        }
+        else
+        {
+          if ( this.getImageSize() )
+          {
+            var src = "uploads/" + this.getImageSize() + "/" + value;
+          }
+          else
+          {
+            var src = "uploads/" + value;  
+          }
+        }
+        qx.util.TimerManager.getInstance().start( function(){
+	        var photo = this.__iframeBody.getElementById("photo");
+	        photo.src = src;        
+        }, null, this, null, 50);
       }
     },
     
@@ -127,7 +163,7 @@ qx.Class.define("logbuch.component.ImageField",
      */    
     getFormElement : function()
     {
-      return this.__formElement;
+      return this._formElement;
     }
   }
 });

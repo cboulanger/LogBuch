@@ -80,6 +80,8 @@ class logbuch_service_Setup
       {
         $lock->release();
       }
+      
+     	
       return;
     }
 
@@ -107,6 +109,7 @@ class logbuch_service_Setup
       $lock->release();
       throw $e;
     }
+    
   }
 
   /**

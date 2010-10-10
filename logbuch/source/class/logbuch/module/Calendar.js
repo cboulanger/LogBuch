@@ -1,13 +1,13 @@
 /* ************************************************************************
 
-   LogBUCH - Plattform für kreatives Projektmanagement
+   logBuch: Software zur online-Dokumentation von Beratungsprozessen
    
    Copyright: Konzeption:     Jürgen Breiter
-              Programmierung: Chritian Boulanger 
+              Programmierung: Christian Boulanger 
 
    Lizenz: GPL v.2
 
-   Authoren:
+   Autoren:
      * Christian Boulanger (cboulanger)
 
 ************************************************************************ */
@@ -146,6 +146,9 @@ qx.Class.define("logbuch.module.Calendar",
   {
     this.base(arguments);
     this.__data = [];
+    this.__messages = {};
+    
+    this.__dateFormatter = new qx.util.format.DateFormat( this.__dateFormat);
   },  
   
   /*
@@ -165,7 +168,10 @@ qx.Class.define("logbuch.module.Calendar",
     __scroller      : null,
     __cellRenderer  : null,
     __data          : null,
-    __dateFormat    : "ccc dd.MM.yyyy",
+    __dateFormat    : "ccc dd.MM.", // FIXME configurable
+    __dateFormatter : null,
+    __messages      : null,
+    __data          : null,
     
     /**
      * 
@@ -236,6 +242,7 @@ qx.Class.define("logbuch.module.Calendar",
       this.__sandbox.subscribe("change-date", this._onSandboxChangeDate, this);
       this.__sandbox.subscribe("change-date-today", this._onSandboxChangeDateToday, this);
       this.__sandbox.subscribe("activate-category", this._onSandboxActivateCategory, this);
+      this.__sandbox.subscribe("message", this._onMessage, this);
     },
     
     /**
@@ -246,6 +253,7 @@ qx.Class.define("logbuch.module.Calendar",
       this.__sandbox.unsubscribe("change-date", this._onSandboxChangeDate, this);
       this.__sandbox.unsubscribe("change-date-today", this._onSandboxChangeDateToday, this);
       this.__sandbox.unsubscribe("activate-category", this._onSandboxActivateCategory, this);
+      this.__sandbox.unsubscribe("message", this._onMessage, this);
     },
     
     /*
@@ -255,17 +263,28 @@ qx.Class.define("logbuch.module.Calendar",
     */    
     _applyDate : function( date, old )
     {
-      var df = new  qx.util.format.DateFormat();
-      //console.log( "Setting date: " + df.format(date) );
+      if ( old && date.getTime() == old.getTime() ) return;
       
-      this.__sandbox.publish("change-date", date );
+      var df = new  qx.util.format.DateFormat();
+      var msday = 24*60*60*1000;
+      
+      /*
+       * rewind to midnight
+       */
+      date = new Date( date.toDateString() );
+      
+      //console.log( "Setting date: " + df.format(date) );
+      //console.log( "First date visible " + df.format( this.getFirstDateVisible() ) );
+      //console.log( "Last date visible " + df.format( this.getLastDateVisible() ) );
       
       /*
        * load data
        */
-      if ( ! old || date < this.getFirstDateLoaded() || date > this.getLastDateLoaded() )
+      if ( ! old || 
+        date.getTime() < this.getFirstDateLoaded().getTime() - msday || 
+        date.getTime() > this.getLastDateLoaded().getTime() + msday )
       {
-        var msAheadBefore = Math.floor( this.getDaysLoaded() / 2 ) * 86400000;
+        var msAheadBefore = Math.floor( this.getDaysLoaded() / 2 ) * msday;
         var firstLoaded = new Date( date.getTime() - msAheadBefore );
         this.setFirstDateLoaded( firstLoaded );
         //console.log( "first loaded: " + df.format(firstLoaded) );
@@ -273,6 +292,23 @@ qx.Class.define("logbuch.module.Calendar",
         var lastLoaded = new Date( date.getTime() + msAheadBefore );        
         this.setLastDateLoaded( lastLoaded );
         //console.log( "last loaded: " + df.format(lastLoaded) );
+        
+        /*
+         * request messages in the given period
+         */
+        this.__data = []; // delete cache
+        this.__sandbox.showNotification( this.tr("Loading LogBuch data ...") );
+        qx.util.TimerManager.getInstance().start(function(){
+	         this.__sandbox.rpcRequest(
+	          "logbuch.message","collect", 
+	          [ this.getFirstDateLoaded().toDateString(), this.getLastDateLoaded().toDateString() ],
+            function()
+            {
+              this.__sandbox.hideNotification();
+            }, this
+	        );        
+        },null,this,null,100); //FIXME
+        
         
         /*
          * determine non-work days
@@ -293,14 +329,20 @@ qx.Class.define("logbuch.module.Calendar",
       /*
        * display date
        */
-      if ( ! old || date < this.getFirstDateVisible() || date > this.getLastDateVisible() )
+      if ( ! old || 
+            date.getTime() < this.getFirstDateVisible().getTime() - msday || 
+            date.getTime() > this.getLastDateVisible().getTime() + msday)
       {
         var delta = date.getDay() - qx.locale.Date.getWeekStart();
-        var firstVisible = new Date( date.getTime() - delta * 86400000 );
+        //console.log([date.getDay(),qx.locale.Date.getWeekStart()])
+        //console.log( "Delta: " + delta );
+        
+        var firstVisible = new Date( date.getTime() - delta * msday );
         this.setFirstDateVisible( firstVisible );
+        
         //console.log( "change first visible: " + df.format(firstVisible) );
         
-        var lastVisible = new Date( firstVisible.getTime() + ( 6 * 86400000 ) );
+        var lastVisible = new Date( firstVisible.getTime() + ( 6 * msday ) );
         this.setLastDateVisible( lastVisible );
         //console.log( "change last visible: " + df.format(lastVisible) );
         
@@ -310,7 +352,8 @@ qx.Class.define("logbuch.module.Calendar",
       /*
        * save column of current date
        */
-      this.setSelectedDateColumn( this.getColumnFromDate( date ) );      
+      var column = this.getColumnFromDate( date );
+      this.setSelectedDateColumn( column );      
       
       /*
        * scroll column into view and schedule an update   
@@ -321,6 +364,8 @@ qx.Class.define("logbuch.module.Calendar",
         pane.setScrollX( this.getScrollXFromColumn( column ) );
         pane.fullUpdate();
       },null,this,null,100);
+      
+      this.__sandbox.publish("change-date", date );
     },
     
     /**
@@ -330,11 +375,17 @@ qx.Class.define("logbuch.module.Calendar",
      */
     getColumnFromDate : function( date )
     {
-      if ( ! this.getFirstDateLoaded() || date < this.getFirstDateLoaded() || date > this.getLastDateLoaded() )
+      var msday = 24*60*60*1000;
+      if ( ! this.getFirstDateLoaded() || 
+        date.getTime() < this.getFirstDateLoaded() - msday || 
+        date.getTime() > this.getLastDateLoaded() + msday )
       {
         this.error( "Date is not within loaded period" );
       }
-      return Math.floor( ( date.getTime() - this.getFirstDateLoaded().getTime() ) / 86400000 );
+      var d1 = new Date( date.toDateString() ).getTime();
+      var d2 = new Date( this.getFirstDateLoaded().toDateString() ).getTime();
+      var column = Math.floor( (d1-d2)/ msday );
+      return column;
     },
     
     /**
@@ -356,6 +407,32 @@ qx.Class.define("logbuch.module.Calendar",
     getScrollXFromColumn : function( column )
     {
       return column * this.__sandbox.getLayoutConfig().getCalendar().getBoxWidth();
+    },
+    
+    /**
+     * Given a category, return the corresponding row
+     * @param category {String}
+     * @return {Integer}
+     */
+    getRowFromCategory : function( category )
+    {
+      var lc = this.__sandbox.getLayoutConfig();
+      return lc.getCalendar().getCategories().indexOf(category)+1;
+    },
+    
+    /**
+     * Given a row, return the corresponding category
+     * @param row {Integer}
+     * @return {String}
+     */
+    getCategoryFromRow : function( row )
+    {
+      var lc = this.__sandbox.getLayoutConfig();
+      if ( row < 1 || row > lc.getCalendar().getCategories().length )
+      {
+        this.error("Invalid row:" + row );
+      }
+      return lc.getCalendar().getCategories().getItem(row-1);      
     },
     
     /*
@@ -382,9 +459,23 @@ qx.Class.define("logbuch.module.Calendar",
      */
     _onCellClick : function(e)
     {
-      var col = e.getColumn();
-      this.setDate( this.getDateFromColumn( col ) );
-      //this.__scroller.getPane().fullUpdate();
+      // do not accept a double click on the date row 
+      if ( e.getRow() == 0 ) return;   
+      
+      this.__sandbox.publish("activate-category",null);
+      
+      e.preventDefault();
+      
+      // do not accept a click when a category is active
+      //if ( this.getActiveCategory() ) return;
+      
+      var col  = e.getColumn();
+      var row  = e.getRow();
+      var date = this.getDateFromColumn( col );
+      var category = this.getCategoryFromRow( row );
+      
+      this.setDate( date );
+      //this.displayMessages( date, category );
     },    
     
     /**
@@ -393,22 +484,14 @@ qx.Class.define("logbuch.module.Calendar",
      */
     _onCellDblclick : function(e)
     {
-      this.__sandbox.publish( "activate-calender-cell", {
-        date : this.getDateFromColumn( e.getColumn() ),
-        row  : e.getRow()
-      });
+      // do not accept a double click on the date row 
+      if ( e.getRow() == 0 ) return;      
+      
+      var category = this.getCategoryFromRow( e.getRow() );  
+      var date = this.getDateFromColumn( e.getColumn() ); // FIXME period
+      this._handleCellAction( date, category );
     },
-    
-    //FIXME
-    setCellData : function( row, col, text )
-    {
-      if ( ! this.__data[row] ) 
-      {
-        this.__data[row] = [];
-      }
-      this.__data[row][col] = text;
-      this.__scroller.getPane().fullUpdate();      
-    },
+
     
     /**
      * Called when the user scrolls the pane horizontally
@@ -416,7 +499,7 @@ qx.Class.define("logbuch.module.Calendar",
      */
     _onScrollX : function(e)
     {
-      //console.log(e.getData());
+      ////console.log(e.getData());
     },
     
     /**
@@ -427,6 +510,20 @@ qx.Class.define("logbuch.module.Calendar",
     {
       this.setActiveCategory( e.getData() );
       this.__scroller.getPane().fullUpdate();
+    },
+    
+    /**
+     * Listens for messages that contain item data to display in the calendar.
+     * @param e {qx.event.message.Message}
+     */
+    _onMessage : function( e )
+    {
+      var message = e.getData(); 
+      var row     = this.getRowFromCategory( message.category ); 
+      var col     = this.getColumnFromDate( message.itemDateStart );
+      var text    = message.subject;
+      
+      this.addCellText( row, col, text, message );  
     },
     
 
@@ -475,7 +572,7 @@ qx.Class.define("logbuch.module.Calendar",
       /*
        * date cell renderer
        */
-      var dateCellRenderer = new qx.ui.virtual.cell.Date(new qx.util.format.DateFormat( this.__dateFormat));
+      var dateCellRenderer = new qx.ui.virtual.cell.Date( this.__dateFormatter );
       dateCellRenderer.set({
         appearance : "logbuch-datecell"
       });     
@@ -556,13 +653,14 @@ qx.Class.define("logbuch.module.Calendar",
 	            }
 	            else if ( column == _this.getCurrentDateColumn() )
               {
-                dateCellRenderer.setFont("logbuch-label-box");
+                //dateCellRenderer.setFont("logbuch-label-box");
                 dateCellRenderer.setTextColor("logbuch-label-box");
                 dateCellRenderer.resetBackgroundColor();
               }
               else 
 	            {
-                dateCellRenderer.setFont("small");
+                //dateCellRenderer.setFont("small");
+                dateCellRenderer.setFont("logbuch-label-box");
 	              dateCellRenderer.setTextColor("logbuch-label-box-disabled");
                 dateCellRenderer.resetBackgroundColor();
 	            }
@@ -585,14 +683,10 @@ qx.Class.define("logbuch.module.Calendar",
               {
                 dateCellRenderer.setFont("small");
                 dateCellRenderer.setTextColor("logbuch-label-box");
-                dateCellRenderer.resetBackgroundColor();
+                //dateCellRenderer.resetBackgroundColor(); //IXME
+                dateCellRenderer.setBackgroundColor("logbuch-background-calendar");
               }
-              
-              
             }
-            
-            
-            
             return dateCellRenderer.getCellProperties( _this._getCellDate( column ), states );
             
           }
@@ -636,10 +730,13 @@ qx.Class.define("logbuch.module.Calendar",
        */
       var hLines = new qx.ui.virtual.layer.GridLines("horizontal","#999999", hGridLineWidth );
       hLines.setZIndex( 20 );
-      var vLines = new qx.ui.virtual.layer.GridLines("vertical");
+      
+      var vLines = new qx.ui.virtual.layer.GridLines("vertical","#999999", hGridLineWidth);      
       vLines.setZIndex( 20 );
+      
+      pane.addLayer( vLines );
       pane.addLayer( hLines );  
-      pane.addLayer( vLines );        
+              
     
       return scroller;
     },    
@@ -660,17 +757,223 @@ qx.Class.define("logbuch.module.Calendar",
      * @param column {Integer} 
      * @return {String}
      */
-    _getCellHtml : function( row, column) 
+    _getCellHtml : function( row, column ) 
     {
-      
       var html = "";
       if ( this.__data[row] && this.__data[row][column] )
       {
-        html = this.__data[row][column];
+        var cell = this.__data[row][column];
+        for( var i=0, id; i < cell.order.length; i++)
+        {
+          id = cell.order[i];
+          html += this._styleEntryHtml( cell.entries[id] );
+        }
       }
-
       return html;
-    } 
+    },
+    
+    // FIXME width
+    _styleEntryHtml : function( text )
+    {
+      return '<span style="width:100px;height:12px;overflow:hidden;font-size:10px; white-space: nowrap;">' + text + '<span><br/>';
+    },
+    
+    /**
+     * Adss text to a calendar cell, identified by an id
+     * @param row {Integer}
+     * @param col {Integer}
+     * @param id {String}
+     * @param text {String}
+     * @param data {Object}
+     * @param sortFunction {Function|undefined}
+     */
+    addCellText : function( row, col, text, data, sortFunction )
+    {
+      
+      /*
+       * create entry
+       */
+      if ( ! this.__data[row] ) 
+      {
+        this.__data[row] = [];
+      }
+      if ( ! this.__data[row][col] ) 
+      {
+        this.__data[row][col] = {
+          entries : [],
+          order   : [],
+          data    : []
+        };
+      } 
+      var cell = this.__data[row][col];
+      cell.order.push(cell.entries.length);
+      cell.entries.push(text);
+      cell.data.push(data);
+      
+      
+      /*
+       * sort the array
+       */
+      cell.order.sort( function(a,b){
+        a = cell.entries[a];
+        b = cell.entries[b];
+        if ( sortFunction ) 
+        {
+          return sortFunction( a, b )
+        }
+        else
+        {
+          return ( a > b ? 1 : ( a < b ? -1 : 0) ); 
+        }
+      });
+      
+      this.__scroller.getPane().fullUpdate();      
+    },
+    
+    /**
+     * Removes text from a calendar cell, identified by an id. 
+     * @param row {Integer}
+     * @param col {Integer}
+     * @param id {String}
+     * @param sortFunction {Function|undefined}
+     */
+    removeCellText : function( row, col, id, sortFunction )
+    {    
+      var cell = this.__data[row][col];
+      delete cell.entries[id];
+      qx.lang.Array.remove( cell.order, id );
+      
+      /*
+       * sort the array
+       */
+      cell.order.sort( function(a,b){
+        if ( sortFunction ) 
+        {
+          return sortFunction( cell.entries[a], cell.entries[b] )
+        }
+        else
+        {
+          return ( a > b ? 1 : ( a < b ? -1 : 0) ); 
+        }
+      });
+      
+      this.__scroller.getPane().fullUpdate();      
+    },
+    
+    /**
+     * Displays the messages in a category in a day
+     * @param {} date
+     * @param {} category
+     */
+    _handleCellAction : function( date, category )
+    {
+      /*
+       * create message list if necessary
+       */
+      if ( ! this.__messageList )
+      {
+        var msglist = new logbuch.component.MessageList(this.__sandbox).set({
+          width   : 300,
+          height  : 400
+        });
+        this.getApplicationRoot().add( msglist);
+        this.__messageList = msglist;
+        msglist.addListener("disappear", function(){
+          this.__sandbox.publish("activate-category",null);
+        },this);
+        this.__sandbox.subscribe("activate-category",function(e){
+          if ( e.getData() === null )
+          {
+            msglist.hide();
+          }
+        },this);
+      }
+      else
+      {
+        var msglist = this.__messageList;
+        msglist.reset();
+      }
+      
+      /*
+       * caption
+       */
+      var lc = this.__sandbox.getLayoutConfig();
+      //msglist.setCaption( );
+     
+      /*
+       * change ui
+       */
+      this.__sandbox.publish( "activate-category", category );      
+
+      /*
+       * get data
+       */
+      var col   = this.getColumnFromDate( date );
+      var row   = this.getRowFromCategory( category );
+      var found = false;
+   
+      if ( this.__data[row] && this.__data[row][col] )
+      {
+        var cell = this.__data[row][col];
+        for( var i=0; i< cell.order.length; i++ )
+        {
+          var message = cell.data[cell.order[i]];
+          found = true;
+          msglist.addMessage( new logbuch.component.Message( 
+            message.date,
+            message.subject,
+            message.sender,
+            message.body,
+            message.category,
+            message.itemId
+          ) );
+        }
+        
+        /*
+         * if data was found, show message list
+         */
+        if ( found )
+        {
+		      /*
+		       * position message list
+		       */
+		      var mycol = this.getColumnFromDate( date );
+		      var leftcol = this.getColumnFromDate( this.getFirstDateVisible() );          
+		      msglist.setLayoutProperties({
+		        top   : 140,
+		        left  : 135 + ( (mycol-leftcol) * 120 ) // FIXME
+		      });          
+          
+          /*
+           * add button label and callback
+           */
+          msglist.setAddButtonLabel( this.tr("New entry ...") );
+          var _this = this;
+          msglist.setAddButtonCallback( function(){
+            msglist.hide();
+            qx.util.TimerManager.getInstance().start(function(){
+	            _this.__sandbox.publish( "new-category-item", {
+	              category  : category,
+	              date      : date
+	            });            
+            },null,null,null,100);
+          });
+          
+          msglist.show();
+        }
+      }
+      
+      /*
+       * enter new item if none was found
+       */
+      if ( ! found )
+      {
+        this.__sandbox.publish( "new-category-item", {
+          category  : category,
+          date      : date
+        });
+      }      
+    }
     
   },
 

@@ -7,7 +7,7 @@
 
    Lizenz: GPL v.2
 
-   Authoren:
+   Autoren:
      * Christian Boulanger (cboulanger)
 
 ************************************************************************ */
@@ -15,6 +15,7 @@
 /* ************************************************************************
 #require(logbuch.module.AccessControl)
 #require(logbuch.module.ExtendedField)
+#asset(logbuch/*)
 ************************************************************************ */
 
 /**
@@ -170,7 +171,7 @@ qx.Class.define("logbuch.module.Documentation",
         /*
          * "fullscreen"-button
          */
-        var img = new qx.ui.basic.Image( "resource/logbuch/icon/16/full-screen.png" );
+        var img = new qx.ui.basic.Image( "logbuch/icon/16/full-screen.png" );
         img.setOpacity(0.5);
         hbox.add(img);
         
@@ -243,15 +244,6 @@ qx.Class.define("logbuch.module.Documentation",
     {
       return this.tr("Documentation entry");
     },
-    
-    /**
-     * Creates a message from the event data
-     */
-    createMessage : function()
-    {
-      var data = qx.util.Serializer.toJson( this.getModel() );
-      console.log( data );
-    },     
     
     dummy : null
   }

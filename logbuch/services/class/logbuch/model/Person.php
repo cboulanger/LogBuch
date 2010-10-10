@@ -45,13 +45,116 @@ class logbuch_model_Person
    */
   private $properties = array(
 
+    /**
+     * Enter description here ...
+     */
+    'userId' => array (
+      'check' => 'integer',
+      'sqltype' => 'int(11)'
+    ),  	
+  
+    /**
+     * Enter description here ...
+     */
+    'givenName' => array (
+      'check' => 'string',
+      'sqltype' => 'varchar(100)'
+    ),
+    
+    /**
+     * Enter description here ...
+     */
+    'familyName' => array (
+      'check' => 'string',
+      'sqltype' => 'varchar(100)'
+    ),
+    
+		/**
+     * Enter description here ...
+     */
+    'image' => array (
+      'check' => 'string',
+      'sqltype' => 'varchar(200)'
+    ),           
+    
+    /**
+     * Enter description here ...
+     */
+    'academicTitle' => array (
+      'check' => 'string',
+      'sqltype' => 'varchar(50)'
+    ),    
+   
+    /**
+     * Enter description here ...
+     */
+    'initials' => array (
+      'check' => 'string',
+      'sqltype' => 'varchar(10)'
+    ),    
+  
+    /**
+     * Enter description here ...
+     */
+    'organizationId' => array (
+      'check' 			=> 'integer',
+      'sqltype' 	  => 'int(11)'
+    ),
+
+		/**
+     * Enter description here ...
+     */
+    'position' => array (
+      'check' => 'string',
+      'sqltype' => 'varchar(50)'
+    ),        
+
+		/**
+     * Enter description here ...
+     */
+    'email' => array (
+      'check' 	=> 'string',
+      'sqltype' => 'varchar(255)'
+    ),  
+
+		/**
+     * Enter description here ...
+     */
+    'telephone' => array (
+      'check' 	=> 'string',
+      'sqltype' => 'varchar(50)'
+    ),  
+
+		/**
+     * Enter description here ...
+     */
+    'mobile' => array (
+      'check' 	=> 'string',
+      'sqltype' => 'varchar(50)'
+    ),  
+
+		/**
+     * Enter description here ...
+     */
+    'initialPassword' => array (
+      'check' 		=> 'boolean',
+      'sqltype' 	=> 'int(1)',
+    	'nullable'	=> false,
+    	'init'			=> false
+    )
  );
 
   /**
    * Relations
    */
-  private $relations = array(
-    
+ 	private $relations = array(
+    'Attachment_Person' => array(
+      'type'        => QCL_RELATIONS_HAS_MANY,
+      'target'      => array( 
+      	'class'    		=> "logbuch_model_Attachment",
+ 				'dependent'		=> true 
+ 			)
+    )
   );
 
   /*
@@ -63,8 +166,8 @@ class logbuch_model_Person
   function __construct( $datasourceModel )
   {
     parent::__construct( $datasourceModel );
-    //$this->addProperties( $this->properties );
-    //$this->addRelations( $this->relations, __CLASS__ );
+    $this->addProperties( $this->properties );
+    $this->addRelations( $this->relations, __CLASS__ );
 
   }
 
@@ -73,6 +176,61 @@ class logbuch_model_Person
      API
   *****************************************************************************
   */
+  
+  /**
+   * Returns the text for a 'label' that is used in a visual widget
+   * to represent the model record.
+   * @return string
+   */
+  public function label()
+  {
+  	$familyName = $this->get("familyName");
+  	$givenName  = $this->get("givenName");
+  	if ( $familyName )
+  	{
+  		return "$familyName, $givenName";
+  	}
+  	else
+  	{
+  		return "";
+  	}
+  }
 
+  /**
+   * Returns the icon path that is used in a visual widget
+   * to represent the model record. Defaults to returning
+   * a NULL value
+   * @param int|null $iconSize
+   * 		The pixel size of the icon, if any. Defaults to null (= no icon) 
+   * @return string
+   */  
+  public function icon( $iconSize=null )
+  {
+  	if ( $iconSize )
+  	{
+  		return $iconSize . "/" . $this->get("imageUrl");
+  	}
+  	elseif ( $iconSize == "" )
+  	{
+  		return $this->get("image");
+  	}
+  	else
+  	{
+  		return null;
+  	}
+  }
+  
+  public function _convertOrganizationId( $value )
+  {
+  	if ( is_object( $value ) )
+  	{
+  		return $value->value;
+  	}
+  	else
+  	{
+  		return value;
+  	}
+  }
+  
 }
 ?>

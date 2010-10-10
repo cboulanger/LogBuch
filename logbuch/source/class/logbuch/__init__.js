@@ -26,17 +26,16 @@
  *    
  * activate-calender-cell (Object)
  *    Published when user double-clicks on a calendar cell. Data is an object with
- *    key "date" (Date) and "row" (Integer).    
+ *    key "date" (Date) and "category" (String).    
  * 
  * message (Object)
  *    Publishes a new category item as a message item. The message object has the 
  *    following structure: {
- *      category    : String,     // The logbuch category that created this message
- *      itemId      : Integer,    // The id of the associated item in the database, if known  
- *      dateStart   : Date,       // The date connected with this message
- *      dateEnd     : Date|null,  // (Events only) The date of the end of the event 
- *      subject     : String,     // The message subject
- *      body        : String,     // The message body
- *      tags        : Array|null  // An array of tags associated with the message
+ *      subject     : String,           // The message subject
+ *      body        : String,           // The message body
+ *      tags        : Array|null        // (Optional) An array of tags associated with the message
+ *      category    : String,           // The logbuch category that created this message  
+ *      itemDateStart   : Date,             // The date connected with this message
+ *      itemDateEnd     : Date|undefined,   // (Events only) The date of the end of the event 
  *    }
  */

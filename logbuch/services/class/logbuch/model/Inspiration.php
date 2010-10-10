@@ -14,13 +14,14 @@
 
 ************************************************************************ */
 
-qcl_import( "qcl_data_model_db_ActiveRecord" );
+		
+qcl_import( "logbuch_model_Model" );
 
 /**
- * 
+ * Enter description here ...
  */
 class logbuch_model_Inspiration
-  extends qcl_data_model_db_ActiveRecord
+extends logbuch_model_Model
 {
 
   /*
@@ -29,10 +30,9 @@ class logbuch_model_Inspiration
   *****************************************************************************
   */
 
-	/**
-	 * The name of the table of this model
-	 * @var string
-	 */
+  /**
+   * The name of the table of this model
+   */
   protected $tableName = "data_Inspiration";
   
   /**
@@ -41,18 +41,65 @@ class logbuch_model_Inspiration
   protected $foreignKey = "InspirationId";  
 
   /**
-   * model properties
+   * The model properties
    */
   private $properties = array(
 
- );
-
-  /**
-   * Relations
-   */
-  private $relations = array(
+    /**
+     * Enter description here ...
+     */
+    'idea' => array (
+      'check' => 'string',
+      'sqltype' => 'varchar(255)',
+      'nullable' => true,
+    ),
     
+    /**
+     * Enter description here ...
+     */
+    'source' => array (
+      'check' => 'string',
+      'sqltype' => 'varchar(255)',
+      'nullable' => true,
+    ),
+    
+    /**
+     * Enter description here ...
+     */
+    'links' => array (
+      'check' => 'string',
+      'sqltype' => 'varchar(255)',
+      'nullable' => true,
+    ),
+    
+    /**
+     * Enter description here ...
+     */
+    'idea_extended' => array (
+      'check' => 'string',
+      'sqltype' => 'text',
+      'nullable' => true,
+    ),
+    
+    /**
+     * Enter description here ...
+     */
+    'source_extended' => array (
+      'check' => 'string',
+      'sqltype' => 'text',
+      'nullable' => true,
+    ),
+    
+    /**
+     * Enter description here ...
+     */
+    'links_extended' => array (
+      'check' => 'string',
+      'sqltype' => 'varchar(100)',
+      'nullable' => true,
+    )
   );
+
 
   /*
   *****************************************************************************
@@ -60,11 +107,10 @@ class logbuch_model_Inspiration
   *****************************************************************************
   */
 
-  function __construct( $datasourceModel )
+  function __construct( $datasourceModel=null )
   {
     parent::__construct( $datasourceModel );
-    //$this->addProperties( $this->properties );
-    //$this->addRelations( $this->relations, __CLASS__ );
+    $this->addProperties( $this->properties );
 
   }
 
@@ -73,6 +119,28 @@ class logbuch_model_Inspiration
      API
   *****************************************************************************
   */
-
+  
+  function createMessage()
+  {
+  	$activeUser = $this->getApplication()->getAccessController()->getActiveUser();
+  	$fields = array( "idea", "source", "links" );
+  	$data = $this->data();
+  	foreach( $fields as $field )
+  	{
+  		if( ! trim( $data[$field] ) ) continue;
+  			
+	  	$message = array(
+	  		'date'					=> date("D M d Y H:i:s \G\M\TO (T)"),
+	  		'sender'				=> $activeUser->getName(),
+	  		'subject'				=> $field . ": " . $data[$field], // FIXME
+	  		'body'					=> $data[ $field . '_extended' ],
+	  		'category'			=> "inspiration",
+	  		'itemId'				=> "inspiration/" . $this->id(),
+	  		'itemDateStart'	=> date("D M d Y H:i:s \G\M\TO (T)", strtotime( $data['dateStart']) ), 
+	  		'itemDateEnd'		=> date("D M d Y H:i:s \G\M\TO (T)", strtotime( $data['dateEnd']) )
+	  	);
+	  	return $message;
+  	}
+  }  
 }
 ?>

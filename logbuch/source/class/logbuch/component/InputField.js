@@ -40,8 +40,13 @@ qx.Class.define("logbuch.component.InputField",
     this._setLayout(new qx.ui.layout.VBox(3));
     
     this.__type = type;
-    this.getChildControl("label"); 
-    this.getChildControl("input"); 
+    this._labelControl = this.getChildControl("label"); 
+    this._inputControl = this.getChildControl("input"); 
+    
+    if ( type != "selectbox" )
+    {
+      this._formElement.bind("value", this, "value");
+    }
     
     this.setLabel( label || null );
     this.setValue( value || null );
@@ -83,8 +88,20 @@ qx.Class.define("logbuch.component.InputField",
       nullable  : true,
       apply     : "_applyValue",
       event     : "changeValue"
+    },
+    
+    
+    /**
+     * Whether the widget is editalbe
+     * @type Boolean
+     */
+    editable :
+    {
+      check     : "Boolean",
+      nullable  : false,
+      init      : true,
+      event     : "changeEditable"
     }
-        
     
   },
 
@@ -120,21 +137,36 @@ qx.Class.define("logbuch.component.InputField",
           {
             case "password":
               control = new qx.ui.form.PasswordField();
+              this.bind( "editable", control, "readOnly", {
+                converter : function( value ) { return ! value; }
+              } );
               break;
               
             case "textarea":
               control = new qx.ui.form.TextArea();
+              this.bind( "editable", control, "readOnly", {
+                converter : function( value ) { return ! value; }
+              } );
               break;
+              
+            case "selectbox":
+              control = new qx.ui.form.SelectBox();
+              this.addListener("changeEditable",function(e){
+                //control.setEnabled(e.getData());
+              },this);
+              break;              
               
             default:
               control = new qx.ui.form.TextField();
+              this.bind( "editable", control, "readOnly", {
+                converter : function( value ) { return ! value; }
+              } );
               break;
           }
-          control.bind( "value", this, "value" );
+          this._formElement = control;
           this._add( control, {flex : 1} );
           break;
       }
-
       return control || this.base(arguments, id);
     },
 
@@ -159,7 +191,10 @@ qx.Class.define("logbuch.component.InputField",
     
     _applyValue : function( value, old )
     {
-      this.getFormElement().setValue( value );
+      if ( this.__type !== "selectbox" )
+      {
+        this.getFormElement().setValue( value );  
+      }
     },
     
     /*
@@ -175,7 +210,7 @@ qx.Class.define("logbuch.component.InputField",
      */    
     getFormElement : function()
     {
-      return this.getInputControl();
+      return this._inputControl;
     },
     
     /**
@@ -184,7 +219,7 @@ qx.Class.define("logbuch.component.InputField",
      */
     getInputControl : function()
     {
-      return this.getChildControl("input");
+      return this._inputControl;
     },
     
     /**
@@ -193,13 +228,16 @@ qx.Class.define("logbuch.component.InputField",
      */
     getLabelControl : function()
     {
-      return this.getChildControl("label");
+      return this._labelControl;
     },
     
     addToForm : function( form, name, validator, context )
     {
       form.add( this.getFormElement(), null, validator || null, name, context )
     },
+    
+
+    
     
     setRequired : function( value )
     {

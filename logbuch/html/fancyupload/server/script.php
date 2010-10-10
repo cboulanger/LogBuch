@@ -20,6 +20,11 @@
  *
  */
 
+error_reporting( E_ALL );
+ini_set("display_errors",false);
+ini_set("log_errors", true);
+ini_set("html_errors", false);
+ini_set("error_log", realpath("./script.log") );
 
 /**
  * Only needed if you have a logged in user, see option appendCookieData,
@@ -37,32 +42,32 @@
  * information.
  */
 
-$result = array();
-
-$result['time'] = date('r');
-$result['addr'] = substr_replace(gethostbyaddr($_SERVER['REMOTE_ADDR']), '******', 0, 6);
-$result['agent'] = $_SERVER['HTTP_USER_AGENT'];
-
-if (count($_GET)) {
-	$result['get'] = $_GET;
-}
-if (count($_POST)) {
-	$result['post'] = $_POST;
-}
-if (count($_FILES)) {
-	$result['files'] = $_FILES;
-}
-
-// we kill an old file to keep the size small
-if (file_exists('script.log') && filesize('script.log') > 102400) {
-	unlink('script.log');
-}
-
-$log = @fopen('script.log', 'a');
-if ($log) {
-	fputs($log, print_r($result, true) . "\n---\n");
-	fclose($log);
-}
+//$result = array();
+//
+//$result['time'] = date('r');
+//$result['addr'] = substr_replace(gethostbyaddr($_SERVER['REMOTE_ADDR']), '******', 0, 6);
+//$result['agent'] = $_SERVER['HTTP_USER_AGENT'];
+//
+//if (count($_GET)) {
+//	$result['get'] = $_GET;
+//}
+//if (count($_POST)) {
+//	$result['post'] = $_POST;
+//}
+//if (count($_FILES)) {
+//	$result['files'] = $_FILES;
+//}
+//
+//// we kill an old file to keep the size small
+//if (file_exists('script.log') && filesize('script.log') > 102400) {
+//	unlink('script.log');
+//}
+//
+//$log = @fopen('script.log', 'a');
+//if ($log) {
+//	fputs($log, print_r($result, true) . "\n---\n");
+//	fclose($log);
+//}
 
 
 // Validation
@@ -82,7 +87,9 @@ if (!$error && $_FILES['Filedata']['size'] > 2 * 1024 * 1024)
 	$error = 'Please upload only files smaller than 2Mb!';
 }
 
-if (!$error && !($size = @getimagesize($_FILES['Filedata']['tmp_name']) ) )
+$size = getimagesize($_FILES['Filedata']['tmp_name']);
+
+if (!$error && ! $size  )
 {
 	$error = 'Please upload only images, no other files are supported.';
 }
@@ -97,9 +104,6 @@ if (!$error && ($size[0] < 25) || ($size[1] < 25))
 	$error = 'Please upload an image bigger than 25px.';
 }
 
-
-
-
 if ($error) {
 
 	$return = array(
@@ -108,31 +112,43 @@ if ($error) {
 	);
 
 } else {
-
+	
+	$origName  = $_FILES['Filedata']['name'];
+	$tmpName 	 = $_FILES['Filedata']['tmp_name'];
+	$extension = substr( $origName, strrpos($origName, ".") ); 
+	
+	// we assign a completely random name for more security
+	$newName = md5( uniqid(mt_rand(), true) ) . $extension;
+	
 	$return = array(
 		'status' => '1',
-		'name' => $_FILES['Filedata']['name']
+		'name' 	 =>  $newName 
 	);
 
-	// Our processing, we get a hash value from the file
-	$return['hash'] = md5_file($_FILES['Filedata']['tmp_name']);
-
 	// ... and if available, we get image data
-	$info = @getimagesize($_FILES['Filedata']['tmp_name']);
-
-	if ($info) {
-		$return['width'] = $info[0];
-		$return['height'] = $info[1];
-		$return['mime'] = $info['mime'];
-	}
+	$info = getimagesize( $tmpName );
+	$return['width'] 	= $info[0];
+	$return['height'] = $info[1];
+	$return['mime'] 	= $info['mime'];
 		
 	/*
 	 * processing
 	 */
-	move_uploaded_file($_FILES['Filedata']['tmp_name'], '../uploads/' . $_FILES['Filedata']['name']);
-//	$return['src'] = '/uploads/' . $_FILES['Filedata']['name'];
-//	$return['link'] = "../html/fancyupload/uploads/"  . $_FILES['Filedata']['name'];	
-
+	$imgPath = "../uploads/$newName";
+	move_uploaded_file($tmpName, $imgPath);
+	
+//	/*
+//	 * create thumbnails in the needed sizes
+//	 */
+//	$path16 = "../uploads/16/$newName";
+//	createthumb( $imgPath, $path16, 16, 16);	
+//	
+//	$path64 = "../uploads/64/$newName";
+//	createthumb( $imgPath, $path64, 64, 64);
+//	
+	$path80 = "../uploads/80/$newName";
+	createthumb( $imgPath, $path80, 80, 80);
+	
 }
 
 /*
@@ -140,4 +156,73 @@ if ($error) {
  */
 header('Content-type: application/json');
 echo json_encode($return);
+exit;
+
+/*
+	Function createthumb($name,$filename,$new_w,$new_h)
+	creates a resized image
+	variables:
+	$name		Original filename
+	$filename	Filename of the resized image
+	$new_w		width of resized image
+	$new_h		height of resized image
+*/	
+function createthumb($name,$filename,$new_w,$new_h)
+{
+	
+	$extension = substr( $name, strrpos($name, ".")+1 ); 
+	switch( $extension )
+	{
+		case "jpg":
+		case "jpeg":
+			$src_img = imagecreatefromjpeg( $name );
+			break;
+		
+		case "png":
+			$src_img = imagecreatefrompng( $name );
+			break;
+			
+		default:
+			trigger_error("Invalid format: $extension" );
+			exit;
+	}
+	
+	if ( ! $src_img )
+	{
+		return;
+	}
+	
+	$old_x=imageSX($src_img);
+	$old_y=imageSY($src_img);
+	if ($old_x > $old_y) 
+	{
+		$thumb_w=$new_w;
+		$thumb_h=$old_y*($new_h/$old_x);
+	}
+	if ($old_x < $old_y) 
+	{
+		$thumb_w=$old_x*($new_w/$old_y);
+		$thumb_h=$new_h;
+	}
+	if ($old_x == $old_y) 
+	{
+		$thumb_w=$new_w;
+		$thumb_h=$new_h;
+	}
+	$dst_img=ImageCreateTrueColor($thumb_w,$thumb_h);
+	imagecopyresampled($dst_img,$src_img,0,0,0,0,$thumb_w,$thumb_h,$old_x,$old_y); 
+	
+	if ( $extension == "png" )
+	{
+		imagepng($dst_img,$filename); 
+	} 
+	else 
+	{
+		imagejpeg($dst_img,$filename); 
+	}
+	
+	imagedestroy($dst_img); 
+	imagedestroy($src_img); 
+}
+
 ?>

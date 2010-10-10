@@ -48,7 +48,13 @@ qx.Class.define("logbuch.component.IndexCard",
      * Can be used to indicate that some action on the card has been canceled.
      * @type qx.event.type.Event
      */
-    "cancel" : "qx.event.type.Event"    
+    "cancel" : "qx.event.type.Event",
+    
+    /**
+     * Can be used to indicate that some action on the card has been initiated.
+     * @type qx.event.type.Data
+     */
+    "action" : "qx.event.type.Data"
     
   },
   
@@ -96,7 +102,7 @@ qx.Class.define("logbuch.component.IndexCard",
     {
       check     : "String",
       nullable  : true,
-      apply     : "_applyIcon"
+      event     : "changeIcon"
     },    
     
     /**
@@ -107,7 +113,7 @@ qx.Class.define("logbuch.component.IndexCard",
     {
       check     : "String",
       nullable  : true,
-      apply     : "_applyLabel"
+      event     : "changeLabel"
     }
   },
 
@@ -135,7 +141,11 @@ qx.Class.define("logbuch.component.IndexCard",
       switch(id)
       {
         case "tab":
-          control = new qx.ui.basic.Atom( this.getLabel(), this.getIcon() );
+          control = new qx.ui.container.Composite( new qx.ui.layout.HBox(5) );
+          var atom = new qx.ui.basic.Atom();
+          this.bind("icon",  atom, "icon" );
+          this.bind("label", atom, "label" );
+          control.add( atom );
           this._add(control);
           break;
 
@@ -168,22 +178,14 @@ qx.Class.define("logbuch.component.IndexCard",
     _getContentPaddingTarget : function()
     {
       return this.getChildControl("container");
-    },    
+    },
     
     /*
     ---------------------------------------------------------------------------
-      APPLY METHODS
+      API
     ---------------------------------------------------------------------------
     */    
-    
-    _applyLabel : function( value, old )
-    {
-      this.getChildControl("tab").setLabel( value );
-    },
-    
-    _applyIcon : function( value, old )
-    {
-      this.getChildControl("tab").setIcon( value );
-    }    
+
+    dummy : null
   }
 });

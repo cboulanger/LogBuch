@@ -77,57 +77,41 @@ class logbuch_model_ProjectDatasource
       	'person'   => array(
           'model' => array(
             'class'   => "logbuch_model_Person"
-          ),
-          'controller' => array(
-            'service' => "logbuch.person"
           )
         ),
-      	'company'   => array(
+      	'organization'   => array(
           'model' => array(
-            'class'   => "logbuch_model_Company"
-          ),
-          'controller' => array(
-            'service' => "logbuch.company"
+            'class'   => "logbuch_model_Organization"
           )
         ),        
         'event'   => array(
           'model' => array(
             'class'   => "logbuch_model_Event"
-          ),
-          'controller' => array(
-            'service' => "logbuch.event"
           )
         ),
         'goal'  => array(
           'model'    => array(
             'class'    => "logbuch_model_Goal"
-          ),
-          'controller' => array(
-            'service' => "logbuch.goal"
           )
         ),
         'documentation'  => array(
           'model'    => array(
             'class'    => "logbuch_model_Documentation"
-          ),
-          'controller' => array(
-            'service' => "logbuch.documentation"
           )
         ),
         'diary'  => array(
           'model'    => array(
             'class'    => "logbuch_model_DiaryEntry"
-          ),
-          'controller' => array(
-            'service' => "logbuch.diary"
           )
         ),
         'inspiration'  => array(
           'model'    => array(
             'class'    => "logbuch_model_Inspiration"
-          ),
-          'controller' => array(
-            'service' => "logbuch.inspiration"
+          )
+        ),
+        'attachment'  => array(
+          'model'    => array(
+            'class'    => "logbuch_model_Attachment"
           )
         )
       ) );

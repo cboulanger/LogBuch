@@ -80,6 +80,10 @@ qx.Class.define("logbuch.module.Footer",
      */    
     build : function()
     {
+      this.__sandbox.subscribe("activate-category",function(e){
+        this.setEnabled( e.getData() === null );
+      },this);
+      
       var lc = this.__sandbox.getLayoutConfig();
       
 	    this.set({ 
@@ -88,25 +92,14 @@ qx.Class.define("logbuch.module.Footer",
 	    });
       
       /*
-       * "Calendar" labe.
-       */
-      this.add( new qx.ui.basic.Label( this.tr("Calendar") ).set({
-        appearance  : "logbuch-label-box",
-        textAlign   : "right",
-        maxHeight   : lc.getFooter().getControlsHeight(),
-        width       : lc.getSidebar().getWidth(),
-        marginLeft  : lc.getSidebar().getMarginLeft(),
-        marginTop   : lc.getFooter().getMarginTop()
-      }));
-      
-      /*
        * one week back button 
        */
       var backButton = new qx.ui.form.Button(null,"logbuch/icon/16/button-arrow-left.png");
       backButton.set({
         //decorator : "main",
         maxHeight   : lc.getFooter().getControlsHeight(),
-        marginTop   : lc.getFooter().getMarginTop()
+        marginTop   : lc.getFooter().getMarginTop(),
+        marginLeft  : lc.getSidebar().getMarginLeft() + lc.getSidebar().getWidth()
       });
       backButton.addListener("execute",function(){
         var date = dateField.getValue();
@@ -138,7 +131,7 @@ qx.Class.define("logbuch.module.Footer",
       
       this.add( dateField );
       
-      /**
+      /*
        * go to today 
        */
       var todayButton = new qx.ui.form.Button(this.tr('Today'));
@@ -152,7 +145,7 @@ qx.Class.define("logbuch.module.Footer",
       },this);
       this.add( todayButton );      
       
-      /**
+      /*
        * one week forward
        */
       var forwardButton = new qx.ui.form.Button(null,"logbuch/icon/16/button-arrow-right.png");
@@ -169,35 +162,53 @@ qx.Class.define("logbuch.module.Footer",
       this.add( forwardButton );
       
       this.add( new qx.ui.core.Spacer(), {flex: 1} );
-
-      /**
-       * ?
-       */
-      var button1 = new qx.ui.form.Button("abc");
-      button1.set({
-        //decorator : "main",
-        maxHeight   : lc.getFooter().getControlsHeight(),
-        width       : lc.getFooter().getButtonWidth(),
-        marginTop   : lc.getFooter().getMarginTop()
-      });
-      this.add( button1 );
       
-      /**
+      /*
        * Print button 
        */
-      var printButton = new qx.ui.form.Button(this.tr("Print"));
-      printButton.set({
+      var reportButton = new qx.ui.form.Button(this.tr("Report"));
+      reportButton.set({
+        maxHeight   : lc.getFooter().getControlsHeight(),
+        width       : lc.getFooter().getButtonWidth(),
+        marginTop   : lc.getFooter().getMarginTop()
+      });
+      reportButton.addListener("execute",function(){
+        this.__sandbox.setApplicationState("view","report");
+      },this);
+      this.add( reportButton );
+      
+      /*
+       * Messages button 
+       */
+      var msgButton = new qx.ui.form.Button(this.tr("Messages"));
+      msgButton.set({
+        maxHeight   : lc.getFooter().getControlsHeight(),
+        width       : lc.getFooter().getButtonWidth(),
+        marginTop   : lc.getFooter().getMarginTop()
+      });
+      msgButton.addListener("execute",function(){
+        this.__sandbox.setApplicationState("view","messages");
+      },this);
+      this.add( msgButton );     
+      
+      /*
+       * user management
+       */
+      var button = new qx.ui.form.Button( this.tr("Users") ).set({
         //decorator : "main",
         maxHeight   : lc.getFooter().getControlsHeight(),
         width       : lc.getFooter().getButtonWidth(),
         marginTop   : lc.getFooter().getMarginTop()
       });
-      this.add( printButton );
+      button.addListener("execute",function(){
+        this.__sandbox.setApplicationState("view","users");
+      },this);
+      this.add( button );      
       
-      /**
+      /*
        * Admin button
        */
-      var adminButton = new qx.ui.form.Button(this.tr("Admin"));
+      var adminButton = new qx.ui.form.MenuButton(this.tr("Admin"));
       adminButton.set({
         //decorator : "main",
         maxHeight   : lc.getFooter().getControlsHeight(),
@@ -206,9 +217,58 @@ qx.Class.define("logbuch.module.Footer",
       });
       this.add( adminButton );
       
-      this.add( new qx.ui.core.Spacer(), {flex: 1} );
+      var menu = new qx.ui.menu.Menu();
+      adminButton.setMenu( menu );
+      this.__sandbox.bindPermissionState("logbuch.admin", adminButton, "visibility", {
+        converter : function( v ){ return v ? "visible" : "excluded"; }
+      });
       
-      this.add( new qx.ui.basic.Image("logbuch/image/tuev_logo.png"), {flex: 1} );
+      
+      /*
+       * organization management
+       */
+      var button = new qx.ui.menu.Button( this.tr("Organization management") );
+      this.__sandbox.bindPermissionState("logbuch.members.manage", button, "visibility", {
+        converter : function( v ){ return v ? "visible" : "excluded"; }
+      });      
+      button.addListener("execute",function(){
+        this.__sandbox.setApplicationState("view","organizations");
+      },this);
+      menu.add( button );      
+           
+      /*
+       * project setup
+       */
+//      var button = new qx.ui.menu.Button( this.tr("Setup Project") ).set({
+//        enabled : true
+//      });
+//      this.__sandbox.bindPermissionState("logbuch.setup", button, "visibility", {
+//        converter : function( v ){ return v ? "visible" : "excluded"; }
+//      });          
+//      button.addListener("execute",function(){
+//        this.__sandbox.setApplicationState("view","setup");
+//      },this);
+//      menu.add( button );
+      
+      /*
+       * advanced user management
+       */
+      var button = new qx.ui.menu.Button( this.tr("Advanced user management") );
+      this.__sandbox.bindPermissionState("access.manage", button, "visibility", {
+        converter : function( v ){ return v ? "visible" : "excluded"; }
+      });      
+      button.addListener("execute",function(){
+        var acl = new logbuch.component.AccessControl( this.__sandbox );
+        acl.open();
+      },this);
+      menu.add( button );      
+      
+      
+      
+//      
+//      this.add( new qx.ui.core.Spacer(), {flex: 1} );
+//      
+//      this.add( new qx.ui.basic.Image("logbuch/image/tuev_logo.png"), {flex: 1} );
       
     },
       
