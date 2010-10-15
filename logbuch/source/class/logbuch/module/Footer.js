@@ -162,9 +162,23 @@ qx.Class.define("logbuch.module.Footer",
       this.add( forwardButton );
       
       this.add( new qx.ui.core.Spacer(), {flex: 1} );
+
+      /*
+       * users
+       */
+      var button = new qx.ui.form.Button( this.tr("Users") ).set({
+        //decorator : "main",
+        maxHeight   : lc.getFooter().getControlsHeight(),
+        minWidth       : lc.getFooter().getButtonWidth(),
+        marginTop   : lc.getFooter().getMarginTop()
+      });
+      button.addListener("execute",function(){
+        this.__sandbox.setApplicationState("view","users");
+      },this);
+      this.add( button );        
       
       /*
-       * Print button 
+       * report button 
        */
       var reportButton = new qx.ui.form.Button(this.tr("Report"));
       reportButton.set({
@@ -180,30 +194,18 @@ qx.Class.define("logbuch.module.Footer",
       /*
        * Messages button 
        */
-      var msgButton = new qx.ui.form.Button(this.tr("Messages"));
-      msgButton.set({
-        maxHeight   : lc.getFooter().getControlsHeight(),
-        width       : lc.getFooter().getButtonWidth(),
-        marginTop   : lc.getFooter().getMarginTop()
-      });
-      msgButton.addListener("execute",function(){
-        this.__sandbox.setApplicationState("view","messages");
-      },this);
-      this.add( msgButton );     
+//      var msgButton = new qx.ui.form.Button(this.tr("Messages"));
+//      msgButton.set({
+//        maxHeight   : lc.getFooter().getControlsHeight(),
+//        width       : lc.getFooter().getButtonWidth(),
+//        marginTop   : lc.getFooter().getMarginTop()
+//      });
+//      msgButton.addListener("execute",function(){
+//        this.__sandbox.setApplicationState("view","messages");
+//      },this);
+//      this.add( msgButton );     
       
-      /*
-       * user management
-       */
-      var button = new qx.ui.form.Button( this.tr("Users") ).set({
-        //decorator : "main",
-        maxHeight   : lc.getFooter().getControlsHeight(),
-        width       : lc.getFooter().getButtonWidth(),
-        marginTop   : lc.getFooter().getMarginTop()
-      });
-      button.addListener("execute",function(){
-        this.__sandbox.setApplicationState("view","users");
-      },this);
-      this.add( button );      
+    
       
       /*
        * Admin button

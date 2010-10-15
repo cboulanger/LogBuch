@@ -97,7 +97,7 @@ qx.Class.define("logbuch.module.Header",
       /*
        * project title
        */
-      var projectTitle = "Sustainable Business Travel"; // FIXME
+      var projectTitle = "Nachhaltiger Business Travel in Berlin"; // FIXME
       this.add( new qx.ui.basic.Label( projectTitle ).set({
         appearance  : "title-project"
       })); 

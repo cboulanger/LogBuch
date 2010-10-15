@@ -46,6 +46,7 @@ qx.Class.define("logbuch.module.OrganizationList",
     build : function()
     {
       this._build("organization");
+
     },
    
     

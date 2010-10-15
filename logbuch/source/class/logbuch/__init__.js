@@ -38,4 +38,10 @@
  *      itemDateStart   : Date,             // The date connected with this message
  *      itemDateEnd     : Date|undefined,   // (Events only) The date of the end of the event 
  *    }
+ *    
+ *  new-category-item (Object)
+ *    {
+ *      category : String,
+ *      date     : Date
+ *    }
  */

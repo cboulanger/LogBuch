@@ -111,8 +111,15 @@ extends logbuch_model_Model
   {
     parent::__construct( $datasourceModel );
     $this->addProperties( $this->properties );
-
   }
+  
+  /**
+   * Returns the names of the properties defined in this class only.
+   */
+  public function ownProperties()
+  {
+  	return array_keys( $this->properties );
+  }  
 
   /*
   *****************************************************************************
@@ -120,27 +127,33 @@ extends logbuch_model_Model
   *****************************************************************************
   */
   
-  function createMessage()
+  function createMessages()
   {
   	$activeUser = $this->getApplication()->getAccessController()->getActiveUser();
   	$fields = array( "idea", "source", "links" );
+  	$transl = array( "Idee", "Quelle", "Links");
   	$data = $this->data();
+  	$messages = array();
+  	qcl_import( "qcl_event_message_ClientMessage" );  
   	foreach( $fields as $field )
   	{
   		if( ! trim( $data[$field] ) ) continue;
-  			
-	  	$message = array(
+  		$label = $transl[array_search($field, $fields)];	
+	  	$messages[] = new qcl_event_message_ClientMessage( "logbuch/message", array(
 	  		'date'					=> date("D M d Y H:i:s \G\M\TO (T)"),
-	  		'sender'				=> $activeUser->getName(),
-	  		'subject'				=> $field . ": " . $data[$field], // FIXME
+	  		'initials'			=> $this->authorInitials(),
+	  		'sender'				=> $this->authorName(),
+	  		'subject'				=> $data[ $field ],
+	  		'label'					=> $transl[array_search($field, $fields)],
 	  		'body'					=> $data[ $field . '_extended' ],
 	  		'category'			=> "inspiration",
 	  		'itemId'				=> "inspiration/" . $this->id(),
 	  		'itemDateStart'	=> date("D M d Y H:i:s \G\M\TO (T)", strtotime( $data['dateStart']) ), 
 	  		'itemDateEnd'		=> date("D M d Y H:i:s \G\M\TO (T)", strtotime( $data['dateEnd']) )
-	  	);
-	  	return $message;
+	  	));
+	  	
   	}
+  	return $messages;
   }  
 }
 ?>

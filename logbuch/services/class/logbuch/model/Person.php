@@ -186,9 +186,13 @@ class logbuch_model_Person
   {
   	$familyName = $this->get("familyName");
   	$givenName  = $this->get("givenName");
+  	$orgName 		= $this->getOrganizationName();
+  	$roleMap 		= $this->getRoleMap();
+  	$role 			= $roleMap[ $this->get("position") ];
+  	
   	if ( $familyName )
   	{
-  		return "$familyName, $givenName";
+  		return "<b>$familyName, $givenName</b><br />$orgName<br />$role";
   	}
   	else
   	{
@@ -220,17 +224,50 @@ class logbuch_model_Person
   	}
   }
   
-  public function _convertOrganizationId( $value )
+  public function getFullName()
   {
-  	if ( is_object( $value ) )
+  	$familyName = $this->get("familyName");
+  	$givenName  = $this->get("givenName");
+  	return "$givenName $familyName";
+  }
+  
+  public function getOrganizationName()
+  {
+  	$orgId = $this->get("organizationId");
+  	if ( $orgId )
   	{
-  		return $value->value;
+	  	return $this->datasourceModel()
+	  		->getInstanceOfType("organization")
+	  		->load( $orgId )->get("name");
   	}
   	else
   	{
-  		return value;
+  		return "";
   	}
   }
   
+  public function loadByUserId( $userId )
+  {
+  	try 
+  	{
+	  	$this->loadWhere(array(
+				'userId'	=> $userId
+			));
+  	}
+  	catch ( qcl_data_model_RecordNotFoundException $e )
+  	{
+  		throw new qcl_data_model_RecordNotFoundException("User #$userId has no associated person.");
+  	}
+  }  
+  
+	public function getRoleMap()
+	{
+		return array(
+			"employee" 		=> "Mitarbeiter/in", // 'label' => $this->tr("Employee") ), // 
+			"external" 		=> "Dienstleister/in", // 'label' => $this->tr("External employee") ), // 
+			"consultant" 	=> "Berater/in", // 'label' => $this->tr("Consultant") ),
+			"scientist" 	=> "Wissenschaftliche Begleitung"  // 'label' => $this->tr("Scientific expert") )
+		);
+	}  
 }
 ?>

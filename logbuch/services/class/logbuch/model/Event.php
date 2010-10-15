@@ -55,27 +55,9 @@ extends logbuch_model_Model
     /**
      * Enter description here ...
      */
-    'timeStart' => array (
-      'check' => 'string',
-      'sqltype' => 'varchar(6)',
-      'nullable' => true,
-    ),
-    
-    /**
-     * Enter description here ...
-     */
-    'timeEnd' => array (
-      'check' => 'string',
-      'sqltype' => 'varchar(6)',
-      'nullable' => true,
-    ),
-    
-    /**
-     * Enter description here ...
-     */
     'location' => array (
-      'check' => 'string',
-      'sqltype' => 'varchar(255)',
+      'check' 	 => 'string',
+      'sqltype'  => 'varchar(255)',
       'nullable' => true,
     ),
     
@@ -83,9 +65,11 @@ extends logbuch_model_Model
      * Enter description here ...
      */
     'participants' => array (
-      'check' => 'string',
-      'sqltype' => 'varchar(255)',
-      'nullable' => true,
+      'check'     => 'array',
+      'sqltype'   => 'varchar(255)',
+    	'serialize'	=> true,
+      'nullable'  => false,
+    	'init'			=> array()
     ),
     
     /**
@@ -109,8 +93,15 @@ extends logbuch_model_Model
   {
     parent::__construct( $datasourceModel );
     $this->addProperties( $this->properties );
-
   }
+  
+  /**
+   * Returns the names of the properties defined in this class only.
+   */
+  public function ownProperties()
+  {
+  	return array_keys( $this->properties );
+  }  
 
   /*
   *****************************************************************************
@@ -118,26 +109,28 @@ extends logbuch_model_Model
   *****************************************************************************
   */
   
-  
-  function createMessage()
+  /**
+   * Creates one or message object(s) with the category record data.
+   * @return qcl_event_message_ClientMessage[]
+   */
+  function createMessages()
   {
   	$activeUser = $this->getApplication()->getAccessController()->getActiveUser();
   	$data = $this->data();  	
-  	$message = array(
+  	qcl_import( "qcl_event_message_ClientMessage" );
+    $message = new qcl_event_message_ClientMessage( "logbuch/message", array(
   		'date'					=> date("D M d Y H:i:s \G\M\TO (T)"),
-  		'sender'				=> $activeUser->getName(),
-  		'subject'				=> $data['timeStart'] . ": " . $data['subject'],
+  		'sender'				=> $this->authorName(),
+    	'initials'			=> $this->authorInitials(),
+  		'subject'				=> date( "H:i", strtotime( $data['dateStart'] ) ) . ": " . $data['subject'],
+    	'label'					=> date( "H:i", strtotime( $data['dateStart'] ) ) . ": " . $data['subject'],
   		'body'					=> $data['notes'],
   		'category'			=> "event",
   		'itemId'				=> "event/" . $this->id(),
   		'itemDateStart'	=> date("D M d Y H:i:s \G\M\TO (T)", strtotime( $data['dateStart']) ), 
   		'itemDateEnd'		=> date("D M d Y H:i:s \G\M\TO (T)", strtotime( $data['dateEnd']) )
-  	);
-  	return $message;
+  	));
+  	return array( $message );
   }
-  
-
-
 }
-
 ?>

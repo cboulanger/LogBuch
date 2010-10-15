@@ -33,8 +33,36 @@ class logbuch_service_Registration
   	$this->sendRegistrationEmail($userModel, $personModel);
   }	
 	
+  public function method_resetPasswordByEmail( $email )
+  {
+  	$userModel = $this->getAccessController()->getUserModel();
+  	try
+  	{
+  		$userModel->loadWhere(array(
+  			'email'	=> $email
+  		));
+  	}
+  	catch ( qcl_data_model_RecordNotFoundException $e )
+  	{
+  		qcl_import("qcl_ui_dialog_Alert");
+  		return new qcl_ui_dialog_Alert( $this->tr("The email address '%s' is invalid.", $email) );
+  	}
+  	$personModel = $this->getDatasourceModel("demo")->getModelOfType("person");
+    try
+  	{
+  		$personModel->loadWhere(array(
+  			'userId'	=> $userModel->id()
+  		));
+  	}
+  	catch ( qcl_data_model_RecordNotFoundException $e )
+  	{
+  		qcl_import("qcl_ui_dialog_Alert"); // FIXME
+  		return new qcl_ui_dialog_Alert( $this->tr("The email address '%s' is invalid.", $email) );
+  	}
+  	$this->sendRegistrationEmail($userModel, $personModel);
+  }	  
 	
-	protected function sendRegistrationEmail( $userModel, $personModel )
+	public function sendRegistrationEmail( $userModel, $personModel )
 	{
  		$app = $this->getApplication();
  		
@@ -57,25 +85,48 @@ class logbuch_service_Registration
     /*
      * mail body
      */
+    
     $confirmationLink = qcl_server_Server::getUrl() .
       "?service="   . "logbuch.registration" .
       "&method="    . "confirmEmail" .
       "&params="    . "$username:$email";
 
-    $body  = $this->tr("Dear %s,", $name);
-    $body .= "\n\n" . $this->tr("You have been registered as a user in the LogBuch." );
-    $body .= "\n\n" . $this->tr("Your start password is '%s'", $password );
+    // FIXME
+    $adminName   = "Annegret Zimmermann";
+    $adminEmail  = "annegret.zimmermann@de.tuv.com"; // $app->getIniValue("email.admin");
     
-    $body .= "\n\n" . $this->tr("Please visit the following link and enter this password there:" );
-    $body .= "\n\n" . $confirmationLink;
-    $body .= "\n\n" . $this->tr("Thank you." );
+    $body  = utf8_encode( sprintf( "
+Sehr geehrte/r %s,
 
+Sie wurden beim LogBuch 'Sustainable Business Travel' registriert.
+
+Ihr Startpasswort ist: %s
+
+Bitte besuchen Sie den folgenden Link und geben Sie dort das 
+Startpasswort ein:
+
+%s
+
+Um das LogBuch aufzurufen, benötigen Sie einen modernen Internetbrowser:
+
+- FireFox ab Version 3.0
+- Internet Explorer ab Version 8.0
+- Safari ab Version 5.0 
+- Opera ab Version 10
+
+Bei Fragen zum LogBuch wenden Sie sich bitte an %s
+
+Wir wünschen Ihnen produktives Arbeiten mit dem LogBuch.
+
+", $name, $password, $confirmationLink, $adminEmail ) ); 
+    
     /*
      * send mail
      */
     qcl_import("qcl_util_system_Mail");
-    $adminEmail  = $app->getIniValue("email.admin");
+    
     $mail = new qcl_util_system_Mail( array(
+    	'sender'					=> $adminName,
       'senderEmail'     => $adminEmail,
       'recipient'       => $name,
       'recipientEmail'  => $email,

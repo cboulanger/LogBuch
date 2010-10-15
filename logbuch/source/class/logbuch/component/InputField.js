@@ -101,6 +101,13 @@ qx.Class.define("logbuch.component.InputField",
       nullable  : false,
       init      : true,
       event     : "changeEditable"
+    },
+    
+    infoText :
+    {
+      check     : "String",
+      nullable  : true,
+      event     : "changeInfoText"
     }
     
   },
@@ -140,6 +147,7 @@ qx.Class.define("logbuch.component.InputField",
               this.bind( "editable", control, "readOnly", {
                 converter : function( value ) { return ! value; }
               } );
+              this.bind( "infoText", control, "placeholder" );
               break;
               
             case "textarea":
@@ -147,13 +155,35 @@ qx.Class.define("logbuch.component.InputField",
               this.bind( "editable", control, "readOnly", {
                 converter : function( value ) { return ! value; }
               } );
+              this.bind( "infoText", control, "placeholder" );
               break;
               
             case "selectbox":
               control = new qx.ui.form.SelectBox();
               this.addListener("changeEditable",function(e){
-                //control.setEnabled(e.getData());
+                if( e.getData() )
+                {
+                  if ( control.__listenersDisabled )
+                  {
+								    control.addListener("mouseover", control._onMouseOver, this);
+								    control.addListener("mouseout", control._onMouseOut, this);
+								    control.addListener("click", control._onClick, control);
+								    control.addListener("mousewheel", control._onMouseWheel, this);
+								    control.addListener("keyinput", control._onKeyInput, this);                    
+                    control.__listenersDisabled = false;
+                  }
+                }
+                else 
+                {
+                  control.removeListener("mouseover", control._onMouseOver, this);
+                  control.removeListener("mouseout", control._onMouseOut, this);
+                  control.removeListener("click", control._onClick, control);
+                  control.removeListener("mousewheel", control._onMouseWheel, this);
+                  control.removeListener("keyinput", control._onKeyInput, this);
+                  control.__listenersDisabled = true;
+                }
               },this);
+              this.bind( "infoText", control, "toolTipText" );
               break;              
               
             default:
@@ -161,6 +191,7 @@ qx.Class.define("logbuch.component.InputField",
               this.bind( "editable", control, "readOnly", {
                 converter : function( value ) { return ! value; }
               } );
+              this.bind( "infoText", control, "placeholder" );
               break;
           }
           this._formElement = control;

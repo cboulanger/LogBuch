@@ -96,6 +96,9 @@ qx.Class.define("logbuch.module.Attachments",
       this.setLayout(new qx.ui.layout.VBox(5));
       this.setAppearance("logbuch-access-control");
       this.setVisibility("visible");
+      
+      // FIXME
+      return;
 
       this.__cell = new logbuch.component.GalleryCell();
       

@@ -31,7 +31,7 @@ msgstr ""
 msgid "Loading configuration ..."
 msgstr ""
 
-#: logbuch/Application.js:348 logbuch/module/Event.js:428
+#: logbuch/Application.js:348 logbuch/module/Event.js:413
 msgid "Event"
 msgstr ""
 
@@ -76,43 +76,43 @@ msgstr ""
 msgid "Links"
 msgstr ""
 
-#: logbuch/Application.js:596
+#: logbuch/Application.js:602
 msgid "logBUCH Messages"
 msgstr ""
 
-#: logbuch/Application.js:600
+#: logbuch/Application.js:606
 msgid "Message"
 msgstr ""
 
-#: logbuch/Application.js:618
+#: logbuch/Application.js:624
 msgid "Setup project"
 msgstr ""
 
-#: logbuch/Application.js:624
+#: logbuch/Application.js:630
 msgid "Administrator"
 msgstr ""
 
-#: logbuch/Application.js:649
+#: logbuch/Application.js:655
 msgid "Registration"
 msgstr ""
 
-#: logbuch/Application.js:655
+#: logbuch/Application.js:661
 msgid "Personal Information"
 msgstr ""
 
-#: logbuch/Application.js:693
+#: logbuch/Application.js:699 logbuch/module/Footer.js:169
 msgid "Users"
 msgstr ""
 
-#: logbuch/Application.js:699
+#: logbuch/Application.js:705
 msgid "User data"
 msgstr ""
 
-#: logbuch/Application.js:725
+#: logbuch/Application.js:730
 msgid "Organizations"
 msgstr ""
 
-#: logbuch/Application.js:731
+#: logbuch/Application.js:736
 msgid "Organization data"
 msgstr ""
 
@@ -132,7 +132,7 @@ msgstr ""
 msgid "Extended Description"
 msgstr ""
 
-#: logbuch/component/Login.js:39 logbuch/component/Login.js:92
+#: logbuch/component/Login.js:39 logbuch/component/Login.js:95
 msgid "Login"
 msgstr ""
 
@@ -140,71 +140,75 @@ msgstr ""
 msgid "Enter name or alias"
 msgstr ""
 
-#: logbuch/component/Login.js:73
+#: logbuch/component/Login.js:74
 msgid "Enter your password"
 msgstr ""
 
-#: logbuch/component/Login.js:94
+#: logbuch/component/Login.js:99
 msgid "Logging in ..."
 msgstr ""
 
-#: logbuch/component/Login.js:104
+#: logbuch/component/Login.js:109
 msgid "Register"
 msgstr ""
 
-#: logbuch/module/AbstractCategoryModule.js:237
-msgid "Loading record ..."
+#: logbuch/module/AbstractCategoryModule.js:382
+msgid "Delete"
 msgstr ""
 
-#: logbuch/module/AbstractCategoryModule.js:315
-msgid "Documents"
-msgstr ""
-
-#: logbuch/module/AbstractCategoryModule.js:322
-msgid "Photo Gallery"
-msgstr ""
-
-#: logbuch/module/AbstractCategoryModule.js:329
-msgid "Discussion"
-msgstr ""
-
-#: logbuch/module/AbstractCategoryModule.js:339
-msgid "Upload Files"
-msgstr ""
-
-#: logbuch/module/AbstractCategoryModule.js:358
-msgid "Created by %1"
-msgstr ""
-
-#: logbuch/module/AbstractCategoryModule.js:377
-msgid "Save"
-msgstr ""
-
-#: logbuch/module/AbstractCategoryModule.js:384
-msgid "Invite"
-msgstr ""
-
-#: logbuch/module/AbstractCategoryModule.js:501
-msgid "Updating %1"
-msgstr ""
-
-#: logbuch/module/AbstractCategoryModule.js:532
+#: logbuch/module/AbstractCategoryModule.js:496
 msgid "Creating %1"
 msgstr ""
 
-#: logbuch/module/AbstractCategoryModule.js:579
+#: logbuch/module/AbstractCategoryModule.js:513
+msgid "Loading record ..."
+msgstr ""
+
+#: logbuch/module/AbstractCategoryModule.js:581
+msgid "Updating %1"
+msgstr ""
+
+#: logbuch/module/AbstractCategoryModule.js:602
+msgid "Do you really want to delete this item?"
+msgstr ""
+
+#: logbuch/module/AbstractCategoryModule.js:604
+msgid "Deleting %1"
+msgstr ""
+
+#: logbuch/module/AbstractCategoryModule.js:625
+msgid "You have not yet saved this record. Do you want to save or discard it?"
+msgstr ""
+
+#: logbuch/module/AbstractCategoryModule.js:626
+msgid "Discard"
+msgstr ""
+
+#: logbuch/module/AbstractCategoryModule.js:649
 msgid "Upload photos"
 msgstr ""
 
-#: logbuch/module/AbstractCategoryModule.js:594
+#: logbuch/module/AbstractCategoryModule.js:664
 msgid "Gallery"
 msgstr ""
 
-#: logbuch/module/Calendar.js:300
+#: logbuch/module/AccessControl.js:114
+msgid "Own consultant"
+msgstr ""
+
+#: logbuch/module/AccessControl.js:118
+msgid "All consultants"
+msgstr ""
+
+#: logbuch/module/AccessControl.js:130
+msgid "Individual access for"
+msgstr ""
+
+#: logbuch/module/Calendar.js:327
 msgid "Loading LogBuch data ..."
 msgstr ""
 
-#: logbuch/module/Calendar.js:950
+#: logbuch/module/Calendar.js:976
 msgid "New entry ..."
 msgstr ""
 
@@ -268,11 +272,11 @@ msgstr ""
 msgid "Topic, Occation, Goal"
 msgstr ""
 
-#: logbuch/module/Event.js:278
+#: logbuch/module/Event.js:289
 msgid "Location, building, floor, room ..."
 msgstr ""
 
-#: logbuch/module/Event.js:419
+#: logbuch/module/Event.js:404
 msgid "Events"
 msgstr ""
 
@@ -280,27 +284,15 @@ msgstr ""
 msgid "Today"
 msgstr ""
 
-#: logbuch/module/Footer.js:183
-msgid "Messages"
-msgstr ""
-
-#: logbuch/module/Footer.js:197
+#: logbuch/module/Footer.js:213
 msgid "Admin"
 msgstr ""
 
-#: logbuch/module/Footer.js:215
-msgid "User management"
-msgstr ""
-
-#: logbuch/module/Footer.js:227
+#: logbuch/module/Footer.js:232
 msgid "Organization management"
 msgstr ""
 
-#: logbuch/module/Footer.js:239
-msgid "Setup Project"
-msgstr ""
-
-#: logbuch/module/Footer.js:253
+#: logbuch/module/Footer.js:258
 msgid "Advanced user management"
 msgstr ""
 
@@ -345,59 +337,74 @@ msgstr ""
 msgid "Logo"
 msgstr ""
 
-#: logbuch/module/PersonForm.js:110
+#: logbuch/module/PersonForm.js:118
 msgid "Last name"
 msgstr ""
 
-#: logbuch/module/PersonForm.js:118
+#: logbuch/module/PersonForm.js:135
 msgid "First name"
 msgstr ""
 
-#: logbuch/module/PersonForm.js:126
+#: logbuch/module/PersonForm.js:145
 msgid "Portrait"
 msgstr ""
 
-#: logbuch/module/PersonForm.js:139
+#: logbuch/module/PersonForm.js:159
 msgid "Academic title"
 msgstr ""
 
-#: logbuch/module/PersonForm.js:146
+#: logbuch/module/PersonForm.js:167
 msgid "Initials"
 msgstr ""
 
-#: logbuch/module/PersonForm.js:153
+#: logbuch/module/PersonForm.js:176 logbuch/module/UserList.js:82
 msgid "Company/Organization"
 msgstr ""
 
-#: logbuch/module/PersonForm.js:167
+#: logbuch/module/PersonForm.js:197
 msgid "Please select the organization"
 msgstr ""
 
-#: logbuch/module/PersonForm.js:180
-msgid "Position/Responsibility"
+#: logbuch/module/PersonForm.js:217 logbuch/module/UserList.js:115
+msgid "Project role"
 msgstr ""
 
-#: logbuch/module/PersonForm.js:187
+#: logbuch/module/PersonForm.js:231
+msgid "Please select the role in the project"
+msgstr ""
+
+#: logbuch/module/PersonForm.js:251
 msgid "Email"
 msgstr ""
 
-#: logbuch/module/PersonForm.js:189
+#: logbuch/module/PersonForm.js:253
 msgid "No valid email address."
 msgstr ""
 
-#: logbuch/module/PersonForm.js:198
+#: logbuch/module/PersonForm.js:263
 msgid "Telephone"
 msgstr ""
 
-#: logbuch/module/PersonForm.js:210
+#: logbuch/module/PersonForm.js:271
 msgid "Mobile"
 msgstr ""
 
-#: logbuch/module/PersonForm.js:233 logbuch/module/OrganizationForm.js:126
+#: logbuch/module/PersonForm.js:299 logbuch/module/OrganizationForm.js:121
+#: logbuch/module/AbstractCategoryModule.js:375
+#: logbuch/module/AbstractCategoryModule.js:626
+msgid "Save"
+msgstr ""
+
+#: logbuch/module/PersonForm.js:307 logbuch/module/OrganizationForm.js:127
 msgid "Saving ..."
 msgstr ""
 
-#: logbuch/module/PersonForm.js:272 logbuch/module/OrganizationForm.js:165
+#: logbuch/module/PersonForm.js:326 logbuch/module/OrganizationForm.js:145
+#: logbuch/module/AbstractCategoryModule.js:339
+msgid "Close"
+msgstr ""
+
+#: logbuch/module/PersonForm.js:348 logbuch/module/OrganizationForm.js:166
 msgid "Loading data ..."
 msgstr ""
 
@@ -417,6 +424,10 @@ msgstr ""
 msgid "Repeat personal passwort"
 msgstr ""
 
+#: logbuch/module/Registration.js:118
+msgid "Continue ..."
+msgstr ""
+
 #: logbuch/module/Registration.js:147
 msgid "Wrong password!"
 msgstr ""
@@ -425,7 +436,8 @@ msgstr ""
 msgid "Passwords do not match. Please re-enter your personal password"
 msgstr ""
 
-#: logbuch/module/Report.js:102 logbuch/module/Footer.js:169
+#: logbuch/module/Report.js:102 logbuch/module/Report.js:302
+#: logbuch/module/Footer.js:183
 msgid "Report"
 msgstr ""
 
@@ -433,7 +445,15 @@ msgstr ""
 msgid "logBuch"
 msgstr ""
 
-#: logbuch/module/Report.js:141 logbuch/module/AccessControl.js:89
+#: logbuch/module/Report.js:117
+msgid "from"
+msgstr ""
+
+#: logbuch/module/Report.js:124
+msgid "to"
+msgstr ""
+
+#: logbuch/module/Report.js:142 logbuch/module/AccessControl.js:89
 msgid "Entry visible for"
 msgstr ""
 
@@ -441,52 +461,55 @@ msgstr ""
 msgid "Author"
 msgstr ""
 
-#: logbuch/module/Report.js:160 logbuch/module/AccessControl.js:112
+#: logbuch/module/Report.js:158 logbuch/module/AccessControl.js:110
 msgid "Own company"
 msgstr ""
 
-#: logbuch/module/Report.js:164 logbuch/module/AccessControl.js:116
+#: logbuch/module/Report.js:162
 msgid "Own Consultant"
 msgstr ""
 
-#: logbuch/module/Report.js:168 logbuch/module/AccessControl.js:120
+#: logbuch/module/Report.js:166
 msgid "All Consultants"
 msgstr ""
 
-#: logbuch/module/Report.js:172 logbuch/module/AccessControl.js:124
+#: logbuch/module/Report.js:170 logbuch/module/AccessControl.js:122
+msgid "Scientific analyst"
+msgstr ""
+
+#: logbuch/module/Report.js:175 logbuch/module/AccessControl.js:126
 msgid "All portal members"
 msgstr ""
 
-#: logbuch/module/Report.js:176 logbuch/module/AccessControl.js:128
-msgid "Individual access for"
+#: logbuch/module/Report.js:179
+msgid "Entries by"
 msgstr ""
 
-#: logbuch/module/Report.js:195 logbuch/module/AccessControl.js:147
-msgid "Enter the first letters of the person, or * for all of them, or an email address to add a person"
-msgstr ""
-
-#: logbuch/module/Report.js:226
+#: logbuch/module/Report.js:234
 msgid "Filter by category"
 msgstr ""
 
-#: logbuch/module/Report.js:297
+#: logbuch/module/Report.js:239
+msgid "Subcategory"
+msgstr ""
+
+#: logbuch/module/Report.js:286
 msgid "Other preferences"
 msgstr ""
 
-#: logbuch/module/Report.js:302
+#: logbuch/module/Report.js:290
 msgid "Photos"
 msgstr ""
 
-#: logbuch/module/Report.js:306
+#: logbuch/module/Report.js:294
 msgid "Discussions"
 msgstr ""
 
-#: logbuch/module/Report.js:310
-msgid "Time"
+#: logbuch/module/Report.js:316
+msgid "Create Report"
 msgstr ""
 
-#: logbuch/module/Report.js:321 logbuch/module/AbstractCategoryModule.js:391
-#: logbuch/module/MessageConsole.js:71
+#: logbuch/module/Report.js:329 logbuch/module/MessageConsole.js:71
 msgid "Cancel"
 msgstr ""
 
@@ -510,23 +533,34 @@ msgstr ""
 msgid "label_setup_project"
 msgstr ""
 
-#: logbuch/module/UserList.js:97
-msgid "Loading list ..."
+#: logbuch/module/UserList.js:105
+msgid "All participating organizations"
 msgstr ""
 
-#: logbuch/module/UserList.js:160
+#: logbuch/module/UserList.js:130
+msgid "All roles"
+msgstr ""
+
+#: logbuch/module/UserList.js:220
 msgid "Creating new record ..."
 msgstr ""
 
-#: logbuch/module/UserList.js:188
+#: logbuch/module/UserList.js:248
 msgid "Are you sure you want to remove the selected item(s)?"
 msgstr ""
 
-#: logbuch/module/UserList.js:215
+#: logbuch/module/UserList.js:275
 msgid "Reset Password"
 msgstr ""
 
+#: logbuch/module/UserList.js:340
+msgid "Loading list ..."
+msgstr ""
+
 #~ msgid "%1 saved."
+#~ msgstr ""
+
+#~ msgid "All scientific experts"
 #~ msgstr ""
 
 #~ msgid "Bericht"
@@ -535,13 +569,58 @@ msgstr ""
 #~ msgid "Calendar"
 #~ msgstr ""
 
+#~ msgid "Discussion"
+#~ msgstr ""
+
+#~ msgid "Documents"
+#~ msgstr ""
+
+#~ msgid "Enter the first letters of the person, or * for all of them, or an email address to add a person"
+#~ msgstr ""
+
+#~ msgid "Invite"
+#~ msgstr ""
+
+#~ msgid "Messages"
+#~ msgstr ""
+
 #~ msgid "New %1"
 #~ msgstr ""
 
 #~ msgid "Photo 1"
 #~ msgstr ""
 
+#~ msgid "Photo Gallery"
+#~ msgstr ""
+
+#~ msgid "Please select the position/responsibility"
+#~ msgstr ""
+
+#~ msgid "Position/Responsibility"
+#~ msgstr ""
+
+#~ msgid "Setup Project"
+#~ msgstr ""
+
+#~ msgid "Upload Files"
+#~ msgstr ""
+
+#~ msgid "Created by %1"
+#~ msgstr ""
+
+#~ msgid "Own scientific expert"
+#~ msgstr ""
+
+#~ msgid "Please enter the email address:"
+#~ msgstr ""
+
 #~ msgid "Print"
+#~ msgstr ""
+
+#~ msgid "Time"
+#~ msgstr ""
+
+#~ msgid "User management"
 #~ msgstr ""
 
 #~ msgid "event"

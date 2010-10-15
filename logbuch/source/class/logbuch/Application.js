@@ -459,6 +459,12 @@ qx.Class.define("logbuch.Application",
     {
       var view = e.getData().value;
       
+      // FIXME
+      if ( view == "undefined" )
+      {
+        core.setApplicationState("view", this._isRegisteredUser() ? "main" : "login" );
+      }
+      
       
       // login
       this._showIfTrue( this.__loginDialog, view == "login" );

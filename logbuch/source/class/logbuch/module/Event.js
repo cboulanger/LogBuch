@@ -191,12 +191,21 @@ qx.Class.define("logbuch.module.Event",
       this.addListener("appear",function(){
         field1.focus();
       },this);
+
+      // FIXME
+			function parseDate(input) 
+      {
+				return new Date( input );
+			}
+      
       
       
       /*
        * date start 
        */
-      var field2 = new qx.ui.form.DateField();
+      var field2 = new qx.ui.form.DateField().set({
+        enabled : false
+      });
       this.bind( "dateStart", field2, "value");
       field2.addListener("focus",function(){
         this.fireDataEvent("focusRow",1);
@@ -209,7 +218,7 @@ qx.Class.define("logbuch.module.Event",
       this._controller.addBindingOptions( "dateStart", {
         // model -> form
         converter : function(value){
-          return new Date(value);
+          return parseDate(value);
         }
       },{
         // form -> model
@@ -238,7 +247,9 @@ qx.Class.define("logbuch.module.Event",
       /*
        * date end
        */
-      var field4 = new qx.ui.form.DateField();
+      var field4 = new qx.ui.form.DateField().set({
+        enabled : false
+      });
       this.bind( "dateStart", field4, "value");
       field4.addListener("focus",function(){
         this.fireDataEvent("focusRow",1);
@@ -248,7 +259,7 @@ qx.Class.define("logbuch.module.Event",
       this._controller.addBindingOptions( "dateEnd", {
         // model -> form
         converter : function(value){
-          return new Date(value );
+          return parseDate( value );
         }
       },{
         // form -> model
@@ -290,109 +301,83 @@ qx.Class.define("logbuch.module.Event",
       /*
        * participants
        */
-      var participants = new tokenfield.Token().set({
-        backgroundColor   : "logbuch-field-background",
-        decorator         : "logbuch-field-border",
-        height            : rowHeight,
-        selectionMode     : "multi"
+      var field7 = new logbuch.component.TokenField().set({
+        height        : rowHeight,
+        modelPath     : "value",
+        style         : "facebook",
+        hintText      : "Bitte geben Sie Teile des Namens ein, oder 'alle' ...", //FIXME
+        searchingText : "Suche ...",
+        noResultsText : "Keine passenden Einträge vorhanden ..."
       });
       
-      participants.addListener("focus",function(){
+      // visual effects
+      field7.addListener("focus",function(){
         this.fireDataEvent("focusRow",3);
       },this);
-      
       this.addListener("focusRow",function(e){
-        if( e.getData() == 3 ) { participants.focus() }
-      },this);   
-      
-      // FIXME
-      participants.addListener("loadData", function(e){
-        var str = e.getData();
-        var data = [];
-        for( var i=0; i<(Math.floor(Math.random()*10)+3);i++ )
-        {
-          data.push( { label: str + " " + i } );
-        }
-        qx.util.TimerManager.getInstance().start(function(){
-          participants.populateList( str, data );
-        },null,this,null,100);
+        if( e.getData() == 3 ) { field7.focus() }
       },this);
-      grid.add( participants, { row: 3, column : 1, colSpan : 2 });
       
-      form.add( participants, null, null, "participants" );
+      // load list data on user input
+      field7.addListener("loadData", function(e){
+        var str = e.getData();
+        this.__sandbox.rpcRequest(
+          "logbuch.record", "personList", [null, str ],
+          function ( data ){
+            field7.populateList( str, data );    
+          }, this
+        );
+      },this);
       
-      this._controller.addBindingOptions( "participants", {
-        // model -> form
-//        converter : function(model){
-//          
-//          console.warn( "model->form: model:");
-//          console.log( model );          
-//          
-//          if ( model === null ) 
-//          {
-//            return [];
-//          }
-//          
-//          if ( ! ( model instanceof qx.data.Array ) ) 
-//          {
-//            model = new qx.data.Array( model );
-//          }
-//          
-//          var selection = [];
-//          for ( var i=0; i < model.getLength(); i++)
-//          {
-//            var item = model.getItem(i);
-//            //participants._selectItem( new qx.ui.form.ListItem( item.getLabel(), null, item) );
-//            selection.push( new qx.ui.form.ListItem( item.getLabel(), null, item) );
-//          }
-//          
-//          return selection;
-//        }
-      },{
-        // form -> model
-//        converter : function(selection){
-//          console.warn( "form->model: selection:");
-//          console.log( selection );
-//          var model = new qx.data.Array();
-//          for ( var i=0; i < selection.length; i++)
-//          {
-//            // selection item is either a TextField (with a value) or a ListItem (with a model)
-//            model.push( selection[i].getModel ? selection[i].getModel() : selection[i].getValue() )
-//          }
-//          return model;
-//        }
-      });
-      participants.setSelection([]);
+	    // when value changes, recreate tokens
+	    field7.addListener("loadTokenData", function(){
+        field7.setEnabled(false);
+        this.__sandbox.rpcRequest( 
+          "logbuch.record", "personList", 
+          [null, field7.getTokenIds().toArray() ],
+          function ( data ){
+            field7.setEnabled(true);
+            data.forEach( function( itemModelData ) {
+              field7.addToken( itemModelData );
+            });    
+          }
+        );
+	    },this);
       
+      // add to form
+      grid.add( field7, { row: 3, column : 1, colSpan : 2 });
+      
+      // sync with model
+      this._controller.bind("model.participants", field7, "tokenIds" );
+      field7.bind("tokenIds", this._controller, "model.participants" );
       
       /*
        * notes
        */
-      var field7 = new qx.ui.form.TextArea().set({
+      var field8 = new qx.ui.form.TextArea().set({
         appearance  : "logbuch-field",
         height      : rowHeight
       });
-      field7.addListener("focus",function(){
+      field8.addListener("focus",function(){
         this.fireDataEvent("focusRow",4);
       },this);   
       this.addListener("focusRow",function(e){
-        if( e.getData() == 4 ) { field7.focus(); }
+        if( e.getData() == 4 ) { field8.focus(); }
       },this);       
-      form.add( field7, null, null, "notes" );
-      grid.add( field7, { row: 4, column : 1, colSpan : 2 })
+      form.add( field8, null, null, "notes" );
+      grid.add( field8, { row: 4, column : 1, colSpan : 2 })
       
       /* 
        * author label
        */
       var authorLabel = this._createAuthorLabel();
-      grid.add( authorLabel, { row: 5, column : 1, colSpan : 2 })
-      
-      ;       
+      grid.add( authorLabel, { row: 5, column : 1, colSpan : 2 });       
 
       /*
        * right column
        */
       this._createRightColumn( grid, 6 ); 
+      
 
     },
     

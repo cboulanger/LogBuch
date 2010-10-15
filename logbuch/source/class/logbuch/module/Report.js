@@ -114,18 +114,18 @@ qx.Class.define("logbuch.module.Report",
       });
       tab.add(hbox);
       
-      hbox.add( new qx.ui.basic.Label("from").set({ alignY: "bottom" }) );
+      hbox.add( new qx.ui.basic.Label( this.tr("from") ).set({ alignY: "bottom" }) );
       var dateStart = new qx.ui.form.DateField().set({
         value : new Date()
       });
-      this._form.add( dateStart, null, null, "dateStart" );
+      //this._form.add( dateStart, null, null, "dateStart" );
       hbox.add( dateStart );
       
-      hbox.add( new qx.ui.basic.Label("to").set({ alignY: "bottom" }) );
+      hbox.add( new qx.ui.basic.Label( this.tr("to") ).set({ alignY: "bottom" }) );
       var dateEnd = new qx.ui.form.DateField().set({
         value : new Date()
       });
-      this._form.add( dateEnd, null, null, "dateEnd" );
+      //this._form.add( dateEnd, null, null, "dateEnd" );
       hbox.add( dateEnd );
       
       var hbox = new qx.ui.container.Composite( new qx.ui.layout.HBox(5) );
@@ -134,14 +134,14 @@ qx.Class.define("logbuch.module.Report",
        * left box
        */
       var vbox1 = new qx.ui.container.Composite( new qx.ui.layout.VBox(5) ).set({
-        appearance : "logbuch-field"
+    //    appearance : "logbuch-field"
       });
       hbox.add( vbox1, {flex:1} );
+      this.add( hbox, {flex:1} );
      
-      vbox1.add( new qx.ui.basic.Label( this.tr("Entry visible for") ).set({
-        font         : "bold",
-        marginBottom : 5
-      }));
+      var groupbox = new qx.ui.groupbox.GroupBox( this.tr("Entry visible for") );
+      groupbox.setLayout( new qx.ui.layout.VBox(5) );
+      vbox1.add( groupbox, {flex: 1} );
       
       var field1 = new qx.ui.form.CheckBox( this.tr("Author") ).set({
         value : true
@@ -153,90 +153,90 @@ qx.Class.define("logbuch.module.Report",
         }
       },this);
       
-      vbox1.add( field1 );
-      form.add( field1, null, null, "author" );
-      
+      groupbox.add( field1 );
       
       var field2 = new qx.ui.form.CheckBox( this.tr("Own company") );
-      vbox1.add( field2 );
+      groupbox.add( field2 );
       form.add( field2, null, null, "ownCompany" );
       
       var field3 = new qx.ui.form.CheckBox( this.tr("Own Consultant") );
-      vbox1.add( field3 );
+      groupbox.add( field3 );
       form.add( field3, null, null, "ownConsultant" );
       
       var field4 = new qx.ui.form.CheckBox( this.tr("All Consultants") );
-      vbox1.add( field4 );
+      groupbox.add( field4 );
       form.add( field4, null, null, "allConsultants" );
       
-      var field5 = new qx.ui.form.CheckBox( this.tr("All portal members") );
-      vbox1.add( field5 );
-      form.add( field5, null, null, "allMembers" );
+      var field3b = new qx.ui.form.CheckBox( this.tr("Scientific analyst") );
+      groupbox.add( field3b );
+      form.add( field3b, null, null, "analyst" );
+
       
-      var field6 = new qx.ui.form.CheckBox( this.tr("Individual access for") );
-      vbox1.add( field6 );
-      field6.addListener("changeValue",function(e){
-        var selection = field7.getSelection();
-        if( e.getData() != ( selection.length > 0) )
-        {
-          field6.setValue( selection.length > 0 );  
-        }
-      },this);
+      var field5 = new qx.ui.form.CheckBox( this.tr("All portal members") );
+      groupbox.add( field5 );
+      form.add( field5, null, null, "allMembers" );  
+      
+      var groupbox0 = new qx.ui.groupbox.GroupBox( this.tr("Entries by") );
+      groupbox0.setLayout( new qx.ui.layout.Grow );
+      vbox1.add( groupbox0, {flex:1} );
       
       /*
-       * more viewers
+       * entries by
        */
-      var field7 = this.__allowed = new tokenfield.Token().set({
-        backgroundColor   : "logbuch-field-background",
-        decorator         : "logbuch-field-border",
-        height            : 100,
-        selectionMode     : "multi",
-        style             : "",
-        hintText          : this.tr("Enter the first letters of the person, or * for all of them, or an email address to add a person")
+      var field7 = new logbuch.component.TokenField().set({
+        height        : 100,
+        modelPath     : "value",
+        style         : "facebook",
+        hintText      : "Bitte geben Sie Teile des Namens ein, oder 'alle' ...", //FIXME
+        searchingText : "Suche ...",
+        noResultsText : "Keine passenden Einträge vorhanden ..."
       });
+      groupbox0.add( field7 );
+            
+      // load list data on user input
       field7.addListener("loadData", function(e){
         var str = e.getData();
-        var data = [];
-        for( var i=0; i<(Math.floor(Math.random()*10)+3);i++ )
-        {
-          data.push( { label: str + " " + i } );
-        }
-        qx.util.TimerManager.getInstance().start(function(){
-          field7.populateList( str, data );
-        },null,this,null,500);
-      },this); 
-      vbox1.add( field7, {flex:1} );
-      form.add( field7, null, null, "moreMembers" );
+        this.__sandbox.rpcRequest(
+          "logbuch.record", "personList", [ null, str ],
+          function ( data ){
+            field7.populateList( str, data );    
+          }, this
+        );
+      },this);
       
-      // update "Individual access for" dependent on selection
-      field7.addListener("changeSelection",function(e){
-        field6.setValue( e.getData().length > 0);
-      },this);           
+      // when value changes, recreate tokens
+      field7.addListener("loadTokenData", function(){
+        field7.setEnabled(false);
+        this.__sandbox.rpcRequest( 
+          "logbuch.record", "personList", 
+          [null, field7.getTokenIds().toArray() ],
+          function ( data ){
+            field7.setEnabled(true);
+            data.forEach( function( itemModelData ) {
+              field7.addToken( itemModelData );
+            });    
+          }
+        );
+      },this);
       
+      this.__entriesBy = field7;     
       
       /*
        * middle box 
        */
       
-      var vbox2 = new qx.ui.container.Composite( new qx.ui.layout.VBox(5) ).set({
-        appearance : "logbuch-field"
-      });
+      var vbox2 = new qx.ui.container.Composite( new qx.ui.layout.VBox(5) );
       hbox.add( vbox2, {flex:1} );
       
-      vbox2.add( new qx.ui.basic.Label( this.tr("Filter by category") ).set({
-        font         : "bold",
-        marginBottom : 5
-      }));      
-      
       var hbox3 = new qx.ui.container.Composite( new qx.ui.layout.HBox(5) );
-      vbox2.add( hbox3, {flex:1});
+      vbox2.add( hbox3, {flex:2});
       
-      var groupbox1 = new qx.ui.groupbox.GroupBox().set({
+      var groupbox1 = new qx.ui.groupbox.GroupBox( this.tr("Filter by category") ).set({
         layout : new qx.ui.layout.VBox(5)
       });
       hbox3.add( groupbox1, {flex:1});
       
-      var groupbox2 = new qx.ui.groupbox.GroupBox().set({
+      var groupbox2 = new qx.ui.groupbox.GroupBox( this.tr("Subcategory")).set({
         layout : new qx.ui.layout.Grow()
       });
       hbox3.add( groupbox2, {flex:1});
@@ -275,7 +275,7 @@ qx.Class.define("logbuch.module.Report",
           };
         }(vbox,boxes),this);
         
-        cb1.addListener("click",function(vbox){
+        cb1.addListener("mouseover",function(vbox){
           return function(e){            
             stack.setSelection( [vbox] );
           };
@@ -283,33 +283,28 @@ qx.Class.define("logbuch.module.Report",
       }
       stack.setSelection([]);
       
-      
-      /*
-       * right box
-       */
-      
-      var vbox3 = new qx.ui.container.Composite( new qx.ui.layout.VBox(5) ).set({
-        appearance : "logbuch-field"
-      });
-      hbox.add( vbox3, {flex:1} );
-      this.add( hbox, {flex:1} );
-
-      vbox3.add( new qx.ui.basic.Label( this.tr("Other preferences") ).set({
-        font         : "bold",
-        marginBottom : 5
-      }));
+      var groupbox3 = new qx.ui.groupbox.GroupBox( this.tr("Other preferences") );
+      groupbox3.setLayout( new qx.ui.layout.VBox(5) );
+      hbox3.add( groupbox3, {flex:1});
       
       var field1 = new qx.ui.form.CheckBox( this.tr("Photos") );
-      vbox3.add( field1 );
+      groupbox3.add( field1 );
       form.add( field1, null, null, "photos" );
       
       var field2 = new qx.ui.form.CheckBox( this.tr("Discussions") );
-      vbox3.add( field2 );
+      groupbox3.add( field2 );
       form.add( field2, null, null, "discussions" );
       
-      var field3 = new qx.ui.form.CheckBox( this.tr("Time") );
-      vbox3.add( field3 );
-      form.add( field3, null, null, "time" );
+//      var field3 = new qx.ui.form.CheckBox( this.tr("Time") );
+//      groupbox3.add( field3 );
+//      form.add( field3, null, null, "time" );
+      
+      var groupbox4 = new qx.ui.groupbox.GroupBox( this.tr("Report") );
+      vbox2.add( groupbox4, {flex:1});
+      groupbox4.setLayout( new qx.ui.layout.VBox(5) );
+
+      
+      var model = this._controller.createModel();
       
       /*
        * buttons
@@ -317,6 +312,19 @@ qx.Class.define("logbuch.module.Report",
       var hbox2 = new qx.ui.container.Composite( new qx.ui.layout.HBox(5) );
       hbox2.add( new qx.ui.core.Spacer(), {flex:1});
       this.add( hbox2 );
+      
+      var button = new qx.ui.form.Button( this.tr("Create Report") );
+      button.addListener("execute",function(){
+        var data = qx.util.Serializer.toNativeObject( this._controller.createModel() );
+        this.__sandbox.rpcRequest(
+          "logbuch.category", "createReport", [ data ],
+          function(url)
+          {
+            window.open(url);
+          }
+        );
+      },this);
+      hbox2.add(button);      
       
       var button = new qx.ui.form.Button(this.tr("Cancel"));
       button.addListener("execute",function(){

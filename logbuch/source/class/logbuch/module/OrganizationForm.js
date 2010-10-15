@@ -106,6 +106,7 @@ qx.Class.define("logbuch.module.OrganizationForm",
       });
       field.addToForm( form, "image" );
       formContainer.add( field  );
+      formContainer.setEnabled(false);
       
       /*
        * buttons
@@ -117,7 +118,7 @@ qx.Class.define("logbuch.module.OrganizationForm",
       /*
        * save
        */
-      var saveButton = new qx.ui.form.Button("Save").set({
+      var saveButton = new qx.ui.form.Button( this.tr("Save") ).set({
         enabled : false
       });
       hbox.add( saveButton );
@@ -139,9 +140,9 @@ qx.Class.define("logbuch.module.OrganizationForm",
       }, this );
       
       /*
-       * cancel
+       * close
        */
-      var cancelButton = new qx.ui.form.Button("Cancel");
+      var cancelButton = new qx.ui.form.Button( this.tr("Close") );
       hbox.add( cancelButton );
       cancelButton.addListener("execute",function(){
         this.fireEvent("cancel");

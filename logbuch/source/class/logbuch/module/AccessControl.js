@@ -106,20 +106,22 @@ qx.Class.define("logbuch.module.AccessControl",
       },this);
       
       container.add( field1 );
-      form.add( field1, null, null, "author" );
-      
       
       var field2 = new qx.ui.form.CheckBox( this.tr("Own company") );
       container.add( field2 );
       form.add( field2, null, null, "ownCompany" );
       
-      var field3 = new qx.ui.form.CheckBox( this.tr("Own Consultant") );
+      var field3 = new qx.ui.form.CheckBox( this.tr("Own consultant") );
       container.add( field3 );
       form.add( field3, null, null, "ownConsultant" );
       
-      var field4 = new qx.ui.form.CheckBox( this.tr("All Consultants") );
+      var field4 = new qx.ui.form.CheckBox( this.tr("All consultants") );
       container.add( field4 );
       form.add( field4, null, null, "allConsultants" );
+            
+      var field4b = new qx.ui.form.CheckBox( this.tr("Scientific analyst") );
+      container.add( field4b );
+      form.add( field4b, null, null, "analyst" );      
       
       var field5 = new qx.ui.form.CheckBox( this.tr("All portal members") );
       container.add( field5 );
@@ -128,7 +130,7 @@ qx.Class.define("logbuch.module.AccessControl",
       var field6 = new qx.ui.form.CheckBox( this.tr("Individual access for") );
       container.add( field6 );
       field6.addListener("changeValue",function(e){
-        var selection = field7.getSelection();
+        var selection = field7.getTokenIds();
         if( e.getData() != ( selection.length > 0) )
         {
           field6.setValue( selection.length > 0 );  
@@ -136,34 +138,55 @@ qx.Class.define("logbuch.module.AccessControl",
       },this);
       
       /*
-       * more viewers
+       * more members
        */
-      var field7 = this.__allowed = new tokenfield.Token().set({
-        backgroundColor   : "logbuch-field-background",
-        decorator         : "logbuch-field-border",
-        height            : 100,
-        selectionMode     : "multi",
-        style             : "",
-        hintText          : this.tr("Enter the first letters of the person, or * for all of them, or an email address to add a person")
+      var field7 = new logbuch.component.TokenField().set({
+        height        : 100,
+        modelPath     : "value",
+        style         : "facebook",
+        hintText      : "Bitte geben Sie Teile des Namens ein, oder 'alle' ...", //FIXME
+        searchingText : "Suche ...",
+        noResultsText : "Keine passenden Einträge vorhanden ..."
       });
+            
+      // load list data on user input
       field7.addListener("loadData", function(e){
         var str = e.getData();
-        var data = [];
-        for( var i=0; i<(Math.floor(Math.random()*10)+3);i++ )
-        {
-          data.push( { label: str + " " + i } );
-        }
-        qx.util.TimerManager.getInstance().start(function(){
-          field7.populateList( str, data );
-        },null,this,null,500);
-      },this); 
+        this.sandbox.rpcRequest(
+          "logbuch.record", "personList", [ null, str ],
+          function ( data ){
+            field7.populateList( str, data );    
+          }, this
+        );
+      },this);
+      
+      // when value changes, recreate tokens
+      field7.addListener("loadTokenData", function(){
+        field7.setEnabled(false);
+        this.sandbox.rpcRequest( 
+          "logbuch.record", "personList", 
+          [null, field7.getTokenIds().toArray() ],
+          function ( data ){
+            field7.setEnabled(true);
+            data.forEach( function( itemModelData ) {
+              field7.addToken( itemModelData );
+            });    
+          }
+        );
+      },this);
+      
+      // sync with model
+      this.__controller.bind("model.moreMembers", field7, "tokenIds" );
+      field7.bind("tokenIds", this.__controller, "model.moreMembers" );     
+      
+      // add to ui
       container.add( field7, {flex:1} );
-      form.add( field7, null, null, "moreMembers" );
       
       // update "Individual access for" dependent on selection
-      field7.addListener("changeSelection",function(e){
+      field7.addListener("changeTokenIds",function(e){
         field6.setValue( e.getData().length > 0);
-      },this);      
+      },this);
+
       
       /*
        * buttons pane
@@ -207,22 +230,7 @@ qx.Class.define("logbuch.module.AccessControl",
        API
     ---------------------------------------------------------------------------
     */
-    
-    /**
-     * Add to the list of the users authorized to see the module 
-     * @param itemArr {qx.ui.form.ListItem[]} An array of list items 
-     */
-    _addAllowedItems : function( itemArr )
-    {
-      if( ! itemArr instanceof Array ) 
-      {
-        this.error("Invalid parameter, array expected");
-      }
-      itemArr.forEach( function( item ){
-        this.__allowed._selectItem( item );
-      },this);
-    },
-    
+        
     reset : function()
     {
       this.__form.reset();
@@ -235,7 +243,13 @@ qx.Class.define("logbuch.module.AccessControl",
     
     getData : function()
     {
-       return qx.util.Serializer.toNativeObject( this.getModel() );
+      var data = qx.util.Serializer.toNativeObject( this.getModel() );
+      return data;
+    },
+    
+    setModel : function( model )
+    {
+      this.__controller.setModel( model );
     },
 
     

@@ -14,9 +14,8 @@
 
 ************************************************************************ */
 
-
-		
 qcl_import( "qcl_data_model_db_ActiveRecord" );
+qcl_import("logbuch_model_AccessControlList");
 
 /**
  * Enter description here ...
@@ -35,68 +34,75 @@ extends qcl_data_model_db_ActiveRecord
    * The model properties
    */
   private $properties = array(
-  
+        
     /**
      * Enter description here ...
      */
-    'messageId' => array (
-      'check' => 'sting',
-      'sqltype' => 'varchar(100)',
-      'nullable' => true,
+    'personId' => array (
+      'check' => 'integer',
+      'sqltype' => 'int(11)'
     ),  
+  	
 
     /**
      * Enter description here ...
      */
-    'author' => array (
-      'check' => 'boolean',
-      'sqltype' => 'tinyint(1)',
-      'nullable' => true,
-    ),
-    
-    /**
-     * Enter description here ...
-     */
     'ownCompany' => array (
-      'check' => 'boolean',
-      'sqltype' => 'tinyint(1)',
-      'nullable' => true,
+      'check' 		=> 'boolean',
+      'sqltype' 	=> 'tinyint(1)',
+      'nullable' 	=> false,
+    	'init'			=> false
     ),
     
     /**
      * Enter description here ...
      */
     'ownConsultant' => array (
-      'check' => 'boolean',
-      'sqltype' => 'tinyint(1)',
-      'nullable' => true,
+      'check' 		=> 'boolean',
+      'sqltype' 	=> 'tinyint(1)',
+      'nullable' 	=> false,
+    	'init'			=> false
     ),
     
     /**
      * Enter description here ...
      */
     'allConsultants' => array (
-      'check' => 'boolean',
-      'sqltype' => 'tinyint(1)',
-      'nullable' => true,
-    ),
+      'check' 		=> 'boolean',
+      'sqltype' 	=> 'tinyint(1)',
+      'nullable' 	=> false,
+    	'init'			=> false
+    ),    
+    
+    /**
+     * Enter description here ...
+     */
+    'analyst' => array (
+      'check' 		=> 'boolean',
+      'sqltype' 	=> 'tinyint(1)',
+      'nullable' 	=> false,
+    	'init'			=> false
+    ),    
     
     /**
      * Enter description here ...
      */
     'allMembers' => array (
-      'check' => 'boolean',
-      'sqltype' => 'tinyint(1)',
-      'nullable' => true,
+      'check' 		=> 'boolean',
+      'sqltype' 	=> 'tinyint(1)',
+      'nullable' 	=> false,
+    	'init'			=> false
     ),
     
     /**
      * Enter description here ...
      */
     'moreMembers' => array (
-      'check' => 'string',
-      'sqltype' => 'varchar(100)',
-      'nullable' => true,
+      'check'     => 'array',
+      'sqltype'   => 'varchar(255)',
+    	'serialize'	=> true,
+      'nullable'  => false,
+    	'init'			=> array()
     ),
     
     /**
@@ -104,7 +110,7 @@ extends qcl_data_model_db_ActiveRecord
      */
     'dateStart' => array (
       'check' => 'string',
-      'sqltype' => 'date',
+      'sqltype' => 'datetime',
       'nullable' => true,
     ),
     
@@ -113,7 +119,7 @@ extends qcl_data_model_db_ActiveRecord
      */
     'dateEnd' => array (
       'check' => 'string',
-      'sqltype' => 'date',
+      'sqltype' => 'datetime',
       'nullable' => true,
     ),        
   );
@@ -128,8 +134,16 @@ extends qcl_data_model_db_ActiveRecord
   {
     parent::__construct( $datasourceModel );
     $this->addProperties( $this->properties );
-
   }
+  
+  /**
+   * Returns the names of the properties defined in this class only.
+   * @return array
+   */
+  public function ownProperties()
+  {
+  	return array_keys( $this->properties );
+  }  
 
   /*
   *****************************************************************************
@@ -137,6 +151,48 @@ extends qcl_data_model_db_ActiveRecord
   *****************************************************************************
   */
   
+  /**
+   * Returns the acl data contained in the model record
+   * @return array
+   */
+  public function aclData()
+  {
+  	static $aclNames = null;
+  	if( $aclNames === null )
+  	{
+	  	$aclModel = new logbuch_model_AccessControlList();
+	  	$aclNames = $aclModel->getAclNames();
+  	}
+  	return $this->data(array(
+  		'include'	=> $aclNames
+  	));
+  }
+  
+  /**
+   * @return logbuch_model_Person
+   */
+  protected function personModel()
+  {
+  	static $personModel = null;
+  	if ( $personModel === null )
+  	{
+	  	$personModel = $this->datasourceModel()->getInstanceOfType("person");
+	  	$personId = $this->get("personId");
+	  	$personModel->load( $personId );  		
+  	}
+  	return $personModel; 
+  }
+  
+  public function authorInitials()
+  {
+  	return $this->personModel()->get("initials");
+  }
+  
+	public function authorName()
+  {
+  	$p = $this->personModel();
+  	return $p->get("givenName") . " " . $p->get("familyName");
+  }
 }
 
 

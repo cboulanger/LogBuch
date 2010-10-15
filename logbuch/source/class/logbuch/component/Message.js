@@ -71,9 +71,9 @@ qx.Class.define("logbuch.component.Message",
     vbox.add( this.getChildControl("body") ); 
     
     this.add(vbox,{flex:1});
-    this.add( this.getChildControl("deleteButton").set({
-      alignY : "middle"
-    }) );
+//    this.add( this.getChildControl("deleteButton").set({
+//      alignY : "middle"
+//    }) );
   },
   
   /*
@@ -86,8 +86,9 @@ qx.Class.define("logbuch.component.Message",
   {
     category :
     {
-      check : "String",
-      nullable : true
+      check     : "String",
+      nullable  : true,
+      event     : "changeCategory"
     },
     
     itemId :
@@ -213,7 +214,10 @@ qx.Class.define("logbuch.component.Message",
           break;
           
         case "subject":
-          control = new qx.ui.basic.Label();
+          control = new qx.ui.basic.Label().set({
+            rich : true,
+            font : "bold"
+          });
           this.bind( "subject", control, "value" );
           break;          
           

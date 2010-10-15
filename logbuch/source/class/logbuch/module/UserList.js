@@ -71,8 +71,76 @@ qx.Class.define("logbuch.module.UserList",
     _build : function( modelType )
     {
       this.getChildrenContainer().setLayout( new qx.ui.layout.VBox(5) );
+      this.__modelType = modelType;
       
-      var list = new qx.ui.list.List().set({
+      if ( modelType == "person" )
+      {
+      
+	      /*
+	       * company / organization
+	       */
+	      var organizationField  = new logbuch.component.InputField( this.tr("Company/Organization" ), null, "selectbox" );
+	      
+	      var selectBoxController1 = new qx.data.controller.List(null,organizationField.getInputControl(),"label").set({
+	        iconPath : "icon",
+	        iconOptions : {
+	          converter : function( value ){
+	            return ( value ? "../html/fancyupload/uploads/16/" + value : null );
+	          }
+	        }
+	      });
+	      selectBoxController1.setDelegate({
+	        bindItem : function(controller, item, id) {
+	          controller.bindDefaultProperties(item, id);
+	          controller.bindProperty("value", "model", null, item, id);
+	        }
+	      });
+	      this.__organizationSelectBox = selectBoxController1;
+	      selectBoxController1.addListener("changeSelection",this._loadList,this);
+	      organizationField.addListenerOnce("appear",function(){
+	       this.__sandbox.rpcRequest( 
+	          "logbuch.record", "list", 
+	          [ null, "organization" ],
+	          function( listModel ){
+	            listModel.unshift( { label: ""+this.tr("All participating organizations"), icon:null, value:null});
+	            selectBoxController1.setModel( qx.data.marshal.Json.createModel(listModel) );
+	          }, this
+	        );
+	      },this);   
+	      this.add( organizationField );
+	      
+	      /*
+	       * Position/Role
+	       */
+	      var roleField = new logbuch.component.InputField( this.tr( "Project role" ), null, "selectbox" );
+	      var selectBoxController2 = new qx.data.controller.List(null,roleField.getInputControl(),"label");
+	      selectBoxController2.setDelegate({
+	        bindItem : function(controller, item, id) {
+	          controller.bindDefaultProperties(item, id);
+	          controller.bindProperty("value", "model", null, item, id);
+	        }
+	      });
+	      selectBoxController2.addListener("changeSelection",this._loadList,this);
+	      this.__roleSelectBox = selectBoxController2;
+	      roleField.addListenerOnce("appear",function(){
+	       this.__sandbox.rpcRequest( 
+	          "logbuch.record", "getRoleList", 
+	          [ null, "role" ],
+	          function( listModel ){
+	            listModel.unshift( { label: ""+this.tr("All roles"), icon:null, value:null});
+	            selectBoxController2.setModel( qx.data.marshal.Json.createModel(listModel) );
+	          }, this
+	        );
+	      },this);
+	      this.add( roleField );
+      
+      }
+
+      
+      /*
+       * user list
+       */
+      var list = this.__list = new qx.ui.list.List().set({
         selectionMode : "single",
         itemHeight : 70,
         labelPath: "label",
@@ -82,35 +150,23 @@ qx.Class.define("logbuch.module.UserList",
             if ( value ){
               return "../html/fancyupload/uploads/64/" + value; //FIXME 
             }
-            return  "../html/fancyupload/assets/upload.png";
+            return  "../html/fancyupload/assets/person.jpg";
           }
+        },
+        delegate : {
+	        configureItem : function(item) {
+	          item.setRich(true);
+	        }
         }
       });
       
       /*
        * load list on appear
        */
-      list.addListener("appear", function(){
-        this.setEnabled(false);
-        list.resetModel();
-        list.getSelection().removeAll();
-        this.__sandbox.showNotification(this.tr("Loading list ..."));
-        this.__sandbox.rpcRequest( 
-	        "logbuch.record", "list", [ null, modelType ],
-	        function( data ){
-            this.__sandbox.hideNotification();
-            this.setEnabled(true);
-            var model = qx.data.marshal.Json.createModel( data );
-	          list.setModel( model );
-            // FIXME replace with itemHeight?
-            var rowConfig = list.getPane().getRowConfig();
-			      for (var i = 0; i < model.length; i++)
-			      {
-			        rowConfig.setItemSize(i, 70);//
-			      }
-	        }, this
-	      );      
-      },this);
+      if ( modelType == "organization" )
+      {
+        list.addListener("appear", this._loadList, this );
+      }
       
       /*
        * load data in external editor when selected
@@ -159,7 +215,7 @@ qx.Class.define("logbuch.module.UserList",
        */
       var addButton = new qx.ui.form.Button(null, "qcl/icon/button-plus.png");
       hbox.add(addButton);
-      this.__sandbox.bindPermissionState("logbuch.users.add", addButton, "enabled");
+      this.__sandbox.bindPermissionState("logbuch.members.manage", addButton, "enabled");// FIXME
       addButton.addListener("execute", function(){
         this.__sandbox.showNotification(this.tr("Creating new record ..."));
         this.__sandbox.rpcRequest( 
@@ -233,9 +289,71 @@ qx.Class.define("logbuch.module.UserList",
           );
         },this);
       }
+    },
+    
+    _loadList : function()
+    {
+      if ( this.__isLoading ) return;
+
+      var list = this.__list;
       
-	     
-          
+      /*
+       * disable and clear controls
+       */
+      this.setEnabled(false);
+      list.resetModel();
+      list.getSelection().removeAll();
+      
+      /*
+       * filter
+       */
+      
+      if (  this.__organizationSelectBox )
+      {
+        var orgSel  = this.__organizationSelectBox.getSelection();
+	      var roleSel = this.__roleSelectBox.getSelection();
+	      var where  = {};
+	      if ( orgSel.length > 0 && orgSel.getItem(0) !== null )
+	      {
+	        where['organizationId'] = orgSel.getItem(0);
+	      }
+	      if ( roleSel.length > 0 && roleSel.getItem(0) !== null )
+	      {
+	        where['position'] = roleSel.getItem(0);
+	      }
+	      if ( ! ( 'organizationId' in where || 'position' in where) )
+	      {
+	        where = null;
+	      }
+        var orderBy = "familyName";
+      }
+      else
+      {
+        var where = null;
+        var orderBy = "name";
+      }
+     
+      /*
+       * load
+       */
+      this.__isLoading = true;
+      this.__sandbox.showNotification(this.tr("Loading list ..."));
+      this.__sandbox.rpcRequest( 
+        "logbuch.record", "list", [ null, this.__modelType, where, orderBy ],
+        function( data ){
+          this.__isLoading = false;
+          this.__sandbox.hideNotification();
+          this.setEnabled(true);
+          var model = qx.data.marshal.Json.createModel( data );
+          list.setModel( model );
+          // FIXME replace with itemHeight?
+          var rowConfig = list.getPane().getRowConfig();
+          for (var i = 0; i < model.length; i++)
+          {
+            rowConfig.setItemSize(i, 70);//
+          }
+        }, this
+      );      
     },
     
     

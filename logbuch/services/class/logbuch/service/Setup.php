@@ -80,8 +80,6 @@ class logbuch_service_Setup
       {
         $lock->release();
       }
-      
-     	
       return;
     }
 
@@ -131,8 +129,8 @@ class logbuch_service_Setup
      */
     $lock = new qcl_util_system_Lock("logbuch_setup_lock");
 
-    /**
-     * register bibliograph datasource schema and create a datasource
+    /*
+     * register logbuch project datasource schema
      */
     if ( ! $cache->get("schemas_registered") )
     {
@@ -148,6 +146,21 @@ class logbuch_service_Setup
 
       $cache->set( "schemas_registered", true );
     }
+    
+    /*
+     * create initial logbuch datasource
+     */
+  	try 
+		{
+			$datasourceModel = $this->getDatasourceModel( "demo" );
+		}
+		catch( InvalidArgumentException $e )
+		{
+			$this->getDatasourceManager()->createDatasource("demo", "project", array(
+				'database' => "logbuch_devel_user"
+			) );
+			$datasourceModel = $this->getDatasourceModel( "demo" );
+		}    
 
     /*
      * remote and local file storage datasources

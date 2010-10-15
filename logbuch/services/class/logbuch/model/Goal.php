@@ -79,13 +79,16 @@ extends logbuch_model_Model
       'nullable' => true,
     ),
     
+    
     /**
      * Enter description here ...
      */
     'participants' => array (
-      'check' => 'string',
-      'sqltype' => 'varchar(255)',
-      'nullable' => true,
+      'check'     => 'array',
+      'sqltype'   => 'varchar(255)',
+    	'serialize'	=> true,
+      'nullable'  => false,
+    	'init'			=> array()
     ),
     
     /**
@@ -109,8 +112,15 @@ extends logbuch_model_Model
   {
     parent::__construct( $datasourceModel );
     $this->addProperties( $this->properties );
-
   }
+  
+  /**
+   * Returns the names of the properties defined in this class only.
+   */
+  public function ownProperties()
+  {
+  	return array_keys( $this->properties );
+  }    
 
   /*
   *****************************************************************************
@@ -118,21 +128,24 @@ extends logbuch_model_Model
   *****************************************************************************
   */
   
-  function createMessage()
+  function createMessages()
   {
   	$activeUser = $this->getApplication()->getAccessController()->getActiveUser();
   	$data = $this->data();
-  	$message = array(
+  	qcl_import( "qcl_event_message_ClientMessage" );
+    $message = new qcl_event_message_ClientMessage( "logbuch/message",  array(
   		'date'					=> date("D M d Y H:i:s \G\M\TO (T)"),
-  		'sender'				=> $activeUser->getName(),
+  		'sender'				=> $this->authorName(),
+    	'initials'			=> $this->authorInitials(),
   		'subject'				=> $data['timeStart'] . ": " . $data['subject'],
+    	'label'					=> $data['timeStart'] . ": " . $data['subject'],
   		'body'					=> $data['notes'],
   		'category'			=> "goal",
   		'itemId'				=> "goal/" . $this->id(),
   		'itemDateStart'	=> date("D M d Y H:i:s \G\M\TO (T)", strtotime( $data['dateStart']) ), 
   		'itemDateEnd'		=> date("D M d Y H:i:s \G\M\TO (T)", strtotime( $data['dateEnd']) )
-  	);
-  	return $message;
+  	));
+  	return array( $message );
   }
 
 }

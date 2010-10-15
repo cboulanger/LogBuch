@@ -182,6 +182,14 @@ class logbuch_Application
     	"logbuch.record"	   		=> "logbuch_service_Record",
      	"logbuch.acltool"     	=> "qcl_access_ACLTool"    
     ) );
+    
+    /*
+     * filter messages by registering a callback
+     */
+    qcl_import("logbuch_service_Message");
+    $this->getMessageBus()->registerOnBeforeBroadcastCallback(array(
+    	new logbuch_service_Message(), "filterMessage"
+    ));
   }
 
   /**

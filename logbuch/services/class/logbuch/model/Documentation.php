@@ -173,6 +173,14 @@ extends logbuch_model_Model
   	//$this->addRelations( $this->relations, __CLASS__ );
 
   }
+  
+  /**
+   * Returns the names of the properties defined in this class only.
+   */
+  public function ownProperties()
+  {
+  	return array_keys( $this->properties );
+  }  
 
   /*
   *****************************************************************************
@@ -180,32 +188,36 @@ extends logbuch_model_Model
   *****************************************************************************
   */
  
-   function createMessage()
+  /**
+   * Creates one or message object(s) with the category record data.
+   * @return qcl_event_message_ClientMessage[]
+   */  
+  function createMessages()
   {
   	$activeUser = $this->getApplication()->getAccessController()->getActiveUser();
   	$fields = array( "process", "result", "heureka", "stumblingBlock", "incentive", "miscellaneous" );
-  	$transl = array( "Beratungsprozess", "Ergebnis", "Aha-Erlebnis","Stolperstein", "Denkansto§", "Sonstiges");
+  	$transl = array( "Beratung", "Ergebnis", "Aha-Erlebnis","Stolperstein", "Denkansto§", "Sonstiges");
   	
   	$data = $this->data();
-  	
+  	$messages = array();
+  	qcl_import( "qcl_event_message_ClientMessage" );  	
   	foreach( $fields as $field )
   	{
   		if( ! trim( $data[$field] ) ) continue;
-  			
-  		$label = $transl[array_search($field, $fields)];
-  		
-	  	$message = array(
+  		$messages[] = new qcl_event_message_ClientMessage( "logbuch/message", array(
 	  		'date'					=> date("D M d Y H:i:s \G\M\TO (T)"),
-	  		'sender'				=> $activeUser->getName(),
-	  		'subject'				=> $label . ": " . $data[$field],
+	  		'sender'				=> $this->authorName(),
+  			'initials'			=> $this->authorInitials(),
+	  		'subject'				=> $data[ $field ],
 	  		'body'					=> $data[ $field . '_extended' ],
 	  		'category'			=> "documentation",
+  			'label'					=> $transl[array_search($field, $fields)],
 	  		'itemId'				=> "documentation/" . $this->id(),
 	  		'itemDateStart'	=> date("D M d Y H:i:s \G\M\TO (T)", strtotime( $data['dateStart']) ), 
 	  		'itemDateEnd'		=> date("D M d Y H:i:s \G\M\TO (T)", strtotime( $data['dateEnd']) )
-	  	);
-	  	return $message;
+	  	));
   	}
+  	return $messages;
   }  
 }
 ?>

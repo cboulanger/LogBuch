@@ -104,63 +104,78 @@ qx.Class.define("logbuch.module.PersonForm",
       
       qx.ui.core.FocusHandler.getInstance().addRoot(formContainer);
       
+      this.addListener("appear",function(){
+        this.__form.reset();
+        formContainer.setEnabled(false);
+        saveButton.setEnabled(false);      
+      },this);
+      
       var fields = [];
       
       /*
        * last name
        */
-      field = new logbuch.component.InputField( this.tr("Last name" ) );
-      field.setRequired(true);
-      field.addToForm( form, "familyName" );
-      vbox.add( field );
-      fields.push( field );
+      var field1 = new logbuch.component.InputField( this.tr("Last name" ) );
+      field1.setRequired(true);
+      field1.addToForm( form, "familyName" );
+      vbox.add( field1 );
+      fields.push( field1 );
+      var updateInitials = function(e)
+      {
+        if( field1.getValue() && field2.getValue() && ! field5.getValue() )
+        {
+          field5.setValue( field2.getValue().substring(0,2) + "." + field1.getValue().substring(0,2) + "." );
+        }
+      };
+      field1.addListener("changeValue", updateInitials,this);
       
       /*
        * first name
        */
-      field = new logbuch.component.InputField( this.tr("First name" ) );
-      field.setRequired(true);
-      field.addToForm( form, "givenName" );
-      vbox.add( field );
-      fields.push( field );
+      var field2 = new logbuch.component.InputField( this.tr("First name" ) );
+      field2.setRequired(true);
+      field2.addToForm( form, "givenName" );
+      vbox.add( field2 );
+      fields.push( field2 );
+      field2.addListener("changeValue", updateInitials, this );
       
       /*
        * photo
        */
-      field =  new logbuch.component.ImageField( this.tr("Portrait" ) ).set({
+      var field3 =  new logbuch.component.ImageField( this.tr("Portrait" ) ).set({
         width     : 100,
         imageSize : 80
       });
-      field.addToForm( form, "image" );
-      hbox.add( field  );
+      field3.addToForm( form, "image" );
+      hbox.add( field3  );
       
       hbox = new qx.ui.container.Composite( new qx.ui.layout.HBox(5) );
       formContainer.add(hbox);
-      fields.push( field );
+      fields.push( field3 );
       
       /*
        * academic title
        */
-      field = new logbuch.component.InputField( this.tr("Academic title" ) );
-      field.addToForm( form, "academicTitle" );
-      hbox.add( field, {flex : 3} );
-      fields.push( field );
+      var field4 = new logbuch.component.InputField( this.tr("Academic title" ) );
+      field4.addToForm( form, "academicTitle" );
+      hbox.add( field4, {flex : 3} );
+      fields.push( field4 );
       
       /*
        * initials
        */
-      field = new logbuch.component.InputField( this.tr("Initials" ) );
-      field.addToForm( form, "initials" );
-      hbox.add( field, {flex: 1} );   
-      fields.push( field );
+      var field5 = new logbuch.component.InputField( this.tr("Initials" ) );
+      field5.addToForm( form, "initials" );
+      hbox.add( field5, {flex: 1} );   
+      fields.push( field5 );
       
       /*
        * company / organization
        * FIXME create Widget for this!
        */
-      field = new logbuch.component.InputField( this.tr("Company/Organization" ), null, "selectbox" );
+      var organizationField  = new logbuch.component.InputField( this.tr("Company/Organization" ), null, "selectbox" );
       
-      var selectBoxController1 = new qx.data.controller.List(null,field.getInputControl(),"label").set({
+      var selectBoxController1 = new qx.data.controller.List(null,organizationField.getInputControl(),"label").set({
         iconPath : "icon",
         iconOptions : {
           converter : function( value ){
@@ -174,7 +189,7 @@ qx.Class.define("logbuch.module.PersonForm",
           controller.bindProperty("value", "model", null, item, id);
         }
       });
-      field.addListener("appear",function(){
+      organizationField.addListener("appear",function(){
 	     this.__sandbox.rpcRequest( 
 	        "logbuch.record", "list", 
           [ null, "organization" ],
@@ -184,36 +199,51 @@ qx.Class.define("logbuch.module.PersonForm",
 	        }, this
 	      );
       },this);
-      form.add( field.getInputControl(), null, null, "organizationId" );
+      // only manager can change organization
+      organizationField.addListener("changeEditable",function(e){
+        if ( e.getData() )
+        {
+          organizationField.setEditable( this.__sandbox.hasPermission("logbuch.members.manage") );
+        }
+      },this);      
+      form.add( organizationField.getInputControl(), null, null, "organizationId" );
       
-      formContainer.add( field );     
-      fields.push( field );
+      formContainer.add( organizationField );     
+      fields.push( organizationField );
       
       /*
        * Position/Role
        */
-      field = new logbuch.component.InputField( this.tr( "Position/Responsibility" ), null, "selectbox" );
+      var roleField = new logbuch.component.InputField( this.tr( "Project role" ), null, "selectbox" );
       
-      var selectBoxController2 = new qx.data.controller.List(null,field.getInputControl(),"label");
+      var selectBoxController2 = new qx.data.controller.List(null,roleField.getInputControl(),"label");
       selectBoxController2.setDelegate({
         bindItem : function(controller, item, id) {
           controller.bindDefaultProperties(item, id);
           controller.bindProperty("value", "model", null, item, id);
         }
       });
-      field.addListener("appear",function(){
+      roleField.addListener("appear",function(){
        this.__sandbox.rpcRequest( 
           "logbuch.record", "getRoleList", 
           [ null, "role" ],
           function( listModel ){
-            listModel.unshift( { label: ""+this.tr("Please select the position/responsibility"), icon:null, value:null});
+            listModel.unshift( { label: ""+this.tr("Please select the role in the project"), icon:null, value:null});
             selectBoxController2.setModel( qx.data.marshal.Json.createModel(listModel) );
           }, this
         );
       },this);
-      form.add( field.getInputControl(), null, null, "position" );
-      formContainer.add( field );     
-      fields.push( field );
+      // only manager can change role
+      roleField.addListener("changeEditable",function(e){
+        if ( e.getData() )
+        {
+          roleField.setEditable( this.__sandbox.hasPermission("logbuch.members.manage") );
+        }
+      },this);
+
+      form.add( roleField.getInputControl(), null, null, "position" );
+      formContainer.add( roleField );     
+      fields.push( roleField );
       
       /*
        * E-Mail
@@ -270,10 +300,7 @@ qx.Class.define("logbuch.module.PersonForm",
         enabled : false,
         visibility : "excluded"
       });
-      
-//      this.__sandbox.bindPermissionState("logbuch.members.manage", saveButton, "visibility", {
-//        converter : function( v ){ return v ? "visible" : "excluded"; }
-//      });        
+        
       hbox.add( saveButton );
       saveButton.addListener("execute", function(){ 
         var data = qx.util.Serializer.toNativeObject( this.__controller.getModel() );
@@ -294,9 +321,9 @@ qx.Class.define("logbuch.module.PersonForm",
       }, this );
       
       /*
-       * cancel
+       * close
        */
-      var cancelButton = new qx.ui.form.Button( this.tr("Cancel") );
+      var cancelButton = new qx.ui.form.Button( this.tr("Close") );
       hbox.add( cancelButton );
       cancelButton.addListener("execute",function(){
         this.fireEvent("cancel");

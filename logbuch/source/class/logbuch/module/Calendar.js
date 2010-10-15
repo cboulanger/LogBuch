@@ -242,6 +242,7 @@ qx.Class.define("logbuch.module.Calendar",
       this.__sandbox.subscribe("change-date", this._onSandboxChangeDate, this);
       this.__sandbox.subscribe("change-date-today", this._onSandboxChangeDateToday, this);
       this.__sandbox.subscribe("activate-category", this._onSandboxActivateCategory, this);
+      this.__sandbox.subscribe("reload-calendar", this._onReloadCalendar, this);
       this.__sandbox.subscribe("message", this._onMessage, this);
     },
     
@@ -253,6 +254,7 @@ qx.Class.define("logbuch.module.Calendar",
       this.__sandbox.unsubscribe("change-date", this._onSandboxChangeDate, this);
       this.__sandbox.unsubscribe("change-date-today", this._onSandboxChangeDateToday, this);
       this.__sandbox.unsubscribe("activate-category", this._onSandboxActivateCategory, this);
+      this.__sandbox.unsubscribe("reload-calendar", this._onReloadCalendar, this);
       this.__sandbox.unsubscribe("message", this._onMessage, this);
     },
     
@@ -264,7 +266,20 @@ qx.Class.define("logbuch.module.Calendar",
     _applyDate : function( date, old )
     {
       if ( old && date.getTime() == old.getTime() ) return;
-      
+      this.load( date, old );
+    },
+    
+    _onReloadCalendar : function()
+    {
+      this.load();
+    },
+    
+        
+    
+    // FIXME load visible Area first and other areas later
+    load : function( date, old)
+    {
+      date = date || this.getDate();
       var df = new  qx.util.format.DateFormat();
       var msday = 24*60*60*1000;
       
@@ -292,6 +307,18 @@ qx.Class.define("logbuch.module.Calendar",
         var lastLoaded = new Date( date.getTime() + msAheadBefore );        
         this.setLastDateLoaded( lastLoaded );
         //console.log( "last loaded: " + df.format(lastLoaded) );
+        
+        /*
+         * if not authenticated, defer until we have an authenticated
+         * user
+         */
+        if ( ! this.__sandbox.isAuthenticatedUser() )
+        {
+          this.__sandbox.callOnceWhenAuthenticated( function(){
+            this._applyDate( date, old );
+          },this);
+          return;
+        }
         
         /*
          * request messages in the given period
@@ -518,12 +545,11 @@ qx.Class.define("logbuch.module.Calendar",
      */
     _onMessage : function( e )
     {
-      var message = e.getData(); 
-      var row     = this.getRowFromCategory( message.category ); 
-      var col     = this.getColumnFromDate( message.itemDateStart );
-      var text    = message.subject;
-      
-      this.addCellText( row, col, text, message );  
+      var data = e.getData(); 
+      var row  = this.getRowFromCategory( data.category ); 
+      var col  = this.getColumnFromDate( data.itemDateStart );
+      var text = "<b>" + data.label + "</b> (" + data.initials + ")";
+      this.addCellText( row, col, text, data );  
     },
     
 
@@ -917,15 +943,15 @@ qx.Class.define("logbuch.module.Calendar",
         var cell = this.__data[row][col];
         for( var i=0; i< cell.order.length; i++ )
         {
-          var message = cell.data[cell.order[i]];
+          var data = cell.data[cell.order[i]];
           found = true;
           msglist.addMessage( new logbuch.component.Message( 
-            message.date,
-            message.subject,
-            message.sender,
-            message.body,
-            message.category,
-            message.itemId
+            data.date,
+            data.sender + " (" + data.initials + ")",
+            data.label == data.subject ? data.subject : ( data.label + ": " + data.subject),
+            data.body,
+            data.category,
+            data.itemId
           ) );
         }
         

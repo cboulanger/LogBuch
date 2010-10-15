@@ -49,6 +49,13 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       check    : "Date",
       nullable : true,
       event    : "changeDateEnd"
+    },
+    
+    authorLabel :
+    {
+      check    : "String",
+      nullable : true,
+      event    : "changeAuthorLabel"
     }
   },
   
@@ -119,6 +126,8 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
     init : function( sandbox )
     {
       this.__sandbox = sandbox;
+      var acl = logbuch.module.AccessControl.getInstance();
+      if ( ! acl.sandbox ) acl.sandbox = this.__sandbox;
     },
     
     /**
@@ -218,12 +227,7 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       {
         return;
       }
-      this._form.reset();
-      this.set({
-        dateStart : data.dateStart || data.date,
-        dateEnd   : data.dateEnd   || data.date
-      });
-      this.show();
+      this.create( data.date );
     },
     
     _onSandboxLoadCategoryItem  : function(e)
@@ -233,23 +237,13 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       {
         return;
       }
-      this._form.reset();
-      this.__sandbox.showNotification(this.tr("Loading record ..."));
-      this.__sandbox.publish("activate-category", this.getName() );
-      this.__sandbox.rpcRequest(
-        "logbuch.category","read",[this.getName(),data.id],
-        function(data){
-          this.__sandbox.hideNotification();
-          this._controller.setModel( qx.data.marshal.Json.createModel( data ) ); //FIXME
-          this.show();
-          this.__sandbox.publish("activate-category", this.getName() );
-        },this
-      );  
-    },
+      this.load( data );
+    },    
+
     
     /*
     ---------------------------------------------------------------------------
-       INTERNAL METHODS
+       WIDGET CREATION
     ---------------------------------------------------------------------------
     */
     
@@ -310,36 +304,41 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       });
       
       
-      // documents
-      var button4 = new qx.ui.form.Button( null, "logbuch/icon/24/documents.png" ).set({
-        toolTipText :this.tr("Documents")
-      });
-      button4.addListener("execute",this.showAttachments,this);
-      hbox.add(button4);      
-      
-      // photos
-      var button2 = new qx.ui.form.Button( null, "logbuch/icon/24/photo.png" ).set({
-        toolTipText :this.tr("Photo Gallery")
-      });
-      button2.addListener("execute",this.showPhotoGallery,this);
-      hbox.add(button2);
-      
-      // discussion
-      var button3 = new qx.ui.form.Button( null, "logbuch/icon/24/cloud.png" ).set({
-        toolTipText :this.tr("Discussion")
-      });
-      button3.addListener("execute",this.showDiscussion,this);
-      hbox.add(button3);
-      
+//      // documents
+//      var button4 = new qx.ui.form.Button( null, "logbuch/icon/24/documents.png" ).set({
+//        toolTipText :this.tr("Documents")
+//      });
+//      button4.addListener("execute",this.showAttachments,this);
+//      hbox.add(button4);      
+//      
+//      // photos
+//      var button2 = new qx.ui.form.Button( null, "logbuch/icon/24/photo.png" ).set({
+//        toolTipText :this.tr("Photo Gallery")
+//      });
+//      button2.addListener("execute",this.showPhotoGallery,this);
+//      hbox.add(button2);
+//      
+//      // discussion
+//      var button3 = new qx.ui.form.Button( null, "logbuch/icon/24/cloud.png" ).set({
+//        toolTipText :this.tr("Discussion")
+//      });
+//      button3.addListener("execute",this.showDiscussion,this);
+//      hbox.add(button3);
+//      
+//      // upload
+//      var button1 = new qx.ui.form.Button( null, "logbuch/icon/24/arrow-up.png").set({
+//        toolTipText : this.tr("Upload Files")
+//      });
+//      button1.addListener("execute",this.uploadPhotos,this);
+//      hbox.add(button1);
+
       // spacer
       hbox.add( new qx.ui.core.Spacer(), {flex:1});
       
-      // upload
-      var button1 = new qx.ui.form.Button( null, "logbuch/icon/24/arrow-up.png").set({
-        toolTipText : this.tr("Upload Files")
-      });
-      button1.addListener("execute",this.uploadPhotos,this);
-      hbox.add(button1);
+      // close
+      var button = new qx.ui.form.Button(this.tr("Close")); //,"logbuch/icon/24/cancel.png").set({
+      button.addListener("execute",this.close,this);
+      hbox.add(button);      
       
       grid.add( hbox, { row : numRows-1, column : 3 } );     
     },
@@ -353,9 +352,9 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
         rich      : true,
         alignY    : "bottom"
       });
-      this.__sandbox.subscribe("authenticated",function(){
+      this.addListener("changeAuthorLabel", function(e){
         label.setValue( 
-          this.tr("Created by %1", this.__sandbox.getActiveUserData().fullname ) // FIXME !! 
+          this.tr("Created by %1", e.getData() )  
         ); 
       },this);
       hbox.add( label, {flex:1} );
@@ -373,25 +372,25 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       });
       
       // save 
-      var button = new qx.ui.form.Button(null,"logbuch/icon/24/save.png").set({
-        toolTipText : this.tr("Save")
-      });
+      var button = new qx.ui.form.Button(this.tr("Save"));//,"logbuch/icon/24/save.png").set({
       button.addListener("execute",this.save,this);
-      hbox.add(button,{flex:1});
+      hbox.add(button);
+      this.__saveButton = button;
+      
+      
+      // delete 
+      var deleteButton = new qx.ui.form.Button(this.tr("Delete"));//,"logbuch/icon/24/save.png").set({
+      deleteButton.addListener("execute",this.deleteItem,this);
+      deleteButton.setEnabled(false);
+      this.__deleteButton = deleteButton;
+      hbox.add(deleteButton);
       
       // invite/Send
-      var button = new qx.ui.form.Button(null,"logbuch/icon/24/mail.png").set({
-        toolTipText : this.tr("Invite")
-      });
-      button.addListener("execute",this.send,this);
-      hbox.add(button,{flex:1});
-      
-      // cancel
-      var button = new qx.ui.form.Button(null,"logbuch/icon/24/cancel.png").set({
-        toolTipText : this.tr("Cancel")
-      });
-      button.addListener("execute",this.cancel,this);
-      hbox.add(button,{flex:1});
+//      var button = new qx.ui.form.Button(null,"logbuch/icon/24/mail.png").set({
+//        toolTipText : this.tr("Send")
+//      });
+//      button.addListener("execute",this.send,this);
+//      hbox.add(button,{flex:1});
       
       return hbox;
     },
@@ -444,102 +443,6 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       return "logbuch-category-" + this.getName();
     },
     
-    cancel : function()
-    {
-      this._form.reset();        
-      this.__sandbox.publish("activate-category",null);
-      
-      this.hide();
-    },
-    
-    /**
-     * Saves the 
-     */
-    save : function()
-    {
-      this.fireDataEvent("focusRow",null);
-      
-      var acl = logbuch.module.AccessControl.getInstance();
-      acl.set({
-        callback : this._save,
-        context  : this
-      });
-      
-      acl.show();
-      
-//      var selection= this._form.getItems()['participants'].getSelection();
-//      console.log(selection);
-//      acl._addAllowedItems( selection );
-    },
-    
-    _save : function (result)
-    {
-      if( ! result ) return;
-      
-      if ( this._controller.getModel() && this._controller.getModel().getId )
-      {
-        //this._update(); FIXME!ar
-        this._create();
-      }
-      else
-      {
-        this._create();
-      }
-    },
-    
-    _update : function()
-    {
-      var data  = this.getData();
-      
-      /*
-       * get the access scope 
-       */
-      var scope = logbuch.module.AccessControl.getInstance().getData();
-
-      //this.__sandbox.publish("activate-category",null);
-      
-      this.__sandbox.showNotification(this.tr("Updating %1", this.getLabel() ) );
-      this.__sandbox.rpcRequest(
-        "logbuch.category", "update", 
-        [ this.getName(), this._controller.getModel().getId(), data, scope ], 
-        function(){
-          this.__sandbox.hideNotification();           
-        }, this
-      );
-
-    },    
-    
-    _create : function()
-    {
-      var data  = this.getData();
-      
-      /*
-       * add start and end time if not set by form
-       */
-      if ( ! data.dateStart )
-      {
-        data.dateStart = this.getDateStart().toDateString();
-        data.dateEnd   = this.getDateStart().toDateString();
-      }
-      
-      /*
-       * get the access scope 
-       */
-      var scope = logbuch.module.AccessControl.getInstance().getData();
-
-      //this.__sandbox.publish("activate-category",null);
-      
-      this.__sandbox.showNotification(this.tr("Creating %1", this.getLabel() ) );
-      this.__sandbox.rpcRequest(
-        "logbuch.category", "create", 
-        [ this.getName(),data, scope ], 
-        function(){
-          this.__sandbox.hideNotification();           
-        }, this
-      );
-
-    },
-    
     getModel : function()
     {
       return this._controller.getModel() || this._controller.createModel();
@@ -567,12 +470,178 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
     createMessages : function()
     {
       this.error("Not implemented in category " + this.getName() );
-    }, 
+    },     
     
-    send : function()
+    
+    /**
+     * Creates a category item of the current type
+     */    
+    create : function( date )
     {
-      dialog.Dialog.alert("Senden noch nicht implementiert");
+      if ( ! date instanceof Date )
+      {
+        this.error("Argument must be a Date object");
+      }
+      
+      /*
+       * reset forms
+       */
+      this._form.reset();
+      logbuch.module.AccessControl.getInstance().reset();
+      
+      /*
+       * create item on the server
+       */
+      this.__isUnsaved = true;
+      this.__sandbox.showNotification(this.tr("Creating %1", this.getLabel() ) );
+      this.__sandbox.rpcRequest(
+        "logbuch.category", "create", 
+        [ this.getName(), date.toString() ], 
+        this._populateForms, this 
+      );
+
     },
+        
+    /**
+     * Populates the category form and the acl form with the server data
+     * @param itemData {Object} 
+     * @return {void}
+     */
+    load : function( itemData )
+    {
+      this._form.reset();
+      this.__sandbox.showNotification(this.tr("Loading record ..."));
+      this.__sandbox.publish("activate-category", this.getName() );
+      this.__sandbox.rpcRequest(
+        "logbuch.category","read",[ this.getName(), itemData.id ],
+        this._populateForms, this
+      );
+    },
+    
+    /**
+     * Populates the category form and the acl form with the server data
+     * @param data {Object}
+     * @return {void}
+     */
+    _populateForms : function( data )
+    {
+      this.__sandbox.hideNotification();
+      
+      if( data.authorLabel )
+      {
+        this.setAuthorLabel( data.authorLabel );
+      }
+      
+      var aclModel  = qx.data.marshal.Json.createModel( data.acl ); 
+      var itemModel = qx.data.marshal.Json.createModel( data.item );
+      
+      logbuch.module.AccessControl.getInstance().setModel( aclModel );
+      this._controller.setModel( itemModel );
+      
+      this.__deleteButton.setEnabled( data.allowDelete );
+      
+      this.__sandbox.publish("activate-category", this.getName() );
+      
+      this.show();
+    },
+        
+    
+    /**
+     * Saves category data after showing the ACL dialag
+     */
+    save : function()
+    {
+      this.fireDataEvent("focusRow",null);
+      var acl = logbuch.module.AccessControl.getInstance();
+      acl.set({
+        callback : this._save,
+        context  : this
+      });
+      if( this._controller.getModel().getParticipants )
+      {
+        acl.getModel().set('moreMembers',  this._controller.getModel().getParticipants() );
+      }
+      acl.show();
+    },
+      
+    
+    /**
+     * Called when acl data has been set, 
+     */
+    _save : function( proceed )
+    {
+      if ( ! proceed ) return;
+      
+      var itemData = this.getData();
+      var aclData  = logbuch.module.AccessControl.getInstance().getData();
+      
+      var id = itemData.id;
+      delete itemData.id;
+      
+      this.__sandbox.showNotification(this.tr("Updating %1", this.getLabel() ) );
+      this.__sandbox.rpcRequest(
+        "logbuch.category", "update", 
+        [ this.getName(), id, itemData, aclData ], 
+        function(){
+          this.__sandbox.hideNotification();
+          this.__sandbox.publish("activate-category",null);
+          if ( ! this.__isUnsaved )
+          {
+            this.__sandbox.publish("reload-calendar");  
+          }
+          this.__isUnsaved = false;
+        }, this
+      );
+    },    
+    
+    /**
+     * Deletes the current category data
+     */
+    deleteItem : function()
+    {
+      dialog.Dialog.confirm( this.tr("Do you really want to delete this item?"), function(yes){
+        if ( ! yes ) return;
+	      this.__sandbox.showNotification(this.tr("Deleting %1", this.getLabel() ) );
+	      this.__sandbox.rpcRequest(
+	        "logbuch.category", "delete", 
+	        [ this.getName(), this._controller.getModel().getId() ], 
+	        function(){
+	          this.__sandbox.hideNotification();
+	          this.__sandbox.publish("activate-category",null);
+	          this.__sandbox.publish("reload-calendar",null);
+	        }, this
+	      );      
+      },this);
+    },   
+    
+    /**
+     * Closes the category form
+     */
+    close : function()
+    {
+      if ( this.__isUnsaved )
+      {
+        dialog.Dialog.select( 
+          this.tr("You have not yet saved this record. Do you want to save or discard it?"),
+          [ { label: this.tr("Save"), value: true}, { label: this.tr("Discard"), value: false} ],
+          function( doSave ){
+            if ( doSave === true ) {
+              this.save();
+            } else {
+              this.deleteItem();
+            }
+          },this, false
+        ); 
+      }
+      else
+      {
+	      this._form.reset();
+	      this.__sandbox.publish("activate-category",null);      
+	      this.__deleteButton.setEnabled( false );
+	      this.hide();
+      }
+    },
+    
     
     uploadPhotos : function()
     {

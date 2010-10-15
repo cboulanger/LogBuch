@@ -113,7 +113,7 @@ class logbuch_service_Record
 	 * Creates a model record on the server and returns the 
 	 * UI element model of it. 
 	 * @param string $datasource
-	 * @param $modelType
+	 * @param string $modelType
 	 * @return array
 	 */
 	function method_create( $datasource, $modelType )
@@ -252,15 +252,19 @@ class logbuch_service_Record
 			 * check necessary information
 			 */
 			$requiredFields = array( 
-				"email" 			=>  $this->tr("E-Mail"),
-				"familyName" 	=> 	$this->tr("Family name"),
-				"givenName"		=>  $this->tr("Given Name" )
+				"email" 						=>  $this->tr("E-Mail"),
+				"familyName" 				=> 	$this->tr("Family name"),
+				"givenName"					=>  $this->tr("Given name" ),
+				"organizationId"		=>  $this->tr("Organisation" ),
+				"position"					=>  $this->tr("Project role" ),
+				"initials"					=>  $this->tr("Initials" )
 			);
 			foreach( $requiredFields as $key => $label )
 			{
 				if ( ! $data->$key )
 				{
-					throw new InvalidJsonRpcArgumentException( $this->tr( "You need to enter a value in field '%s'.", $label ) );
+					qcl_import("qcl_ui_dialog_Alert");
+					return new qcl_ui_dialog_Alert( $this->tr( "You need to enter a value in field '%s'.", $label ) );
 				}
 			}
 			
@@ -408,17 +412,69 @@ class logbuch_service_Record
 		return $listModel;
 	}	
 	
+	/**
+	 * Returns data for a list of persons
+	 * Enter description here ...
+	 * @param $datasource
+	 * @param $identifier
+	 */
+	function method_personList( $datasource, $identifier )
+	{
+		if ( is_array( $identifier ) )
+		{
+			$list = implode( ",", $identifier );
+			$query = new qcl_data_db_Query(array( 
+				where 						=> "id IN($list) " // FIXME
+			));
+		}
+		elseif ( trim( $identifier ) == "alle" )  
+		{
+			$query = new qcl_data_db_Query(array( 
+				where 			=> null
+			));
+		}
+		elseif ( is_string( $identifier ) ) 
+		{
+			$query = new qcl_data_db_Query(array( 
+				where 			=> "familyName LIKE :search OR givenName LIKE :search",
+				parameters 	=> array( ':search' => "%$identifier%")
+			));
+		}
+		else
+		{
+			throw new InvalidArgumentException("Invalid identifier");
+		}
+		
+		$listModel = array();
+		$model = $this->getModel("demo", "person" );
+		
+//		$this->getLogger()->setFilterEnabled(QCL_LOG_DB, true);
+		$model->find( $query );
+//		$this->getLogger()->setFilterEnabled(QCL_LOG_DB, false);
+		
+		if( $model->foundNothing() )
+		{
+			return $listModel;
+		}
+		while( $model->loadNext() )
+		{
+			$listModel[] = array(
+				'label'		=> $model->getFullName(),
+				'value'		=> $model->id()
+			);
+		}
+		return $listModel;
+	}
+	
 	// FIXME
 	function method_getRoleList()
 	{
 		return array(
 			array( 'value' => "employee", 	'label' => "Mitarbeiter/in" ), // 'label' => $this->tr("Employee") ), // 
-			array( 'value' => "external", 	'label' => "Externe Mitarbeiter/in" ), // 'label' => $this->tr("External employee") ), // 
+			array( 'value' => "external", 	'label' => "Dienstleister/in" ), // 'label' => $this->tr("External employee") ), // 
 			array( 'value' => "consultant", 'label' => "Berater/in" ), // 'label' => $this->tr("Consultant") ),
-			array( 'value' => "academic", 	'label' => "Wissenschaftliche Begleitung" ), // 'label' => $this->tr("Academic consultant") ),
-			array( 'value' => "leader", 		'label' => "Projektleitung" ) // 'label' => $this->tr("Project Leader") )
+			array( 'value' => "scientist", 	'label' => "Wissenschaftliche Begleitung" ) // 'label' => $this->tr("Scientific expert") )
 		);
 	}
-
 }
 ?>
