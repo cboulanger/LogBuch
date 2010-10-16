@@ -101,7 +101,15 @@ class logbuch_service_Category
 		 * load record
 		 */
 		$model = $this->getDatasourceModel( "demo" )->getModelOfType( $category );
-		$model->load( $id );		
+		try 
+		{
+			$model->load( $id );
+		}
+		catch( qcl_data_model_RecordNotFoundException $e )
+		{
+			qcl_import("qcl_ui_dialog_Alert");
+			return new qcl_ui_dialog_Alert( $this->tr("This record has been deleted.") );
+		}		
 		
 		/*
 		 * item data
@@ -203,7 +211,6 @@ class logbuch_service_Category
 			{
 				$newAcl[$key] = array_diff( $acl->$key, $value );
 			}
-			
 		}	
 		$bus = qcl_event_message_Bus::getInstance();
 		foreach( $model->createMessages() as $message )
@@ -211,6 +218,9 @@ class logbuch_service_Category
 			$message->setAcl( $newAcl );
 			$message->setBroadcast( true );
 			$message->setExcludeOwnSession( false );
+			$data = $message->getData();
+			$data['isPrivate'] = $model->isPrivate();
+			$message->setData( $data );			
 			$bus->dispatch($message);
 		}
 		

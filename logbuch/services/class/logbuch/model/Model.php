@@ -169,6 +169,33 @@ extends qcl_data_model_db_ActiveRecord
   }
   
   /**
+   * Returns true if the record is only accessible by the creator
+   * of the record
+   * @return boolean
+   */
+  public function isPrivate()
+  {
+  	static $aclNames = null;
+  	if( $aclNames === null )
+  	{
+	  	$aclModel = new logbuch_model_AccessControlList();
+	  	$aclNames = $aclModel->getAclNames();
+  	}
+  	$private = true;
+  	foreach( $aclNames as $key )
+  	{
+  		$value = $this->get( $key );
+  		if (  ( is_bool($value) and $value === true ) or 
+  					( is_array($value) and count( $value ) > 0 ) ) 
+  		{
+  			$private = false;
+  			break;
+  		}
+  	}
+  	return $private;
+  }  
+  
+  /**
    * @return logbuch_model_Person
    */
   protected function personModel()

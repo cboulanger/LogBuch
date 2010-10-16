@@ -78,6 +78,9 @@ class logbuch_service_Message
 					foreach( $model->createMessages() as $message )
 					{
 						$message->setAcl( $model->aclData() );
+						$data = $message->getData();
+						$data['isPrivate'] = $model->isPrivate();
+						$message->setData( $data );
 						$bus->dispatch( $message );
 					}
 				}
@@ -91,8 +94,11 @@ class logbuch_service_Message
 	/**
 	 * Filters message according to acl
 	 * @param qcl_event_message_ClientMessage $message
+	 * 		The message to dispatch
 	 * @param qcl_access_model_Session $sessionModel
+	 * 		The loaded model of the session that is to receive the message
 	 * @param qcl_access_model_User $userModel
+	 * 		The loaded model of the user that is to receive the message
 	 * @return boolean True if message should be broadcast, false if not.
 	 */
 	public function filterMessage( 
@@ -104,10 +110,9 @@ class logbuch_service_Message
 		/*
 		 * administrators can see everything
 		 */
-		if ( $this->hasRole( QCL_ROLE_ADMIN ) )
+		if ( $userModel->hasRole( QCL_ROLE_ADMIN ) )
 		{
-			$this->debug( "Admin access", __CLASS__, __LINE__ );
-			$access = true;
+			return true;
 		}		
 				
 		/*
@@ -122,7 +127,6 @@ class logbuch_service_Message
 		 * no message to anonymous clients
 		 */
 		if ( $userModel->isAnonymous() ) {
-			$this->debug( "Anonymous", __CLASS__, __LINE__ );
 			return false;		
 		}
 	
@@ -190,32 +194,22 @@ class logbuch_service_Message
 		$access = $aclModel->checkAccess( $sender, $recipient );
 		
 		/*
-		 * if current user is the recipient and the author and no other access exists,
-		 * this is a private message
+		 * if current user is the recipient and the author, grant access
 		 */
-		$data = $message->getData();
-		if ( 		$activeUserPerson->id()	== $sender->id()
-				and $activeUserPerson->id() == $recipient->id()  
-				and ! $access )
+		if ( $activeUserPerson->id()	== $sender->id()
+				and $activeUserPerson->id() == $recipient->id() )
 		{
 			$access = true;
-			$data['isPrivate'] = true;
 		}
-		else
-		{
-			$data['isPrivate'] = false;
-		}
-		$message->setData($data);
 		
-$this->debug( sprintf(
-	"\n%s => user: %s, author: %s, recipient: %s, private: %s, access: %s",
-	$data['subject'],
-	$activeUserPerson->getFullName(),
-	$sender->getFullName(),
-	$recipient->getFullName(),
-	($data['isPrivate'] === true ? "yes" : "no"),
-	($access === true ? "yes" : "no" )
-), __CLASS__, __LINE__ );		
+//$this->debug( sprintf(
+//	"\n%s => user: %s, author: %s, recipient: %s, access: %s",
+//	$data['subject'],
+//	$activeUserPerson->getFullName(),
+//	$sender->getFullName(),
+//	$recipient->getFullName(),
+//	($access === true ? "yes" : "no" )
+//), __CLASS__, __LINE__ );		
 				
 		return $access;
 	}
