@@ -163,11 +163,13 @@ qx.Class.define("logbuch.module.AccessControl",
       // when value changes, recreate tokens
       field7.addListener("loadTokenData", function(){
         field7.setEnabled(false);
+        okButton.setEnabled(false);
         this.sandbox.rpcRequest( 
           "logbuch.record", "personList", 
           [null, field7.getTokenIds().toArray() ],
           function ( data ){
             field7.setEnabled(true);
+            okButton.setEnabled(true);
             data.forEach( function( itemModelData ) {
               field7.addToken( itemModelData );
             });    

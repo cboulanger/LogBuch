@@ -121,6 +121,7 @@ extends logbuch_model_Model
     $message = new qcl_event_message_ClientMessage( "logbuch/message", array(
   		'date'					=> date("D M d Y H:i:s \G\M\TO (T)"),
   		'sender'				=> $this->authorName(),
+	 		'senderId'			=> $this->authorId(),
     	'initials'			=> $this->authorInitials(),
   		'subject'				=> date( "H:i", strtotime( $data['dateStart'] ) ) . ": " . $data['subject'],
     	'label'					=> date( "H:i", strtotime( $data['dateStart'] ) ) . ": " . $data['subject'],

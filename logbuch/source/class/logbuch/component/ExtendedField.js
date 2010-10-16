@@ -13,7 +13,7 @@
 ************************************************************************ */
 
 /* ************************************************************************
-
+#asset(logbuch/icon/16/cancel.png)
 ************************************************************************ */
 
 /**
@@ -44,7 +44,7 @@ qx.Class.define("logbuch.component.ExtendedField",
    * @param form {qx.ui.form.Form} 
    * @param label{String} The label of the field
    */
-  construct : function( field, name, form, label )
+  construct : function( field, name, form, label, controller )
   {
     this.base(arguments);
     
@@ -59,7 +59,7 @@ qx.Class.define("logbuch.component.ExtendedField",
     }));
     
     hbox.add( new qx.ui.core.Spacer(), {flex:1} );
-    var img = new qx.ui.basic.Image( "resource/logbuch/icon/16/cancel.png" );
+    var img = new qx.ui.basic.Image( "logbuch/icon/16/cancel.png" );
     img.setOpacity(0.5);
     hbox.add(img);
     this.add( hbox );
@@ -95,9 +95,6 @@ qx.Class.define("logbuch.component.ExtendedField",
      */
     var longfield = new logbuch.component.InputField( this.tr("Extended Description" ),null,"textarea" );
     
-    // add to form 
-    longfield.addToForm( form, logbuch.component.ExtendedField.getExtendedFieldName( name ) );
-    
     this.add( longfield, { flex : 1 } );     
     
     longfield.getInputControl().addListener("focus",function(){
@@ -109,7 +106,15 @@ qx.Class.define("logbuch.component.ExtendedField",
       qx.util.TimerManager.getInstance().start(function(){
         if ( ! this.__isFocused ) this.hide();
       },null,this,null,50);
-    },this);        
+    },this);
+    
+    
+    
+    // add to form model 
+    //longfield.addToForm( form, long_field_name );
+    var long_field_name = logbuch.component.ExtendedField.getExtendedFieldName( name );
+    controller.bind( "model." + long_field_name, longfield.getInputControl(), "value" ); 
+    longfield.getInputControl().bind("value", controller, "model." + long_field_name );
     
   },
     

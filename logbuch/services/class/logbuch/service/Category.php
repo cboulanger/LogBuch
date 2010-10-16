@@ -128,7 +128,9 @@ class logbuch_service_Category
 		 */
 		$personModel = $this->getDatasourceModel( "demo" )->getModelOfType( "person" ); // FIXME
 		$personModel->load( $model->get("personId") );		
-		$data['authorLabel'] = $personModel->get("givenName") . " " . $personModel->get("familyName");
+		$data['authorLabel'] = 
+			$personModel->get("givenName") . " " . $personModel->get("familyName") .
+			" (" . $model->getCreated()->format("d.m.Y H:i") . ")";
 		
 		/*
 		 * acl
@@ -193,7 +195,15 @@ class logbuch_service_Category
 		
 		foreach( $oldAcl as $key => $value )
 		{
-			$newAcl[$key] = ( $value === false && $acl->$key === true );
+			if ( is_bool($value) )
+			{
+				$newAcl[$key] = ( $value === false && $acl->$key === true );	
+			}
+			elseif ( is_array( $value) )
+			{
+				$newAcl[$key] = array_diff( $acl->$key, $value );
+			}
+			
 		}	
 		$bus = qcl_event_message_Bus::getInstance();
 		foreach( $model->createMessages() as $message )

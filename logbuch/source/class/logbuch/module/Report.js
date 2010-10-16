@@ -137,48 +137,37 @@ qx.Class.define("logbuch.module.Report",
     //    appearance : "logbuch-field"
       });
       hbox.add( vbox1, {flex:1} );
-      this.add( hbox, {flex:1} );
+      this.add( hbox, {flex:2} );
      
-      var groupbox = new qx.ui.groupbox.GroupBox( this.tr("Entry visible for") );
-      groupbox.setLayout( new qx.ui.layout.VBox(5) );
-      vbox1.add( groupbox, {flex: 1} );
+      var groupbox0 = new qx.ui.groupbox.GroupBox( this.tr("Entries by")  );
+      groupbox0.setLayout( new qx.ui.layout.VBox(5) );
+      vbox1.add( groupbox0, {flex: 1} );
       
-      var field1 = new qx.ui.form.CheckBox( this.tr("Author") ).set({
-        value : true
-      });
-      field1.addListener("changeValue",function(e){
-        if( e.getData() == false )
-        {
-          field1.setValue(true);
-        }
-      },this);
-      
-      groupbox.add( field1 );
+      var field1 = new qx.ui.form.CheckBox( this.tr("Author") );
+      form.add( field1, null, null, "author" );
+      groupbox0.add( field1 );
       
       var field2 = new qx.ui.form.CheckBox( this.tr("Own company") );
-      groupbox.add( field2 );
+      groupbox0.add( field2 );
       form.add( field2, null, null, "ownCompany" );
       
       var field3 = new qx.ui.form.CheckBox( this.tr("Own Consultant") );
-      groupbox.add( field3 );
+      groupbox0.add( field3 );
       form.add( field3, null, null, "ownConsultant" );
       
-      var field4 = new qx.ui.form.CheckBox( this.tr("All Consultants") );
-      groupbox.add( field4 );
-      form.add( field4, null, null, "allConsultants" );
-      
       var field3b = new qx.ui.form.CheckBox( this.tr("Scientific analyst") );
-      groupbox.add( field3b );
-      form.add( field3b, null, null, "analyst" );
-
+      groupbox0.add( field3b );
+      form.add( field3b, null, null, "analyst" );    
       
-      var field5 = new qx.ui.form.CheckBox( this.tr("All portal members") );
-      groupbox.add( field5 );
-      form.add( field5, null, null, "allMembers" );  
-      
-      var groupbox0 = new qx.ui.groupbox.GroupBox( this.tr("Entries by") );
-      groupbox0.setLayout( new qx.ui.layout.Grow );
-      vbox1.add( groupbox0, {flex:1} );
+      var field6 = new qx.ui.form.CheckBox( this.tr("Individual entries by:") );
+      groupbox0.add( field6 );
+      field6.addListener("changeValue",function(e){
+        var selection = field7.getTokenIds();
+        if( e.getData() != ( selection.length > 0) )
+        {
+          field6.setValue( selection.length > 0 );  
+        }
+      },this);      
       
       /*
        * entries by
@@ -219,7 +208,12 @@ qx.Class.define("logbuch.module.Report",
         );
       },this);
       
-      this.__entriesBy = field7;     
+      this.__entriesBy = field7;  
+      
+      // update "Individual access for" dependent on selection
+      field7.addListener("changeTokenIds",function(e){
+        field6.setValue( e.getData().length > 0);
+      },this);      
       
       /*
        * middle box 
@@ -299,9 +293,13 @@ qx.Class.define("logbuch.module.Report",
 //      groupbox3.add( field3 );
 //      form.add( field3, null, null, "time" );
       
-      var groupbox4 = new qx.ui.groupbox.GroupBox( this.tr("Report") );
-      vbox2.add( groupbox4, {flex:1});
-      groupbox4.setLayout( new qx.ui.layout.VBox(5) );
+      
+      /*
+       * Report details summary
+       */
+//      var groupbox4 = new qx.ui.groupbox.GroupBox( this.tr("Report") );
+//      this.add( groupbox4, {flex:1});
+//      groupbox4.setLayout( new qx.ui.layout.VBox(5) );
 
       
       var model = this._controller.createModel();

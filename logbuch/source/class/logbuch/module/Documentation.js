@@ -16,6 +16,7 @@
 #require(logbuch.module.AccessControl)
 #require(logbuch.module.ExtendedField)
 #asset(logbuch/*)
+#asset(logbuch/icon/16/button-show-panel.png)
 ************************************************************************ */
 
 /**
@@ -166,13 +167,16 @@ qx.Class.define("logbuch.module.Documentation",
           };
         }(field), this);
         
+        // tooltip
+        field.setToolTipText( this.tr("Double-click to edit details" ) ); 
+        
 	      form.add( field, null, null, fields[i].name );
         
         /*
-         * "fullscreen"-button
+         * extended field -button
          */
-        var img = new qx.ui.basic.Image( "logbuch/icon/16/full-screen.png" );
-        img.setOpacity(0.5);
+        var img = new qx.ui.basic.Image( "logbuch/icon/16/button-show-panel.png" );
+        
         hbox.add(img);
         
         // on click, extend the editor field
@@ -182,6 +186,15 @@ qx.Class.define("logbuch.module.Documentation",
 			      _this._extendField(field, name,label);
           };
         }(field,fields[i].name,fields[i].label),this);
+        
+        // tooltip
+        img.setToolTipText( this.tr("Click here to edit details" ) ); 
+        
+        // bind opacity on content
+        var long_field_name = logbuch.component.ExtendedField.getExtendedFieldName( fields[i].name );
+        this._controller.bind( "model." + long_field_name, img, "opacity", {
+          converter : function( value ){ return value ? 1 : 0.5; }
+        });
         
 	      grid.add( hbox, { row: i, column : 1, colSpan : 2 }); 
       }

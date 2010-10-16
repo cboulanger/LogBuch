@@ -143,6 +143,7 @@ extends logbuch_model_Model
 	  		'date'					=> date("D M d Y H:i:s \G\M\TO (T)"),
 	  		'initials'			=> $this->authorInitials(),
 	  		'sender'				=> $this->authorName(),
+	  		'senderId'			=> $this->authorId(),
 	  		'subject'				=> $data[ $field ],
 	  		'label'					=> $transl[array_search($field, $fields)],
 	  		'body'					=> $data[ $field . '_extended' ],

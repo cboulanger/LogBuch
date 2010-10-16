@@ -177,9 +177,9 @@ extends qcl_data_model_db_ActiveRecord
   	if ( $personModel === null )
   	{
 	  	$personModel = $this->datasourceModel()->getInstanceOfType("person");
-	  	$personId = $this->get("personId");
-	  	$personModel->load( $personId );  		
   	}
+  	$personId = $this->get("personId");
+  	$personModel->load( $personId );  	
   	return $personModel; 
   }
   
@@ -192,6 +192,11 @@ extends qcl_data_model_db_ActiveRecord
   {
   	$p = $this->personModel();
   	return $p->get("givenName") . " " . $p->get("familyName");
+  }
+  
+  public function authorId()
+  {
+  	return $this->get("personId");
   }
 }
 

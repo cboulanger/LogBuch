@@ -89,8 +89,7 @@ qx.Class.define("logbuch.component.InputField",
       apply     : "_applyValue",
       event     : "changeValue"
     },
-    
-    
+
     /**
      * Whether the widget is editalbe
      * @type Boolean
@@ -151,7 +150,9 @@ qx.Class.define("logbuch.component.InputField",
               break;
               
             case "textarea":
-              control = new qx.ui.form.TextArea();
+              control = new qx.ui.form.TextArea().set({
+                liveUpdate : true
+              });
               this.bind( "editable", control, "readOnly", {
                 converter : function( value ) { return ! value; }
               } );
@@ -187,7 +188,9 @@ qx.Class.define("logbuch.component.InputField",
               break;              
               
             default:
-              control = new qx.ui.form.TextField();
+              control = new qx.ui.form.TextField().set({
+                liveUpdate : true
+              });
               this.bind( "editable", control, "readOnly", {
                 converter : function( value ) { return ! value; }
               } );
@@ -266,9 +269,6 @@ qx.Class.define("logbuch.component.InputField",
     {
       form.add( this.getFormElement(), null, validator || null, name, context )
     },
-    
-
-    
     
     setRequired : function( value )
     {

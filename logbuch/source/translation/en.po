@@ -164,31 +164,31 @@ msgstr ""
 msgid "Loading record ..."
 msgstr ""
 
-#: logbuch/module/AbstractCategoryModule.js:581
+#: logbuch/module/AbstractCategoryModule.js:583
 msgid "Updating %1"
 msgstr ""
 
-#: logbuch/module/AbstractCategoryModule.js:602
+#: logbuch/module/AbstractCategoryModule.js:604
 msgid "Do you really want to delete this item?"
 msgstr ""
 
-#: logbuch/module/AbstractCategoryModule.js:604
+#: logbuch/module/AbstractCategoryModule.js:606
 msgid "Deleting %1"
 msgstr ""
 
-#: logbuch/module/AbstractCategoryModule.js:625
+#: logbuch/module/AbstractCategoryModule.js:627
 msgid "You have not yet saved this record. Do you want to save or discard it?"
 msgstr ""
 
-#: logbuch/module/AbstractCategoryModule.js:626
+#: logbuch/module/AbstractCategoryModule.js:628
 msgid "Discard"
 msgstr ""
 
-#: logbuch/module/AbstractCategoryModule.js:649
+#: logbuch/module/AbstractCategoryModule.js:650
 msgid "Upload photos"
 msgstr ""
 
-#: logbuch/module/AbstractCategoryModule.js:664
+#: logbuch/module/AbstractCategoryModule.js:665
 msgid "Gallery"
 msgstr ""
 
@@ -216,39 +216,47 @@ msgstr ""
 msgid "Diary entry"
 msgstr ""
 
-#: logbuch/module/Documentation.js:221 logbuch/Application.js:368
+#: logbuch/module/Documentation.js:171
+msgid "Double-click to edit details"
+msgstr ""
+
+#: logbuch/module/Documentation.js:191
+msgid "Click here to edit details"
+msgstr ""
+
+#: logbuch/module/Documentation.js:234 logbuch/Application.js:368
 msgid "Consultancy process"
 msgstr ""
 
-#: logbuch/module/Documentation.js:222 logbuch/Application.js:369
+#: logbuch/module/Documentation.js:235 logbuch/Application.js:369
 msgid "Result"
 msgstr ""
 
-#: logbuch/module/Documentation.js:223 logbuch/Application.js:370
+#: logbuch/module/Documentation.js:236 logbuch/Application.js:370
 #: logbuch/Application.js:379 logbuch/module/Diary.js:61
 msgid "Heureka!"
 msgstr ""
 
-#: logbuch/module/Documentation.js:224 logbuch/Application.js:371
+#: logbuch/module/Documentation.js:237 logbuch/Application.js:371
 #: logbuch/Application.js:381 logbuch/module/Diary.js:63
 msgid "Stumbling block"
 msgstr ""
 
-#: logbuch/module/Documentation.js:225 logbuch/Application.js:372
+#: logbuch/module/Documentation.js:238 logbuch/Application.js:372
 #: logbuch/Application.js:382 logbuch/module/Diary.js:64
 msgid "Incentive"
 msgstr ""
 
-#: logbuch/module/Documentation.js:226 logbuch/Application.js:373
+#: logbuch/module/Documentation.js:239 logbuch/Application.js:373
 #: logbuch/Application.js:383 logbuch/module/Diary.js:65
 msgid "Miscellaneous"
 msgstr ""
 
-#: logbuch/module/Documentation.js:236 logbuch/Application.js:366
+#: logbuch/module/Documentation.js:249 logbuch/Application.js:366
 msgid "Documentation"
 msgstr ""
 
-#: logbuch/module/Documentation.js:245
+#: logbuch/module/Documentation.js:258
 msgid "Documentation entry"
 msgstr ""
 
@@ -391,7 +399,7 @@ msgstr ""
 
 #: logbuch/module/PersonForm.js:299 logbuch/module/OrganizationForm.js:121
 #: logbuch/module/AbstractCategoryModule.js:375
-#: logbuch/module/AbstractCategoryModule.js:626
+#: logbuch/module/AbstractCategoryModule.js:628
 msgid "Save"
 msgstr ""
 

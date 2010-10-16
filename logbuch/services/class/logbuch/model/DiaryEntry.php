@@ -1,10 +1,10 @@
 <?php
 /* ************************************************************************
 
-   logBuch: Die Online-Plattform fŸr Unternehmenszusammenarbeit
+   logBuch: Die Online-Plattform fï¿½r Unternehmenszusammenarbeit
 
    Copyright:
-     2010 JŸrgen Breiter (Konzeption) Christian Boulanger (Programmierung) 
+     2010 Jï¿½rgen Breiter (Konzeption) Christian Boulanger (Programmierung) 
 
    License:
      GPL: http://www.gnu.org/licenses/gpl.html
@@ -166,7 +166,7 @@ extends logbuch_model_Model
   {
   	$activeUser = $this->getApplication()->getAccessController()->getActiveUser();
   	$fields = array( "heureka", "encounters", "stumblingBlock", "incentive", "miscellaneous" );
-  	$transl = array( "Aha-Erlebnis", "Begegnungen","Stolperstein", "Denkansto§", "Sonstiges");
+  	$transl = array( "Aha-Erlebnis", "Begegnungen","Stolperstein", "DenkanstoÃŸ", "Sonstiges");
   	$data = $this->data();
   	$messages = array();
   	qcl_import( "qcl_event_message_ClientMessage" ); 
@@ -178,6 +178,7 @@ extends logbuch_model_Model
 	  		'date'					=> date("D M d Y H:i:s \G\M\TO (T)"),
 	  		'initials'			=> $this->authorInitials(),
 	  		'sender'				=> $this->authorName(),
+	  		'senderId'			=> $this->authorId(),
 	  		'subject'				=> $data[ $field ],
 	  		'label'					=> $transl[array_search($field, $fields)],
 	  		'body'					=> $data[ $field . '_extended' ],

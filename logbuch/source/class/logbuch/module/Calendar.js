@@ -549,6 +549,10 @@ qx.Class.define("logbuch.module.Calendar",
       var row  = this.getRowFromCategory( data.category ); 
       var col  = this.getColumnFromDate( data.itemDateStart );
       var text = "<b>" + data.label + "</b> (" + data.initials + ")";
+      if ( data.isPrivate )
+      {
+        text = "<span style='color:#FF0033'>" + text + "</span>";
+      }
       this.addCellText( row, col, text, data );  
     },
     

@@ -56,14 +56,6 @@ extends qcl_core_Object
 		$access = false;
 		
 		/*
-		 * authors can see their own posts
-		 */
-		if ( $sender->id() == $recipient->id() )
-		{
-			$access = true;
-		}
-		
-		/*
 		 * own company
 		 */
 		if ( $this->ownCompany )
@@ -127,10 +119,7 @@ extends qcl_core_Object
 			{
 				$access = true;
 			}
-		}
-		
-$this->debug( ( $access ? "" : "NOT " ) . "accessible to ". $recipient->label(), __CLASS__, __LINE__ );
-				
+		}				
 		return $access;
 	}
 }

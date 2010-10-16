@@ -63,7 +63,6 @@ qx.Class.define("logbuch.component.Message",
     var hbox1 = new qx.ui.container.Composite( new qx.ui.layout.HBox(5) );
     var vbox  = new qx.ui.container.Composite( new qx.ui.layout.VBox(5) );
     
-    hbox1.add( this.getChildControl("date") );
     hbox1.add( this.getChildControl("sender") );
     
     vbox.add(hbox1);
@@ -199,14 +198,6 @@ qx.Class.define("logbuch.component.Message",
 
       switch(id)
       {
-        case "date":
-          control = new qx.ui.basic.Label();
-          this.bind( "date", control, "value", {
-            converter : function(value){
-              return logbuch.component.Message.getFormatter().format( value )
-            }
-          });
-          break;
           
         case "sender":
           control = new qx.ui.basic.Label();

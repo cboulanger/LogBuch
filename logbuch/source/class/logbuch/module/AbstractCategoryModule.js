@@ -254,7 +254,7 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       
       if ( ! this.__extendedFields[name] )
       {
-        var ef = new logbuch.component.ExtendedField( field, name, this._form, label ).set({
+        var ef = new logbuch.component.ExtendedField( field, name, this._form, label, this._controller ).set({
           width  : field.getBounds().width + 40, // FIXME
           height : this.getBounds().height - 55// FIXME
         });
@@ -537,6 +537,8 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       
       logbuch.module.AccessControl.getInstance().setModel( aclModel );
       this._controller.setModel( itemModel );
+      
+      this.__itemModel = itemModel; // save for resetting
       
       this.__deleteButton.setEnabled( data.allowDelete );
       
