@@ -52,7 +52,17 @@ qx.Class.define("logbuch.module.Goal",
 
   members :
   {
-    
+    /*
+    ---------------------------------------------------------------------------
+       INTERNAL METHODS
+    ---------------------------------------------------------------------------
+    */  
+    _getTitleHint : function()
+    {
+      return  "Bitte geben sie ein Stichwort, einen Doppelpunkt, <br/> " +
+              "und dann eine Zusammenfassung der Zielplanung ein. Beispiel: <br/>" +
+              "Abgabe: Abgabe der Produktevaluation";
+    },
     
     /*
     ---------------------------------------------------------------------------

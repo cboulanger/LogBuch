@@ -148,10 +148,8 @@ qx.Class.define("logbuch.module.Event",
         label.addListener("click",function(row){
           return function(){
             _this.fireDataEvent("focusRow", row );
-          }   
+          }; 
         }(i), this);        
-        
-        
         grid.add( label, { row : i, column : 0 } );
       }
       
@@ -167,7 +165,7 @@ qx.Class.define("logbuch.module.Event",
        */
       var field1 = new qx.ui.form.TextArea().set({
         appearance  : "logbuch-field",
-        placeholder : this.tr("Topic, Occation, Goal"),
+        toolTipText : this._getTitleHint(),
         height      : rowHeight        
       });
       field1.addListener("focus",function(){
@@ -383,11 +381,16 @@ qx.Class.define("logbuch.module.Event",
     
     /*
     ---------------------------------------------------------------------------
-       APPLY METHODS
+       INTERNAL METHODS
     ---------------------------------------------------------------------------
     */ 
 
-    
+    _getTitleHint : function()
+    {
+      return  "Bitte geben sie ein Stichwort, einen Doppelpunkt,<br /> " +
+              "und dann eine Zusammenfassung des Ereignisses ein. Beispiel:<br/>" +
+              "Teamtreffen: Treffen zur Abstimmung wegen Quartalsbudget";
+    },
     
     /*
     ---------------------------------------------------------------------------

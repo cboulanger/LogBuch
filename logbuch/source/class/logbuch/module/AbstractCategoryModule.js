@@ -621,19 +621,19 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
      */
     close : function()
     {
-      if ( this.__isUnsaved )
+      if ( false ) //this.__isUnsaved )
       {
-        dialog.Dialog.select( 
-          this.tr("You have not yet saved this record. Do you want to save or discard it?"),
-          [ { label: this.tr("Save"), value: true}, { label: this.tr("Discard"), value: false} ],
-          function( doSave ){
-            if ( doSave === true ) {
-              this.save();
-            } else {
-              this.deleteItem();
-            }
-          },this, false
-        ); 
+//        dialog.Dialog.select( 
+//          this.tr("You have not yet saved this record. Do you want to save or discard it?"),
+//          [ { label: this.tr("Save"), value: true}, { label: this.tr("Discard"), value: false} ],
+//          function( doSave ){
+//            if ( doSave === true ) {
+//              this.save();
+//            } else {
+//              this.deleteItem();
+//            }
+//          },this, false
+//        ); 
       }
       else
       {

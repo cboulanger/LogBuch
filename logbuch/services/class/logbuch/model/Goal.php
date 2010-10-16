@@ -132,15 +132,26 @@ extends logbuch_model_Model
   {
   	$activeUser = $this->getApplication()->getAccessController()->getActiveUser();
   	$data = $this->data();
+   	if ( strstr( $data['subject'], ":") )
+  	{
+  		$s = explode( ":", $data['subject'] );
+  		$label = $s[0];
+  		$body  = $s[1];
+  	}
+  	else
+  	{
+  		$label = "Ziel"; //$this->tr("Goal");
+  		$body  = $data['subject'];
+  	}  	
   	qcl_import( "qcl_event_message_ClientMessage" );
     $message = new qcl_event_message_ClientMessage( "logbuch/message",  array(
   		'date'					=> date("D M d Y H:i:s \G\M\TO (T)"),
   		'sender'				=> $this->authorName(),
     	'senderId'			=> $this->authorId(),
     	'initials'			=> $this->authorInitials(),
-  		'subject'				=> $data['timeStart'] . ": " . $data['subject'],
-    	'label'					=> $data['timeStart'] . ": " . $data['subject'],
-  		'body'					=> $data['notes'],
+  		'subject'				=> $data['timeStart'] . ": " . $label,
+    	'label'					=> $label,
+  		'body'					=> $body,
   		'category'			=> "goal",
   		'itemId'				=> "goal/" . $this->id(),
   		'itemDateStart'	=> date("D M d Y H:i:s \G\M\TO (T)", strtotime( $data['dateStart']) ), 

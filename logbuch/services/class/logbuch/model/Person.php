@@ -246,6 +246,13 @@ class logbuch_model_Person
   	}
   }
   
+  /**
+   * Loads a person model with a given user id.
+   * Enter description here ...
+   * @param unknown_type $userId
+   * @throws qcl_data_model_RecordNotFoundException
+   * @return logbuch_model_Person
+   */
   public function loadByUserId( $userId )
   {
   	try 
@@ -258,6 +265,7 @@ class logbuch_model_Person
   	{
   		throw new qcl_data_model_RecordNotFoundException("User #$userId has no associated person.");
   	}
+  	return $this;
   }  
   
 	public function getRoleMap()

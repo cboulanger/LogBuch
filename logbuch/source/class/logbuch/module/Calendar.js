@@ -548,10 +548,11 @@ qx.Class.define("logbuch.module.Calendar",
       var data = e.getData(); 
       var row  = this.getRowFromCategory( data.category ); 
       var col  = this.getColumnFromDate( data.itemDateStart );
-      var text = "<b>" + data.label + "</b> (" + data.initials + ")";
+      var label = data.label || "";
+      var text = "<b>" + label + "</b> (" + data.initials + ")";
       if ( data.isPrivate )
       {
-        text = "<span style='color:#FF0033'>" + text + "</span>";
+        text = "<span style='color:#853506'>" + text + "</span>";
       }
       this.addCellText( row, col, text, data );  
     },
@@ -951,8 +952,8 @@ qx.Class.define("logbuch.module.Calendar",
           found = true;
           msglist.addMessage( new logbuch.component.Message( 
             data.date,
-            data.sender + " (" + data.initials + ")",
-            data.label == data.subject ? data.subject : ( data.label + ": " + data.subject),
+            data.sender  + " (" + data.initials + ")",
+            data.subject,
             data.body,
             data.category,
             data.itemId

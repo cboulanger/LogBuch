@@ -116,7 +116,7 @@ class logbuch_service_Message
 		}		
 				
 		/*
-		 * check if message contains acl data, if not acces is permitted
+		 * check if message contains acl data, if not access is permitted
 		 */
 		if( ! $message->getAcl() )
 		{

@@ -118,14 +118,25 @@ extends logbuch_model_Model
   	$activeUser = $this->getApplication()->getAccessController()->getActiveUser();
   	$data = $this->data();  	
   	qcl_import( "qcl_event_message_ClientMessage" );
+  	if ( strstr( $data['subject'], ":") )
+  	{
+  		$s = explode( ":", $data['subject'] );
+  		$label = $s[0];
+  		$body  = $s[1];
+  	}
+  	else
+  	{
+  		$label = "Ereignis"; //$this->tr("Event");
+  		$body  = $data['subject'];
+  	}
     $message = new qcl_event_message_ClientMessage( "logbuch/message", array(
   		'date'					=> date("D M d Y H:i:s \G\M\TO (T)"),
   		'sender'				=> $this->authorName(),
 	 		'senderId'			=> $this->authorId(),
     	'initials'			=> $this->authorInitials(),
-  		'subject'				=> date( "H:i", strtotime( $data['dateStart'] ) ) . ": " . $data['subject'],
-    	'label'					=> date( "H:i", strtotime( $data['dateStart'] ) ) . ": " . $data['subject'],
-  		'body'					=> $data['notes'],
+  		'subject'				=> date( "H:i", strtotime( $data['dateStart'] ) ) . ": " . $label,
+    	'label'					=> $label,
+  		'body'					=> $body,
   		'category'			=> "event",
   		'itemId'				=> "event/" . $this->id(),
   		'itemDateStart'	=> date("D M d Y H:i:s \G\M\TO (T)", strtotime( $data['dateStart']) ), 

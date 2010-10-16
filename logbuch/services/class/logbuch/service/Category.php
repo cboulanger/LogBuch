@@ -3,7 +3,7 @@
 
    logBuch: Software zur online-Dokumentation von Beratungsprozessen
    
-   Copyright: Konzeption:     Jürgen Breiter
+   Copyright: Konzeption:     JÔøΩrgen Breiter
               Programmierung: Christian Boulanger 
 
    Lizenz: GPL v.2
@@ -268,19 +268,247 @@ class logbuch_service_Category
 		return "OK";
 	}		
 	
+	
+	/**
+	 * Returns the time period where this project has entries
+	 */
+	public function method_getDatePeriod()
+	{
+		$dateStart = null;
+		$dateEnd   = null;
+		
+		$dsModel = $this->getDatasourceModel("demo");
+		foreach( array("event","goal","documentation","diary","inspiration") as $type )
+		{
+			$model = $dsModel->getInstanceOfType($type);
+			$date = $model->getQueryBehavior()->fetchValues("dateStart", new qcl_data_db_Query(array(
+				'orderBy' 			=> "dateStart",
+				'numberOfRows'	=> 1
+			)));
+			if ( ! $dateStart or strtotime( $date[0] ) < strtotime( $dateStart ) )
+			{
+				$dateStart = $date[0];
+			}
+			$date = $model->getQueryBehavior()->fetchValues("dateStart", new qcl_data_db_Query(array(
+				'orderBy' 			=> "dateEnd DESC",
+				'numberOfRows'	=> 1
+			)));
+			if ( ! $dateEnd or strtotime( $date[0] ) > strtotime( $dateEnd ) )
+			{
+				$dateEnd = $date[0];
+			}			
+		}
+		$data = array();
+		$data['dateStart'] 	= date("Y/m/d", strtotime( $dateStart ) ); 
+	  $data['dateEnd'] 		= date("Y/m/d", strtotime( $dateEnd ) );		
+		return $data;
+	}
+	
 	public function method_createReport( $data )
 	{
+		$_SESSION['reportData'] = $data;
 		$reportLink = qcl_server_Server::getUrl() .
       "?service="   . $this->serviceName() .
       "&method="    . "displayReport" .
-      "&params="    . urlencode(serialize( $data )) . 
+			"&params=" .
 			"&sessionId="	. $this->getSessionId();
 		return $reportLink;
 	}
 	
-	public function method_displayReport( $data )
+	public function method_displayReport()
 	{
-		print_r( unserialize( urldecode( $data ) ) ); 
+		/*
+		 * data 
+		 */
+		$data = (array) $_SESSION['reportData'];
+		
+		/*
+		 * models
+		 */
+		$dsModel 		 = $this->getDatasourceModel("demo");
+		$personModel = $dsModel->getInstanceOfType("person");
+		$authorModel = $dsModel->createInstanceOfType("person");
+		$aclModel 	 = new logbuch_model_AccessControlList;
+		
+		$personModel->loadByUserId( $this->getActiveUser()->id() );
+		
+		header("Content-Type: text/html; charset=utf-8");
+		
+		echo 
+			"<h1 id='title'>Auswertung f√ºr logBuch 'Sustainable Business Travel in Berlin</h1>" . 
+			"<table id='meta'>" .
+				"<tr><td>Auswertungszeitraum:</td><td>" . 
+						date("d.m.Y", strtotime( $data['period_start'] ) ) . " - " .
+						date("d.m.Y", strtotime( $data['period_end'] ) ) . 
+						"</td></tr>" .
+				"<tr><td>Auswertungsdatum:</td><td>" . date("d.m.Y H:i") . "</td></tr>" .
+				"<tr><td>Erstellt durch:</td><td>" . $personModel->getFullName() .
+				"</td></tr>".
+			"</table>";
+				
+		/*
+		 * the report data
+		 */		
+		$report = array();
+		
+		/*
+		 * query to retrieve all category items in the given period
+		 */
+		$dateStart = date ("Y-m-d", strtotime( $data['period_start'] ) );
+		$dateEnd   = date ("Y-m-d", strtotime( $data['period_end'] ) );
+		
+		/*
+		 * iterate through the categories
+		 */ 
+		foreach( array("event","goal","documentation","diary","inspiration") as $category )
+		{
+			$this->debug( "Category $category", __CLASS__, __LINE__ );
+			
+			/*
+			 * if category is not chosen, skip
+			 */
+			if ( $data['category_' . $category ] == false ) {
+				$this->debug( "Skipping $category", __CLASS__, __LINE__ );
+				contiune;
+			}
+			
+			/*
+			 * category model
+			 */
+			$model = $dsModel->getInstanceOfType($category);
+				
+			/*
+			 * load model records and iterate through them
+			 */
+			$query = new qcl_data_db_Query(array(
+				'where' => array(
+						"dateStart" => array( ">=", $dateStart ),
+					 	"dateEnd"		=> array( "<=", $dateEnd )
+				)
+			));			
+			$model->find( $query );
+			while ( $model->loadNext( $query ) )
+			{
+				/*
+				 * load author model and set ACL
+				 */
+				$authorModel->load( $model->get("personId") );
+				$aclModel->setAcl( $model->aclData() ); 	
+
+				/*
+				 * date
+				 */
+				$date = date("Y/m/d", strtotime($model->get("dateStart") ) );				
+				$this->debug( "$category/$date", __CLASS__, __LINE__ );
+				
+				/*
+				 * if author and reader are not the same and the category item
+				 * is not accessible, skip
+				 */
+				if( $authorModel->id() != $personModel->id() and $aclModel->checkAccess( $authorModel, $personModel) )
+				{
+					$this->debug( "No access", __CLASS__, __LINE__ );
+					continue;
+				}
+				
+				/*
+				 * see if we're supposed to include the subcategories
+				 */
+				foreach( $data as $key => $value )
+				{
+					if ( $value == false ) continue;
+					
+					if ( substr( $key, 0, strlen( $category ) ) == $category )
+					{
+						$subcategory = substr( $key, strlen( $category ) +1 );
+						
+						/*
+						 * field content
+						 */
+						$subcategory_content  = $model->get( $subcategory );
+						
+						/*
+						 * extended field
+						 */
+						$subcategory_extended = $subcategory . "_extended";						 
+						if( $model->hasProperty( $subcategory_extended ) )
+						{
+							$subcategory_extended_content = $model->get( $subcategory_extended );
+						}
+						else 
+						{
+							$subcategory_extended_content = null;
+						}
+						
+						if( $subcategory_content )
+						{
+							$cell =& $report[ $date ][ $category ][ $subcategory ];
+							$cell[] = array( 
+								'initials'	=> $authorModel->get("initials"),
+								'content'  	=> $subcategory_content,
+								'extended'	=> $subcategory_extended_content
+							);	
+						}
+					}
+				}
+			}
+		}				
+				
+		ksort( $report );
+		echo '<style type="text/css">
+			table.sample {
+				border-width: 1px;
+				border-spacing: 2px;
+				border-style: none;
+				border-color: black;
+				border-collapse: collapse;
+				background-color: white;
+			}
+			table.sample th {
+				border-width: 1px;
+				padding: 5px;
+				border-style: solid;
+				border-color: black;
+				background-color: white;
+				-moz-border-radius: 0px 0px 0px 0px;
+			}
+			table.sample td {
+				border-width: 1px;
+				padding: 5px;
+				border-style: solid;
+				border-color: black;
+				background-color: white;
+				-moz-border-radius: 0px 0px 0px 0px;
+			}
+			</style>';
+		echo "<table id='report' class='sample'>";		
+		foreach( $report as $date => $category )
+		{
+			echo "<tr><td width='20%'><b>" . date("d.m.Y", strtotime( $date ) ) . "<b></td>";
+			echo "<td width='10%'/><td/></tr>";
+			
+			foreach( $category as $category_name => $subcategory )
+			{
+				foreach ( $subcategory as $subcategory_name => $entries )
+				{
+					foreach( $entries as $entry )
+					{
+						echo "<tr><td>$category_name<br />$subcategory_name</td>";
+						echo "<td align='center'>" . $entry['initials'] .  "</td>";
+						echo "<td>" . $entry['content'];
+						if( $entry['extended'] )
+						{
+							echo "<br />" . $entry['extended']; 
+						}
+						
+						echo  "</td></tr>";
+					}
+				}
+			}
+			
+		}
+		echo "</table>";
+		//echo "<pre>" . print_r( $report ,true ) . "</pre>"; 
 		exit;
 	}
 }

@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: logbuch\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-10-12 21:40+0100\n"
-"PO-Revision-Date: 2010-10-12 21:40+0100\n"
+"POT-Creation-Date: 2010-10-16 17:44+0100\n"
+"PO-Revision-Date: 2010-10-16 17:44+0100\n"
 "Last-Translator: Christian Boulanger <c.boulanger@qxtransformer.org>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -13,6 +13,14 @@ msgstr ""
 "X-Poedit-Basepath: .\n"
 "X-Poedit-Language: de\n"
 "X-Poedit-SearchPath-0: ../../..\n"
+
+#: ../../../class/logbuch/model/Event.php:129
+msgid "Event"
+msgstr "Ereignis"
+
+#: ../../../class/logbuch/model/Goal.php:143
+msgid "Goal"
+msgstr "Ziel"
 
 #: ../../../class/logbuch/service/ACLTool.php:47
 #: ../../../class/logbuch/service/ACLTool.php:91
@@ -157,11 +165,15 @@ msgstr "Vielen Dank, %s, Ihre E-Mailadresse wurde bestätigt."
 msgid "You can now log in at <a href='%s'>this link</a>"
 msgstr "Sie können sich nun unter <a href='%s'>diesem Link</a> einloggen. "
 
-#: ../../../class/logbuch/service/Category.php:79
+#: ../../../class/logbuch/service/Category.php:58
 msgid "Only registered users can enter data into the LogBuch."
 msgstr "Nur registrierte Benutzer können Daten eingeben (Nicht der Sys-Admin!)"
 
-#: ../../../class/logbuch/service/Category.php:186
+#: ../../../class/logbuch/service/Category.php:111
+msgid "This record has been deleted."
+msgstr "Dieser Datensatz wurde gelöscht"
+
+#: ../../../class/logbuch/service/Category.php:265
 msgid "You cannot delete this entry because you do not own it."
 msgstr "Sie können diesen Datensatz nicht löschen, weil er nicht Ihnen gehört."
 
@@ -208,20 +220,20 @@ msgstr "Die E-Mailadresse %s ist ungültig."
 msgid "Your logBuch registration"
 msgstr "Ihre Registrierung beim LogBuch"
 
-#: ../../../class/logbuch/service/Registration.php:138
+#: ../../../class/logbuch/service/Registration.php:139
 #, php-format
 msgid "A registration email has been sent to %s."
 msgstr "Eine Registrierungs-Email wurde an %s gesendet."
 
-#: ../../../class/logbuch/service/Registration.php:169
+#: ../../../class/logbuch/service/Registration.php:170
 msgid "Invalid email or username."
 msgstr "Ungültiger Benutzer/innen/name"
 
-#: ../../../class/logbuch/service/Registration.php:173
+#: ../../../class/logbuch/service/Registration.php:174
 msgid "Unknown error."
 msgstr "Unbekannter Fehler"
 
-#: ../../../class/logbuch/service/Registration.php:239
+#: ../../../class/logbuch/service/Registration.php:240
 msgid "Invalid password."
 msgstr "Ungültiges Passwort"
 
