@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: 1.0\n"
 "Report-Msgid-Bugs-To: you@your.org\n"
 "POT-Creation-Date: 2010-09-10 18:10+0100\n"
-"PO-Revision-Date: 2010-10-16 14:21+0100\n"
+"PO-Revision-Date: 2010-10-17 17:15+0100\n"
 "Last-Translator: Christian Boulanger <c.boulanger@qxtransformer.org>\n"
 "Language-Team: Team <yourteam@your.org>\n"
 "MIME-Version: 1.0\n"
@@ -32,7 +32,7 @@ msgid "Loading configuration ..."
 msgstr "Lade Konfiguration ..."
 
 #: logbuch/Application.js:348
-#: logbuch/module/Event.js:413
+#: logbuch/module/Event.js:416
 msgid "Event"
 msgstr "Ereignis"
 
@@ -51,48 +51,10 @@ msgstr "Ort"
 msgid "Participants"
 msgstr "Teilnehmende"
 
-#: logbuch/Application.js:366
-#: logbuch/module/Documentation.js:249
-msgid "Documentation"
-msgstr "Dokumentation"
-
-#: logbuch/Application.js:368
-#: logbuch/module/Documentation.js:234
-msgid "Consultancy process"
-msgstr "Beratungsprozess"
-
-#: logbuch/Application.js:369
-#: logbuch/module/Documentation.js:235
-msgid "Result"
-msgstr "Ergebnis"
-
-#: logbuch/Application.js:370
-#: logbuch/Application.js:379
-#: logbuch/module/Documentation.js:236
-#: logbuch/module/Diary.js:61
-msgid "Heureka!"
-msgstr "Aha-Erlebnis"
-
-#: logbuch/Application.js:371
-#: logbuch/Application.js:381
-#: logbuch/module/Documentation.js:237
-#: logbuch/module/Diary.js:63
-msgid "Stumbling block"
-msgstr "Stolperstein"
-
-#: logbuch/Application.js:372
-#: logbuch/Application.js:382
-#: logbuch/module/Documentation.js:238
-#: logbuch/module/Diary.js:64
-msgid "Incentive"
-msgstr "Denkanstöße"
-
-#: logbuch/Application.js:373
-#: logbuch/Application.js:383
-#: logbuch/module/Documentation.js:239
-#: logbuch/module/Diary.js:65
-msgid "Miscellaneous"
-msgstr "Sonstiges"
+#: logbuch/Application.js:357
+#: logbuch/module/Goal.js:89
+msgid "Goal"
+msgstr "Ziel"
 
 #: logbuch/Application.js:377
 #: logbuch/module/Diary.js:75
@@ -225,14 +187,6 @@ msgstr "Wollen Sie diesen Datensatz wirklich löschen?"
 msgid "Deleting %1"
 msgstr "%1 wird gelöscht ..."
 
-#: logbuch/module/AbstractCategoryModule.js:627
-msgid "You have not yet saved this record. Do you want to save or discard it?"
-msgstr "Sie haben diesen Datensatz noch nicht gesichert. Wollen Sie das jetzt tun oder ihn verwerfen?"
-
-#: logbuch/module/AbstractCategoryModule.js:628
-msgid "Discard"
-msgstr "Verwerfen"
-
 #: logbuch/module/AbstractCategoryModule.js:650
 msgid "Upload photos"
 msgstr "Fotos hochladen"
@@ -245,17 +199,9 @@ msgstr "Galerie"
 msgid "Entry visible for"
 msgstr "Eintrag sichtbar für"
 
-#: logbuch/module/AccessControl.js:114
-msgid "Own consultant"
-msgstr "Berater/in (Eigenes Unternehmen)"
-
-#: logbuch/module/AccessControl.js:118
-msgid "All consultants"
-msgstr "Alle Berater/inn/en"
-
-#: logbuch/module/AccessControl.js:126
-msgid "All portal members"
-msgstr "Alle LogBuch-Mitglieder"
+#: logbuch/module/AccessControl.js:98
+msgid "Author"
+msgstr "Autor"
 
 #: logbuch/module/AccessControl.js:130
 msgid "Individual access for"
@@ -265,7 +211,7 @@ msgstr "Individueller Zugriff für"
 msgid "Loading LogBuch data ..."
 msgstr "Lade LogBuch Daten"
 
-#: logbuch/module/Calendar.js:980
+#: logbuch/module/Calendar.js:981
 msgid "New entry ..."
 msgstr "Neuer Eintrag ..."
 
@@ -280,6 +226,49 @@ msgstr "Doppelklicken, um Details zu bearbeiten"
 #: logbuch/module/Documentation.js:191
 msgid "Click here to edit details"
 msgstr "Hier klicken, um Details zu bearbeiten"
+
+#: logbuch/module/Documentation.js:234
+#: logbuch/Application.js:368
+msgid "Consultancy process"
+msgstr "Beratungsprozess"
+
+#: logbuch/module/Documentation.js:235
+#: logbuch/Application.js:369
+msgid "Result"
+msgstr "Ergebnis"
+
+#: logbuch/module/Documentation.js:236
+#: logbuch/Application.js:370
+#: logbuch/Application.js:379
+#: logbuch/module/Diary.js:61
+msgid "Heureka!"
+msgstr "Aha-Erlebnis"
+
+#: logbuch/module/Documentation.js:237
+#: logbuch/Application.js:371
+#: logbuch/Application.js:381
+#: logbuch/module/Diary.js:63
+msgid "Stumbling block"
+msgstr "Stolperstein"
+
+#: logbuch/module/Documentation.js:238
+#: logbuch/Application.js:372
+#: logbuch/Application.js:382
+#: logbuch/module/Diary.js:64
+msgid "Incentive"
+msgstr "Denkanstöße"
+
+#: logbuch/module/Documentation.js:239
+#: logbuch/Application.js:373
+#: logbuch/Application.js:383
+#: logbuch/module/Diary.js:65
+msgid "Miscellaneous"
+msgstr "Sonstiges"
+
+#: logbuch/module/Documentation.js:249
+#: logbuch/Application.js:366
+msgid "Documentation"
+msgstr "Dokumentation"
 
 #: logbuch/module/Documentation.js:258
 msgid "Documentation entry"
@@ -301,15 +290,11 @@ msgstr "wo?"
 msgid "who?"
 msgstr "wer?"
 
-#: logbuch/module/Event.js:170
-msgid "Topic, Occation, Goal"
-msgstr "Thema, Anlass, Intention ..."
-
-#: logbuch/module/Event.js:289
+#: logbuch/module/Event.js:287
 msgid "Location, building, floor, room ..."
 msgstr "Ort, Gebäude, Etage, Raum ..."
 
-#: logbuch/module/Event.js:404
+#: logbuch/module/Event.js:407
 msgid "Events"
 msgstr "Ereignisse"
 
@@ -329,14 +314,9 @@ msgstr "Organisationsverwaltung"
 msgid "Advanced user management"
 msgstr "Erweiterte Benutzerverwaltung"
 
-#: logbuch/module/Goal.js:69
+#: logbuch/module/Goal.js:79
 msgid "Goals"
 msgstr "Zielplanung"
-
-#: logbuch/module/Goal.js:79
-#: logbuch/Application.js:357
-msgid "Goal"
-msgstr "Ziel"
 
 #: logbuch/module/Inspiration.js:60
 msgid "idea!"
@@ -434,7 +414,6 @@ msgstr "Mobiltelefon"
 #: logbuch/module/PersonForm.js:299
 #: logbuch/module/OrganizationForm.js:121
 #: logbuch/module/AbstractCategoryModule.js:375
-#: logbuch/module/AbstractCategoryModule.js:628
 msgid "Save"
 msgstr "Speichern"
 
@@ -495,62 +474,68 @@ msgstr "logBuch"
 msgid "from"
 msgstr "von"
 
-#: logbuch/module/Report.js:124
+#: logbuch/module/Report.js:128
 msgid "to"
 msgstr "bis"
 
-#: logbuch/module/Report.js:142
+#: logbuch/module/Report.js:168
 msgid "Entries by"
 msgstr "Eintragungen von "
 
-#: logbuch/module/Report.js:146
-#: logbuch/module/AccessControl.js:98
-msgid "Author"
-msgstr "Autor"
-
-#: logbuch/module/Report.js:150
+#: logbuch/module/Report.js:183
 #: logbuch/module/AccessControl.js:110
 msgid "Own company"
 msgstr "Eigenes Unternehmen"
 
-#: logbuch/module/Report.js:154
-msgid "Own Consultant"
-msgstr "Eigener Berater"
+#: logbuch/module/Report.js:187
+#: logbuch/module/AccessControl.js:114
+msgid "Own consultant"
+msgstr "Berater/in (Eigenes Unternehmen)"
 
-#: logbuch/module/Report.js:158
+#: logbuch/module/Report.js:191
+#: logbuch/module/AccessControl.js:118
+msgid "All consultants"
+msgstr "Alle Berater/inn/en"
+
+#: logbuch/module/Report.js:195
 #: logbuch/module/AccessControl.js:122
 msgid "Scientific analyst"
 msgstr "Wissenschaftliche Begleitung"
 
-#: logbuch/module/Report.js:162
-msgid "Individual entries by:"
-msgstr "Individualle Eintragungen von:"
+#: logbuch/module/Report.js:199
+#: logbuch/module/AccessControl.js:126
+msgid "All portal members"
+msgstr "Alle LogBuch-Mitglieder"
 
-#: logbuch/module/Report.js:228
+#: logbuch/module/Report.js:203
+msgid "Individual entries by:"
+msgstr "Individuelle Eintragungen von:"
+
+#: logbuch/module/Report.js:280
 msgid "Filter by category"
 msgstr "Nach Kategorie filtern"
 
-#: logbuch/module/Report.js:233
+#: logbuch/module/Report.js:285
 msgid "Subcategory"
 msgstr "Unterkategorie"
 
-#: logbuch/module/Report.js:280
-msgid "Other preferences"
-msgstr "Sonstiges"
-
-#: logbuch/module/Report.js:284
+#: logbuch/module/Report.js:335
 msgid "Photos"
 msgstr "Fotos"
 
-#: logbuch/module/Report.js:288
+#: logbuch/module/Report.js:342
 msgid "Discussions"
 msgstr "Diskussionen"
 
-#: logbuch/module/Report.js:314
+#: logbuch/module/Report.js:364
+msgid "Other preferences"
+msgstr "Sonstiges"
+
+#: logbuch/module/Report.js:391
 msgid "Create Report"
 msgstr "Bericht erstellen"
 
-#: logbuch/module/Report.js:327
+#: logbuch/module/Report.js:404
 #: logbuch/module/MessageConsole.js:71
 msgid "Cancel"
 msgstr "Abbrechen"
@@ -632,6 +617,9 @@ msgstr "Liste wird geladen ..."
 #~ msgid "New %1"
 #~ msgstr "Neue/r %1"
 
+#~ msgid "Own Consultant"
+#~ msgstr "Eigener Berater"
+
 #~ msgid "Photo 1"
 #~ msgstr ""
 
@@ -653,6 +641,9 @@ msgstr "Liste wird geladen ..."
 #~ msgid "Created by %1"
 #~ msgstr "Eingetragen von %1"
 
+#~ msgid "Discard"
+#~ msgstr "Verwerfen"
+
 #~ msgid "Own scientific expert"
 #~ msgstr "Wissenschaftliche Begleitung (Eigenes Unternehmen)"
 
@@ -665,8 +656,14 @@ msgstr "Liste wird geladen ..."
 #~ msgid "Time"
 #~ msgstr "Zeit"
 
+#~ msgid "Topic, Occation, Goal"
+#~ msgstr "Thema, Anlass, Intention ..."
+
 #~ msgid "User management"
 #~ msgstr "Benutzerverwaltung"
+
+#~ msgid "You have not yet saved this record. Do you want to save or discard it?"
+#~ msgstr "Sie haben diesen Datensatz noch nicht gesichert. Wollen Sie das jetzt tun oder ihn verwerfen?"
 
 #~ msgid "event"
 #~ msgstr ""

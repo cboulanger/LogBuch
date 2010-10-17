@@ -103,7 +103,7 @@ qx.Class.define("logbuch.module.Footer",
       });
       backButton.addListener("execute",function(){
         var date = dateField.getValue();
-        date.setDate(date.getDate() - 7 );
+        date.setDate(date.getDate() - 7 ); // FIXME
         dateField.setValue( date );
       },this);
       this.add( backButton );
@@ -156,7 +156,7 @@ qx.Class.define("logbuch.module.Footer",
       });
       forwardButton.addListener("execute",function(){
         var date = dateField.getValue();
-        date.setDate(date.getDate() + 7 );
+        date.setDate(date.getDate() + 7 );// FIXME this doesn't always work
         dateField.setValue( date );
       },this);
       this.add( forwardButton );

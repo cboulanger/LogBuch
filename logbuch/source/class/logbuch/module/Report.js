@@ -169,7 +169,9 @@ qx.Class.define("logbuch.module.Report",
       groupbox0.setLayout( new qx.ui.layout.VBox(5) );
       vbox1.add( groupbox0, {flex: 1} );
       
-      var currentUser = new qx.ui.form.CheckBox();
+      var currentUser = new qx.ui.form.CheckBox().set({
+        value : true
+      });
       this.__sandbox.subscribe("authenticated",function(e){
         if (e.getData())
         {
@@ -188,9 +190,17 @@ qx.Class.define("logbuch.module.Report",
       groupbox0.add( field3 );
       form.add( field3, null, null, "author_ownConsultant" );
       
+      var field4 = new qx.ui.form.CheckBox( this.tr("All consultants") );
+      groupbox0.add( field4 );
+      form.add( field4, null, null, "author_allConsultants" );      
+      
       var field3b = new qx.ui.form.CheckBox( this.tr("Scientific analyst") );
       groupbox0.add( field3b );
-      form.add( field3b, null, null, "author_analyst" );    
+      form.add( field3b, null, null, "author_analyst" );  
+      
+      var field5 = new qx.ui.form.CheckBox( this.tr("All portal members") );
+      groupbox0.add( field5 );
+      form.add( field5, null, null, "author_allMembers" );      
       
       var field6 = new qx.ui.form.CheckBox( this.tr("Individual entries by:") );
       groupbox0.add( field6 );
@@ -291,12 +301,24 @@ qx.Class.define("logbuch.module.Report",
         groupbox1.add( cb1 ); 
         form.add( cb1, null, null, "category_" + category );
         
+        // default
+				switch( category )
+				{
+					case "event":
+				  case "goal":
+				    cb1.setValue(true);
+				}        
+        
         var vbox = new qx.ui.container.Composite( new qx.ui.layout.VBox(5) ).set({
           visibility : "hidden"
         });
         stack.add( vbox );
         
         var boxes = [];
+        
+        var toggleButton = new qx.ui.form.CheckBox( "Alle auswählen" );  
+        vbox.add( toggleButton );        
+        
         for ( var field in struct[category].fields )
         {
           var cb2 = new qx.ui.form.CheckBox( struct[category].fields[field] ).set({
@@ -316,33 +338,33 @@ qx.Class.define("logbuch.module.Report",
           form.add( cb2, null, null, formName );
         }
         
-//        cb1.addListener("changeValue",function(vbox,boxes){
-//          return function(e){
-//            boxes.forEach( function(cb){
-//              cb.setValue(e.getData());
-//            } );
-//          };
-//        }(vbox,boxes),this);
+        toggleButton.addListener("changeValue",function(vbox,boxes){
+          return function(e){
+            boxes.forEach( function(cb){
+              cb.setValue(e.getData());
+            } );
+          };
+        }(vbox,boxes),this);        
         
         var field1 = new qx.ui.form.CheckBox( this.tr("Photos") ).set({
-         textColor : "logbuch-category-" + category
+         textColor : "logbuch-category-" + category,
+         enabled : false
         });
         vbox.add( field1 );
-        boxes.push(field1);
         form.add( field1, null, null, category + "_photos" );
     
         var field2 = new qx.ui.form.CheckBox( this.tr("Discussions") ).set({
-         textColor : "logbuch-category-" + category
+         textColor : "logbuch-category-" + category,
+         enabled : false
         });
         vbox.add( field2 );
-        boxes.push(field2);
         form.add( field2, null, null, category + "_discussions" );
         
         var field3 = new qx.ui.form.CheckBox( this.tr("Documents") ).set({
-         textColor : "logbuch-category-" + category
+         textColor : "logbuch-category-" + category,
+         enabled : false
         });
         vbox.add( field3 );
-        boxes.push(field3);
         form.add( field3, null, null, category + "_documents" );          
       
         cb1.addListener("mouseover",function(vbox){

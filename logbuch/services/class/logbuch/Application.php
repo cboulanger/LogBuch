@@ -103,8 +103,8 @@ class logbuch_Application
      * log filters
      */
     $this->getLogger()->setFilterEnabled( QCL_LOG_SETUP, true );
-    $this->getLogger()->setFilterEnabled( LOGBUCH_LOG_APPLICATION, false );
-    //$this->getLogger()->setFilterEnabled( QCL_LOG_DB, true );
+    //$this->getLogger()->setFilterEnabled( LOGBUCH_LOG_APPLICATION, true );
+    //$this->getLogger()->setFilterEnabled( QCL_LOG_LOCALE, true );
 
     /*
      * log request
@@ -175,11 +175,12 @@ class logbuch_Application
       "logbuch.setup"      		=> "logbuch_service_Setup",
     	"logbuch.registration" 	=> "logbuch_service_Registration",
     	"logbuch.access"     		=> "logbuch_service_Access",
-      "logbuch.config"     		=> "qcl_config_Service",
     	"logbuch.data"     			=> "logbuch_service_Data",
     	"logbuch.message"  			=> "logbuch_service_Message",
     	"logbuch.category"   		=> "logbuch_service_Category",
     	"logbuch.record"	   		=> "logbuch_service_Record",
+    	"logbuch.report"	   		=> "logbuch_service_Report",
+    	"logbuch.config"     		=> "qcl_config_Service",
      	"logbuch.acltool"     	=> "qcl_access_ACLTool"    
     ) );
     
@@ -223,6 +224,59 @@ class logbuch_Application
       default:
         return false;
     }
+  }
+  
+  public function getCategoryLabels()
+  {
+  	return array(
+      event => array( 
+        label   => $this->tr("Event"),
+        fields  => array(
+          subject      => $this->tr("Subject"),
+          location     => $this->tr("Location"),
+          participants => $this->tr("Participants"),
+          notes        => $this->tr("Notes")
+        )
+      ),
+      goal => array(
+        label   => $this->tr("Goal"),
+        fields  => array(
+          subject       => $this->tr("Subject"),
+          location      => $this->tr("Location"),
+          participants	=> $this->tr("Participants"),
+          notes      		=> $this->tr("Notes")
+        )
+      ),
+      documentation => array(
+        label   => $this->tr("Documentation"),
+        fields  => array(
+          process      		=> $this->tr("Consultancy process"),
+          result      		=> $this->tr("Result"),
+          heureka       	=> $this->tr("Heureka!"),
+          stumblingBlock  => $this->tr("Stumbling block"),
+          incentive       => $this->tr("Incentive"),
+          miscellaneous   => $this->tr("Miscellaneous")
+        )
+      ),
+      diary => array(
+        label   => $this->tr("Diary"),
+        fields  => array(
+          heureka       	=> $this->tr("Heureka!"),
+          encounters      => $this->tr("Encounters"),
+          stumblingBlock  => $this->tr("Stumbling block"),
+          incentive       => $this->tr("Incentive"),
+          miscellaneous   => $this->tr("Miscellaneous")
+        )
+      ),
+      inspiration => array(
+        label   => $this->tr("Inspiration"),
+        fields  => array(
+          idea      	=> $this->tr("Idea"),
+          source      => $this->tr("Inspiration source"),
+          links       => $this->tr("Links")
+        )
+      )
+  	);
   }
 }
 ?>

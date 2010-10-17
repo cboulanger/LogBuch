@@ -56,6 +56,15 @@ extends qcl_core_Object
 		$access = false;
 		
 		/*
+		 * everybody
+		 * FIXME if .. elseif .. might be faster!
+		 */
+		if ( $this->allMembers )
+		{
+			$access = true;
+		}		
+		
+		/*
 		 * own company
 		 */
 		if ( $this->ownCompany )
@@ -101,14 +110,6 @@ extends qcl_core_Object
 				$access = true;
 			}
 		}		
-		
-		/*
-		 * everybody
-		 */
-		if ( $this->allMembers )
-		{
-			$access = true;
-		}
 		
 		/*
 		 * specific members

@@ -362,6 +362,16 @@ qx.Class.define("logbuch.module.PersonForm",
                 
                 var model = qx.data.marshal.Json.createModel(data);
                 this.__controller.setModel( model );
+                
+                // hack
+                var position = model.getPosition();
+                var organizationId = model.getOrganizationId();
+                model.setPosition(null);
+                model.setOrganizationId(0);
+                model.setPosition(position);
+                model.setOrganizationId(organizationId);
+                
+                
                 this.__id = id;
                 saveButton.setEnabled(true);
                 cancelButton.setEnabled(true);

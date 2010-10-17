@@ -410,7 +410,7 @@ qx.Class.define("logbuch.Application",
 	        categories      : [ "event", "goal", "documentation", "diary", "inspiration" ],
 	        dateRowHeight   : 30,
 	        boxHeight       : 78,
-	        boxWidth        : 120,
+	        boxWidth        : 122,
 	        hGridLineWidth  : 5
 	      },
 	      sidebar : {

@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: logbuch\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-10-16 17:44+0100\n"
-"PO-Revision-Date: 2010-10-16 17:44+0100\n"
+"POT-Creation-Date: 2010-10-17 08:40+0100\n"
+"PO-Revision-Date: 2010-10-17 08:42+0100\n"
 "Last-Translator: Christian Boulanger <c.boulanger@qxtransformer.org>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -14,13 +14,89 @@ msgstr ""
 "X-Poedit-Language: de\n"
 "X-Poedit-SearchPath-0: ../../..\n"
 
-#: ../../../class/logbuch/model/Event.php:129
+#: ../../../class/logbuch/Application.php:233
 msgid "Event"
 msgstr "Ereignis"
 
-#: ../../../class/logbuch/model/Goal.php:143
+#: ../../../class/logbuch/Application.php:235
+#: ../../../class/logbuch/Application.php:244
+msgid "Subject"
+msgstr "Thema"
+
+#: ../../../class/logbuch/Application.php:236
+#: ../../../class/logbuch/Application.php:245
+msgid "Location"
+msgstr "Ort"
+
+#: ../../../class/logbuch/Application.php:237
+#: ../../../class/logbuch/Application.php:246
+msgid "Participants"
+msgstr "Teilnehmer/innen"
+
+#: ../../../class/logbuch/Application.php:238
+#: ../../../class/logbuch/Application.php:247
+msgid "Notes"
+msgstr "Notizen"
+
+#: ../../../class/logbuch/Application.php:242
 msgid "Goal"
 msgstr "Ziel"
+
+#: ../../../class/logbuch/Application.php:251
+msgid "Documentation"
+msgstr "Dokumentation"
+
+#: ../../../class/logbuch/Application.php:253
+msgid "Consultancy process"
+msgstr "Beratungsprozess"
+
+#: ../../../class/logbuch/Application.php:254
+msgid "Result"
+msgstr "Ergebnis"
+
+#: ../../../class/logbuch/Application.php:255
+#: ../../../class/logbuch/Application.php:264
+msgid "Heureka!"
+msgstr "Aha-Erlebnis"
+
+#: ../../../class/logbuch/Application.php:256
+#: ../../../class/logbuch/Application.php:266
+msgid "Stumbling block"
+msgstr "Stolperstein"
+
+#: ../../../class/logbuch/Application.php:257
+#: ../../../class/logbuch/Application.php:267
+msgid "Incentive"
+msgstr "Denkanstoß"
+
+#: ../../../class/logbuch/Application.php:258
+#: ../../../class/logbuch/Application.php:268
+msgid "Miscellaneous"
+msgstr "Sonstiges"
+
+#: ../../../class/logbuch/Application.php:262
+msgid "Diary"
+msgstr "Tagebuch"
+
+#: ../../../class/logbuch/Application.php:265
+msgid "Encounters"
+msgstr "Begegnungen"
+
+#: ../../../class/logbuch/Application.php:272
+msgid "Inspiration"
+msgstr "Inspiration"
+
+#: ../../../class/logbuch/Application.php:274
+msgid "Idea"
+msgstr "Idee"
+
+#: ../../../class/logbuch/Application.php:275
+msgid "Inspiration source"
+msgstr "Inspirationsquelle"
+
+#: ../../../class/logbuch/Application.php:276
+msgid "Links"
+msgstr "Links"
 
 #: ../../../class/logbuch/service/ACLTool.php:47
 #: ../../../class/logbuch/service/ACLTool.php:91
@@ -253,9 +329,6 @@ msgstr "Ungültiges Passwort"
 
 #~ msgid "External employee"
 #~ msgstr "Externe/r Mitarbeiter/in"
-
-#~ msgid "Consultant"
-#~ msgstr "Berater/in"
 
 #~ msgid "Academic consultant"
 #~ msgstr "Wissenschaftliche Begleitung"

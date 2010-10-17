@@ -14,7 +14,7 @@
 
 /* ************************************************************************
 
-#asset(qx/icon/${qx.icontheme}/22/actions/dialog-close.png)
+#asset(qx/icon/${qx.icontheme}/22/actions/application-exit.png)
 
 ************************************************************************ */
 
@@ -123,7 +123,7 @@ qx.Class.define("logbuch.module.Header",
       /*
        * log out button
        */
-      var logoutButton = new qx.ui.form.Button( null, "icon/22/actions/dialog-close.png" ).set({
+      var logoutButton = new qx.ui.form.Button( null, "icon/22/actions/application-exit.png" ).set({
         maxHeight : 28,
         visibility : "hidden"
       });

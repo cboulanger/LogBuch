@@ -300,13 +300,13 @@ qx.Class.define("logbuch.module.Calendar",
         date.getTime() > this.getLastDateLoaded().getTime() + msday )
       {
         var msAheadBefore = Math.floor( this.getDaysLoaded() / 2 ) * msday;
-        var firstLoaded = new Date( date.getTime() - msAheadBefore );
+        var firstLoaded = new Date( ( new Date( date.getTime() - msAheadBefore ) ).toDateString());
         this.setFirstDateLoaded( firstLoaded );
-        //console.log( "first loaded: " + df.format(firstLoaded) );
+        //console.log( "first loaded: " + (firstLoaded) );
         
-        var lastLoaded = new Date( date.getTime() + msAheadBefore );        
+        var lastLoaded = new Date( ( new Date( date.getTime() + msAheadBefore )).toDateString() );        
         this.setLastDateLoaded( lastLoaded );
-        //console.log( "last loaded: " + df.format(lastLoaded) );
+        //console.log( "last loaded: " + (lastLoaded) );
         
         /*
          * if not authenticated, defer until we have an authenticated
@@ -361,10 +361,14 @@ qx.Class.define("logbuch.module.Calendar",
             date.getTime() > this.getLastDateVisible().getTime() + msday)
       {
         var delta = date.getDay() - qx.locale.Date.getWeekStart();
+        if ( delta < 0 )
+        {
+          delta = 6;
+        }
         //console.log([date.getDay(),qx.locale.Date.getWeekStart()])
         //console.log( "Delta: " + delta );
         
-        var firstVisible = new Date( date.getTime() - delta * msday );
+        var firstVisible = new Date( date.getTime() - ( delta * msday ) );
         this.setFirstDateVisible( firstVisible );
         
         //console.log( "change first visible: " + df.format(firstVisible) );
@@ -416,13 +420,53 @@ qx.Class.define("logbuch.module.Calendar",
     },
     
     /**
+     * From http://brauchbar.de/wd/artikel/19.html
+     */
+    getJulianDate : function( date )
+    {
+			var f = (m < 3) ? -1: 0,
+          y = date.getYear(), 
+          m = date.getMonth(),
+          d = date.getDate();
+          
+		  return Math.floor((1461*(f+4800+y))/4)
+		       + Math.floor(((m-2-(f*12))*367)/12)
+		       - Math.floor(3*Math.floor((y+4900+f)/100)/4)
+		       + d
+		       - 32075;
+    },
+    
+    /**
+     * From http://www.webdeveloper.com/forum/showthread.php?t=125428
+     * @param {} date
+     * @return {}
+     */
+    getDayOfYear : function(d)
+    {   
+			var yn = d.getFullYear();
+			var mn = d.getMonth();
+			var dn = d.getDate();
+			var d1 = new Date(yn,0,1,12,0,0); // noon on Jan. 1
+			var d2 = new Date(yn,mn,dn,12,0,0); // noon on input date
+			var ddiff = Math.round((d2-d1)/864e5);
+			return ddiff+1; 
+    },    
+    
+    /**
      * Given the column, return the corresponding date
      * @param  column {Integer}
      * @return {Date}
      */
     getDateFromColumn : function( column )
     {
-      return new Date( this.getFirstDateLoaded().getTime() + 86400000 * column );
+      var d1 = this.getFirstDateLoaded();
+      var d2 = new Date( d1.getTime() +  ( 86400000 * column ) );
+      var delta = Math.abs( d1.getTimezoneOffset() ) - Math.abs( d2.getTimezoneOffset() );
+      if ( delta )
+      {
+        d2 = new Date( d2.getTime() + delta * 60000 );
+      }
+      return d2;
     },    
     
     /**
@@ -526,7 +570,7 @@ qx.Class.define("logbuch.module.Calendar",
      */
     _onScrollX : function(e)
     {
-      ////console.log(e.getData());
+      //////console.log(e.getData());
     },
     
     /**
