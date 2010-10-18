@@ -68,8 +68,8 @@ class logbuch_service_Message
 			try 
 			{
 				$where = array_merge( $acl, array(
-					"dateStart" => array( ">=", $dateStart ),
-				 	"dateEnd"		=> array( "<=", $dateEnd )
+					"dateStart"  => array( ">=", $dateStart ),
+				 	"dateStart"	 => array( "<=", $dateEnd )
 				));
 				$model->findWhere( $where );
 				$bus = qcl_event_message_Bus::getInstance();

@@ -95,7 +95,8 @@ qx.Class.define("logbuch.module.AccessControl",
       var form = this.__form = new qx.ui.form.Form(); 
       this.__controller = new qx.data.controller.Form( null, form );
       
-      var field1 = new qx.ui.form.CheckBox( this.tr("Author") ).set({
+      var field1 = new qx.ui.form.CheckBox().set({
+        label : this.tr("Author"),
         value : true
       });
       field1.addListener("changeValue",function(e){
@@ -103,6 +104,10 @@ qx.Class.define("logbuch.module.AccessControl",
         {
           field1.setValue(true);
         }
+      },this);
+      this.addListener("appear",function(e){
+        var name = this.sandbox.getActiveUserData().fullname; // FIXME
+        field1.setLabel( name );  
       },this);
       
       container.add( field1 );
@@ -129,12 +134,17 @@ qx.Class.define("logbuch.module.AccessControl",
       
       var field6 = new qx.ui.form.CheckBox( this.tr("Individual access for") );
       container.add( field6 );
+      
       field6.addListener("changeValue",function(e){
         var selection = field7.getTokenIds();
         if( e.getData() != ( selection.length > 0) )
         {
           field6.setValue( selection.length > 0 );  
         }
+      },this);
+      field6.addListener("click",function(){
+        field7.focus();
+        field7.toggle();
       },this);
       
       /*

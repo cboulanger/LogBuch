@@ -289,6 +289,12 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       var rightColumnWidth  = lc.getEvent().getRightColumnWidth();
       
       /*
+       * stack
+       */
+      var stack = new qx.ui.container.Stack();
+      grid.add( stack, { row : 0, column : 3, rowSpan : numRows-1 } );
+      
+      /*
        * explanation
        */
       var explanationBox = new qx.ui.basic.Label().set({
@@ -299,23 +305,24 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
         allowGrowX : true,
         value      : "Hier erscheinen Hilfen zu den einzelnen Feldern, wenn Sie in die Felder klicken... "
       });
-      grid.add( explanationBox, { row : 0, column : 3, rowSpan : numRows-1 } );
+      stack.add( explanationBox );
       
       this.addListener("focusRow", function(e){
+        stack.setSelection( [explanationBox] );
         explanationBox.setValue( this._getExplanation(e.getData()) || "");
       },this);
+      stack.setSelection( [explanationBox] );
       
       /*
        * attachments
        */
-//      var name = this.getName() + "-attachments";
-//      var attachments = new logbuch.module.Attachments( name, attachments ).set({
-//        maxWidth : rightColumnWidth
-//      });
-//      this.__sandbox.register(name, attachments);
-//      attachments.show();
-//      grid.add( attachments, { row : 0, column : 3, rowSpan : numRows-1 } );
-
+      var attachmentBox = new logbuch.module.Attachments("attachments_" + this.getName() ).set({
+        maxWidth : rightColumnWidth
+      });
+      attachmentBox.init( this.__sandbox );
+      attachmentBox.build();
+      stack.add( attachmentBox );
+      
       /*
        * buttons
        */
@@ -325,20 +332,68 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
         maxWidth     : rightColumnWidth
       });
       
+      /*
+       * attachment box button
+       */
+      var button = new qx.ui.form.Button("Anhänge"); 
+      button.addListener("execute",function(){
+        attachmentBox.set({
+          category : this.getName(),
+          itemId   : "" + this._controller.getModel().getId()
+        });
+        attachmentBox.load();
+        stack.setSelection( [attachmentBox] );
+      },this);
+      hbox.add(button);           
       
-//      // documents
-//      var button4 = new qx.ui.form.Button( null, "logbuch/icon/24/documents.png" ).set({
-//        toolTipText :this.tr("Documents")
-//      });
-//      button4.addListener("execute",this.showAttachments,this);
-//      hbox.add(button4);      
-//      
-//      // photos
-//      var button2 = new qx.ui.form.Button( null, "logbuch/icon/24/photo.png" ).set({
-//        toolTipText :this.tr("Photo Gallery")
-//      });
-//      button2.addListener("execute",this.showPhotoGallery,this);
-//      hbox.add(button2);
+      
+      /*
+       * Photo Gallery
+       */
+      var button2 = new qx.ui.form.Button( "Bilder" ).set({
+        toolTipText :this.tr("Photo Gallery")
+      });
+      button2.addListener("execute",function(){
+        
+        var galleryUrl = "../html/gallery/index.php" +
+                        "?category="  + this.getName() + 
+                        "&itemId="    + this._controller.getModel().getId() + 
+                        "&sessionId=" + this.__sandbox.getSessionId() + 
+                        "&nocache="   + (new Date).getTime();  
+                        
+        if ( ! logbuch.__galleryWindow || logbuch.__galleryWindow.closed )
+        {
+          logbuch.__galleryWindow = window.open(galleryUrl);
+          if ( ! logbuch.__galleryWindow )
+          {
+            dialog.Dialog.alert("Kann die Fotogalerie nicht öffnen. Bitte deaktivieren Sie den Popup-Blocker.");
+            return;
+          }
+          this.addListener("appear",function(){
+            if ( logbuch.__galleryWindow )
+            {
+              logbuch.__galleryWindow.location.href = "../html/gallery/index.php" +
+                        "?category="  + this.getName() + 
+                        "&itemId="    + this._controller.getModel().getId() + 
+                        "&sessionId=" + this.__sandbox.getSessionId() + 
+                        "&nocache="   + (new Date).getTime(); 
+            }
+          },this);
+            this.addListener("disappear",function(){
+            if ( logbuch.__galleryWindow )
+            {
+              logbuch.__galleryWindow.location.href = "about:blank";
+            }
+          },this);          
+        }
+        else
+        {
+          logbuch.__galleryWindow.location.href = galleryUrl;
+        }
+        logbuch.__galleryWindow.focus();
+      },this);
+      hbox.add(button2);
+      
 //      
 //      // discussion
 //      var button3 = new qx.ui.form.Button( null, "logbuch/icon/24/cloud.png" ).set({
@@ -561,7 +616,9 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       this._controller.setModel( itemModel );
       
       this.__itemModel = itemModel; // save for resetting
-      
+      this.__oldData   = data.item;
+
+            
       this.__deleteButton.setEnabled( data.allowDelete );
       
       this.__sandbox.publish("activate-category", this.getName() );
@@ -625,45 +682,119 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
     {
       dialog.Dialog.confirm( this.tr("Do you really want to delete this item?"), function(yes){
         if ( ! yes ) return;
-	      this.__sandbox.showNotification(this.tr("Deleting %1", this.getLabel() ) );
-	      this.__sandbox.rpcRequest(
-	        "logbuch.category", "delete", 
-	        [ this.getName(), this._controller.getModel().getId() ], 
-	        function(){
-	          this.__sandbox.hideNotification();
-	          this.__sandbox.publish("activate-category",null);
-	          this.__sandbox.publish("reload-calendar",null);
-	        }, this
-	      );      
+        this.__sandbox.showNotification(this.tr("Deleting %1", this.getLabel() ) );
+	      this._delete();
       },this);
     },   
+    
+    _delete : function()
+    {      
+      this.__sandbox.rpcRequest(
+        "logbuch.category", "delete", 
+        [ this.getName(), this._controller.getModel().getId() ], 
+        function(){
+          this.__sandbox.hideNotification();
+          this.__sandbox.publish("activate-category",null);
+          this.__sandbox.publish("reload-calendar",null);
+        }, this
+      );       
+    },
     
     /**
      * Closes the category form
      */
     close : function()
     {
-      if ( false ) //this.__isUnsaved )
+      var data = this.getData();
+      var oldData = this.__oldData;
+      var oldContainsValues = false;
+      var newContainsValues = false;
+      var valuesChanged = false; 
+      for ( var field in data )
       {
-//        dialog.Dialog.select( 
-//          this.tr("You have not yet saved this record. Do you want to save or discard it?"),
-//          [ { label: this.tr("Save"), value: true}, { label: this.tr("Discard"), value: false} ],
-//          function( doSave ){
-//            if ( doSave === true ) {
-//              this.save();
-//            } else {
-//              this.deleteItem();
-//            }
-//          },this, false
-//        ); 
+        switch ( field )
+        {
+          case "id":
+            break;
+            
+          case "dateStart": 
+          case "dateEnd":
+          case "timeStart":
+          case "timeEnd":
+            if ( oldData[field] != data[field] )
+            {
+              valuesChanged = true;
+            }
+            break;
+            
+          case "participants":
+            if ( qx.lang.Type.isArray( oldData[field] ) && oldData[field].count > 0 )
+            {
+              oldContainsValues = true;
+            }
+            if ( qx.lang.Type.isArray( data[field] ) && data[field].count > 0 )
+            {
+              newContainsValues = true;
+              qx.lang.Array.equals( oldData[field], data[field] )
+              {
+                valuesChanged = true; 
+              }
+            }
+            break;
+            
+          default:
+            if ( oldData[field] )
+            {
+              oldContainsValues = true;
+            }
+            if ( data[field] ) 
+            {
+              newContainsValues = true;
+	            if ( oldData[field] != data[field] )
+	            {
+	              valuesChanged = true;
+	            }              
+            }
+            break;
+        }
       }
-      else
+//
+//      console.warn( oldData );
+//      console.warn( data );
+//      console.warn( "oldContainsValues: " + oldContainsValues );
+//      console.warn( "newContainsValues: " + newContainsValues );
+//      console.warn( "valuesChanged: "  + valuesChanged);
+//      
+      if ( ! oldContainsValues && ! newContainsValues ) 
       {
-	      this._form.reset();
-	      this.__sandbox.publish("activate-category",null);      
-	      this.__deleteButton.setEnabled( false );
-	      this.hide();
+        this._delete();
+        return;
       }
+      else if ( valuesChanged )
+      {
+        dialog.Dialog.confirm( "Sie haben im Datensatz Veränderungen vorgenommen. Wollen Sie diese speichern?", function(save){ // FIXME
+          if( save )
+          {
+            this._controller.setModel( qx.data.marshal.Json.createModel( data ) ); // hack
+            this.save(); 
+            return;
+          }
+          else
+          {
+            if ( ! oldContainsValues ) 
+            {
+              this._delete();
+              return;
+            }
+          }
+        },this); 
+      }
+      
+      this._form.reset();
+      this.__sandbox.publish("activate-category",null);      
+      this.__deleteButton.setEnabled( false );
+      this.hide();
+      
     },
     
     
@@ -682,18 +813,6 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       
     },
     
-    showPhotoGallery : function()
-    {
-      var win =  new qx.ui.window.Window( this.tr("Gallery") ).set({
-        width  : 800,
-        height : 600,
-        layout : new qx.ui.layout.Grow()
-      });
-      win.add( new qx.ui.embed.Iframe("../html/mbgallery/gallery.php"));
-      qx.core.Init.getApplication().getRoot().add( win );
-      win.addListener("appear",win.center,win);
-      win.open();
-    },
     
     showDiscussion : function()
     {

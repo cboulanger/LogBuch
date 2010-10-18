@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: 1.0\n"
 "Report-Msgid-Bugs-To: you@your.org\n"
 "POT-Creation-Date: 2010-09-10 18:10+0100\n"
-"PO-Revision-Date: 2010-10-17 17:15+0100\n"
+"PO-Revision-Date: 2010-10-18 11:48+0100\n"
 "Last-Translator: Christian Boulanger <c.boulanger@qxtransformer.org>\n"
 "Language-Team: Team <yourteam@your.org>\n"
 "MIME-Version: 1.0\n"
@@ -201,7 +201,7 @@ msgstr "Eintrag sichtbar für"
 
 #: logbuch/module/AccessControl.js:98
 msgid "Author"
-msgstr "Autor"
+msgstr "Verfasser/in"
 
 #: logbuch/module/AccessControl.js:130
 msgid "Individual access for"

@@ -103,7 +103,7 @@ class logbuch_service_Report
 			$query = new qcl_data_db_Query(array(
 				'where' => array(
 						"dateStart" => array( ">=", $dateStart ),
-					 	"dateEnd"		=> array( "<=", $dateEnd )
+					 	"dateStart"	=> array( "<=", $dateEnd )
 				),
 				'orderBy' => "dateStart"
 			));			
@@ -257,7 +257,8 @@ class logbuch_service_Report
 								'extended'	=> $subcategory_extended_content ? 
 																nl2br($subcategory_extended_content) : null,
 								'dateStart'	=> $model->get( "dateStart" ),
-								'dateEnd'		=> $model->get( "dateEnd" )
+								'dateEnd'		=> $model->get( "dateEnd" ),
+							  'private'		=> $model->isPrivate()
 							);	
 							//$this->debug( $entry, __CLASS__, __LINE__ );
 							$report[ $date ][ $category ][ $subcategory ][] = $entry;
@@ -373,7 +374,7 @@ class logbuch_service_Report
 							( ! $data['category_goal'] ? "" :  
 								( "<li><b>Ziele</b></li><ul>" .
 								  ( $data['goal_subject'] 		  ? "<li>Titel</li>" :  "" ) .
-									( $data['goal_participants'] 	? "<li>Betroffene</li>" :  "" ) .
+									( $data['goal_participants'] 	? "<li>Beteiligte</li>" :  "" ) .
 									( $data['goal_location'] 			? "<li>Ort</li>" :  "" ) .
 									( $data['goal_notes'] 				? "<li>Notizen</li>" :  "" ) .
 									( $data['goal_photos'] 				? "<li>Photos</li>" :  "" ) .
@@ -466,7 +467,8 @@ class logbuch_service_Report
 											date("H:m", strtotime( $subcategory['subject'][$i]['dateEnd'] ) ) .
 									"</td>" .
 									"<td align='center'>" . 
-										$subcategory['subject'][$i]['initials'] . 
+										$subcategory['subject'][$i]['initials'] . "<br/>" .
+										( $subcategory['subject'][$i]['private'] ? "(privat)" : "" ) .
 									"</td>" .  
 									"<td>" . 
 										"<b>" . $subcategory['subject'][$i]['content'] . "</b><br/>" ;
@@ -511,7 +513,8 @@ class logbuch_service_Report
 //											date("d.m.Y", strtotime( $subcategory['subject'][$i]['dateStart'] ) ) .
 									"</td>" .
 									"<td align='center'>" . 
-										$subcategory['subject'][$i]['initials'] . 
+										$subcategory['subject'][$i]['initials'] . "<br/>" .
+										( $subcategory['subject'][$i]['private'] ? "(privat)" : "" ) .
 									"</td>" .  
 									"<td>" . 
 										"<b>" . $subcategory['subject'][$i]['content'] ."</b><br/>";
@@ -523,7 +526,7 @@ class logbuch_service_Report
 								
 								if( $data['goal_participants'] && count( $subcategory['participants'][$i]['content'] ) )
 								{
-									echo "Betroffene: ";
+									echo "Beteiligte: ";
 									$participants = array();
 									foreach ( $subcategory['participants'][$i]['content'] as $participantId )
 									{
@@ -549,24 +552,23 @@ class logbuch_service_Report
 							foreach( $entries as $entry )
 							{								
 								echo 
-									"<tr><td><b>" . $categoryMap[$category_name]['label'] . "</b>" . 
-									"<br />" . $categoryMap[$category_name]['fields'][$subcategory_name] .
+								"<tr>".
+									"<td>" .
+										"<b>"    . $categoryMap[$category_name]['label'] . "</b>" . 
+										"<br />" . $categoryMap[$category_name]['fields'][$subcategory_name] .
 									"</td>" .
-								 "<td align='center'>" . 
-										$entry['initials'] . 
-								 "</td>" .
+								  "<td align='center'>" . 
+										$entry['initials'] . "<br/>" .
+										( $entry['private'] ? "(privat)" : "" ) .
+								  "</td>" .
 									"<td>" . 
-										"<b>" . $entry['content'] ."</b>";
-										
-								if( $entry['extended'] )
-								{
-									echo "<br />" . $entry['extended']; 
-								}
-								
-								echo  "</td></tr>";
-						}
-					}
-					break;
+										"<b>" . $entry['content'] ."</b>" . 
+    								( $entry['extended'] ? "<br />" . $entry['extended'] : "") .  
+  								"</td>" .
+  						  "</tr>";
+  						}
+  					}
+  					break;
 				}
 			}
 		}

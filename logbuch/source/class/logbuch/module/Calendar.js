@@ -290,9 +290,10 @@ qx.Class.define("logbuch.module.Calendar",
       /*
        * rewind to midnight
        */
+      //console.log( "Requested date: " + date );
       date = new Date( date.toDateString() );
       
-      //console.log( "Setting date: " + df.format(date) );
+      //console.log( "Setting date: " + date );
       //console.log( "First date visible " + df.format( this.getFirstDateVisible() ) );
       //console.log( "Last date visible " + df.format( this.getLastDateVisible() ) );
       
@@ -300,8 +301,8 @@ qx.Class.define("logbuch.module.Calendar",
        * load data
        */
       if ( ! old || 
-        date.getTime() < this.getFirstDateLoaded().getTime() - msday || 
-        date.getTime() > this.getLastDateLoaded().getTime() + msday )
+        date.getTime() < this.getFirstDateLoaded().getTime() || 
+        date.getTime() > this.getLastDateLoaded().getTime() )
       {
         var msAheadBefore = Math.floor( this.getDaysLoaded() / 2 ) * msday;
         var firstLoaded = new Date( ( new Date( date.getTime() - msAheadBefore ) ).toDateString());
@@ -361,8 +362,8 @@ qx.Class.define("logbuch.module.Calendar",
        * display date
        */
       if ( ! old || 
-            date.getTime() < this.getFirstDateVisible().getTime() - msday || 
-            date.getTime() > this.getLastDateVisible().getTime() + msday)
+            date.getTime() < this.getFirstDateVisible().getTime() || 
+            date.getTime() > this.getLastDateVisible().getTime() )
       {
         var delta = date.getDay() - qx.locale.Date.getWeekStart();
         if ( delta < 0 )
@@ -375,13 +376,11 @@ qx.Class.define("logbuch.module.Calendar",
         var firstVisible = new Date( date.getTime() - ( delta * msday ) );
         this.setFirstDateVisible( firstVisible );
         
-        //console.log( "change first visible: " + df.format(firstVisible) );
+        //console.log( "change first visible: " + firstVisible );
         
         var lastVisible = new Date( firstVisible.getTime() + ( 6 * msday ) );
         this.setLastDateVisible( lastVisible );
-        //console.log( "change last visible: " + df.format(lastVisible) );
-        
-        //var dayOfYear = Math.ceil((date - new Date(this.getFullYear(),0,1)) / 86400000);
+        //console.log( "change last visible: " + lastVisible );
       } 
       
       /*
@@ -574,7 +573,7 @@ qx.Class.define("logbuch.module.Calendar",
      */
     _onScrollX : function(e)
     {
-      //////console.log(e.getData());
+      //console.log(e.getData());
     },
     
     /**
@@ -594,8 +593,16 @@ qx.Class.define("logbuch.module.Calendar",
     _onMessage : function( e )
     {
       var data = e.getData(); 
-      var row  = this.getRowFromCategory( data.category ); 
-      var col  = this.getColumnFromDate( data.itemDateStart );
+      var row  = this.getRowFromCategory( data.category );
+      try
+      {
+        var col  = this.getColumnFromDate( data.itemDateStart );
+      }
+      catch( e )
+      {
+        // FIXME
+        return;
+      }
       var label = data.label || "";
       var text = "<b>" + label + "</b> (" + data.initials + ")";
       if ( data.isPrivate )

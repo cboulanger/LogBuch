@@ -15,6 +15,7 @@
 
 qcl_import("qcl_data_controller_Controller");
 qcl_import("logbuch_model_AccessControlList");
+qcl_import("qcl_ui_dialog_Alert");
 
 /**
  *
@@ -40,7 +41,9 @@ class logbuch_service_Category
 		 * set date
 		 */
 		$itemData['dateStart'] = date ("Y-m-d H:i:s", strtotime( $date ) + 3600 * 8 );
-		$itemData['dateEnd'] 	 = date ("Y-m-d H:i:s", strtotime( $date ) + 3600 * 8 );
+		$itemData['dateEnd'] 	 = $category == "goal" ?
+		  date ("Y-m-d H:i:s") :
+		  date ("Y-m-d H:i:s", strtotime( $date ) + 3600 * 8 );
 		
 		/*
 		 * set author
@@ -169,8 +172,28 @@ class logbuch_service_Category
 		/*
 		 * load record
 		 */
-		$model = $this->getDatasourceModel( "demo" )->getModelOfType( $category );
+		$model = $this->getDatasourceModel( "demo" )->getModelOfType( $category ); // FIXME
 		$model->load( $id );
+		
+		/*
+		 * only owner can update record
+		 */
+		$authorModel = $this->getDatasourceModel( "demo" )->getModelOfType( "person" ); //FIXME
+		try 
+		{
+		  $authorModel->loadByUserId( $this->getActiveUser()->id() );
+		}
+		catch ( qcl_data_model_RecordNotFoundException $e)
+		{
+		  return new qcl_ui_dialog_Alert("Nur registrierte Nutzer dürfen Datensätze bearbeiten."); // FIXME tr
+		}
+		
+		if ( $authorModel->id() != $model->get("personId") )
+		{
+		  $authorModel->load( $model->get("personId") );
+		  $name = $authorModel->getFullName();
+		  return new qcl_ui_dialog_Alert("Die Veränderungen wurden nicht gespeichert. Nur der/die Verfasser/in des Datensatzes ($name) darf ihn bearbeiten."); // FIXME tr
+		}
 		
 		/*
 		 * unmarshal date data
@@ -212,6 +235,12 @@ class logbuch_service_Category
 				$newAcl[$key] = array_diff( $acl->$key, $value );
 			}
 		}	
+		
+    /*
+     * set new acl 
+     */
+    $model->set( $acl );
+    		
 		$bus = qcl_event_message_Bus::getInstance();
 		foreach( $model->createMessages() as $message )
 		{
@@ -224,11 +253,6 @@ class logbuch_service_Category
 			$bus->dispatch($message);
 		}
 		
-		/*
-		 * set new acl 
-		 */
-		$model->set( $acl );
-				
 		/*
 		 * save  
 		 */

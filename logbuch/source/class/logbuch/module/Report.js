@@ -214,6 +214,7 @@ qx.Class.define("logbuch.module.Report",
       
       field6.addListener("click", function(){
         field7.focus();
+        field7.toggle();
       },this);
       
       /*
@@ -334,6 +335,15 @@ qx.Class.define("logbuch.module.Report",
             case "goal_subject":
               cb2.setValue(true);
           }
+          
+          cb2.addListener("changeValue",function(cb){
+            return function(e){
+	            if ( e.getData() )
+	            {
+	              cb.setValue(true);
+	            }
+            };
+          }(cb1),this);
           
           form.add( cb2, null, null, formName );
         }

@@ -195,13 +195,25 @@ qx.Class.define("logbuch.module.Event",
 				return new Date( input );
 			}
       
+      /*
+       * date start label
+       */
+      if ( this.getName() == "event" )
+      {
+        vbox.add( new qx.ui.basic.Label(this.tr("from") ) ); 
+      }
+      else
+      {
+        vbox.add( new qx.ui.basic.Label(this.tr("Datum Zielerreichung") ) );
+      }
       
+      var dateFormatter = new qx.util.format.DateFormat( "yyyy/MM/dd" );
       
       /*
        * date start 
        */
       var field2 = new qx.ui.form.DateField().set({
-        enabled : false
+        visibility : "excluded"
       });
       this.bind( "dateStart", field2, "value");
       field2.addListener("focus",function(){
@@ -220,19 +232,33 @@ qx.Class.define("logbuch.module.Event",
       },{
         // form -> model
         converter : function(date){
-          return date ? date.toString() : null;
+          return date ? dateFormatter.format(date) : null;
         }
       });      
       
       /*
        * time start 
        */
-      var field3 = new logbuch.component.TimeChooser();
+      var field3 = new logbuch.component.TimeChooser().set({
+        visibility : "excluded"
+      });
       field3.addListener("focus",function(){
         this.fireDataEvent("focusRow",1);
       },this);      
       form.add( field3, null, null, "timeStart" );
-      vbox.add( field3 );      
+      vbox.add( field3 );
+      
+      /*
+       * add date/time picker dependent on category type
+       */
+      if ( this.getName() == "event" )
+      {
+        field3.setVisibility( "visible" );
+      }
+      else
+      {
+        field2.setVisibility( "visible" );
+      }
       
       grid.add( vbox, { row: 1, column : 1 });
       
@@ -242,17 +268,29 @@ qx.Class.define("logbuch.module.Event",
       });     
       
       /*
+       * date start label
+       */
+      if ( this.getName() == "event" )
+      {
+        vbox.add( new qx.ui.basic.Label(this.tr("to") ) ); 
+      }
+      else
+      {
+        vbox.add( new qx.ui.basic.Label(this.tr("Datum Zielformulierung") ) );
+      }      
+      
+      /*
        * date end
        */
       var field4 = new qx.ui.form.DateField().set({
-        enabled : false
+        visibility : "excluded"
       });
+      vbox.add( field4 );
       this.bind( "dateStart", field4, "value");
       field4.addListener("focus",function(){
         this.fireDataEvent("focusRow",1);
       },this);         
       form.add( field4, null, null, "dateEnd" );
-      vbox.add( field4 );
       this._controller.addBindingOptions( "dateEnd", {
         // model -> form
         converter : function(value){
@@ -261,19 +299,34 @@ qx.Class.define("logbuch.module.Event",
       },{
         // form -> model
         converter : function(date){
-          return date ? date.toString() : null;
+          return date ? dateFormatter.format(date) : null;
         }
       });            
       
       /*
        * time start 
        */
-      var field5 = new logbuch.component.TimeChooser();
+      var field5 = new logbuch.component.TimeChooser().set({
+        visibility : "excluded"
+      });
       field5.addListener("focus",function(){
         this.fireDataEvent("focusRow",1);
       },this);      
       form.add( field5, null, null, "timeEnd" );
-      vbox.add( field5 );      
+      vbox.add( field5 );
+      
+      /*
+       * add date/time picker dependent on category type
+       */
+      if ( this.getName() == "event" )
+      {
+        
+        field5.setVisibility( "visible" );
+      }
+      else
+      {
+        field4.setVisibility( "visible" );
+      }      
       
       grid.add( vbox, { row: 1, column : 2 });
              
@@ -422,7 +475,7 @@ qx.Class.define("logbuch.module.Event",
           return "Ort, Straße, Gebäude, Etage, Raum etc.";
           
         case 3:
-          return "Geben Sie hier die Personen an, die an dem Ereignis beteiligt waren. Sie können hierbei nur Personen angeben, die im Logbuch registriert sind. Tippen Sie einige Buchstaben ein, um Vorschläge zu erhalten, oder 'alle', um eine Liste aller registrierten Personen zu bekommen. Nicht im LogBuch registrierte Personen müssen im Feld 'Notizen' eingegeben werden.";
+          return "Geben Sie hier die Personen an, die an dem Ereignis beteiligt waren. Sie können hierbei nur Personen angeben, die im Logbuch registriert sind. Tippen Sie einige Buchstaben ein, um Vorschläge zu erhalten, oder 'alle', um eine Liste aller registrierten Personen zu bekommen. Personen, die nicht im LogBuch registriert sind, wie z.B. Gäste, bitte im Feld 'Notizen' eintragen.";
           
         case 4: 
           return "In diesem Feld können z.B. Gesprächsnotizen gespeichert werden.  Hier auch Externe/Gäste eintragen, die nicht im 'Wer?'-Feld eingetragen werden können.";

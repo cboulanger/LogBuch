@@ -104,7 +104,7 @@ qx.Class.define("logbuch.module.Goal",
           return "Ort, Straße, Gebäude, Etage, Raum etc.";
           
         case 3:
-          return "Geben Sie hier die Personen an, die an der Zielerreichung beteiligt sind/waren. Sie können hierbei nur Personen angeben, die im Logbuch registriert sind. Tippen Sie einige Buchstaben ein, um Vorschläge zu erhalten, oder 'alle', um eine Liste aller registrierten Personen zu bekommen. Nicht im LogBuch registrierte Personen müssen im Feld 'Notizen' eingegeben werden.";
+          return "Geben Sie hier die Personen an, die an der Zielerreichung beteiligt sind/waren. Sie können hierbei nur Personen angeben, die im Logbuch registriert sind. Tippen Sie einige Buchstaben ein, um Vorschläge zu erhalten, oder 'alle', um eine Liste aller registrierten Personen zu bekommen. Personen, die nicht im LogBuch registriert sind, wie z.B. Gäste, bitte im Feld 'Notizen' eintragen.";
           
         case 4: 
           return "In diesem Feld können Notizen gespeichert werden. Hier auch Externe/Gäste eintragen, die nicht im 'Wer?'-Feld eingetragen werden können.";
