@@ -230,7 +230,11 @@ qx.Class.define("logbuch.module.Calendar",
       /*
        * mark date column
        */
-      this.setCurrentDateColumn( this.getColumnFromDate( date ) );
+      try
+      {
+        //this.setCurrentDateColumn( this.getColumnFromDate( date ) ); //FIXME
+      }
+      catch(e){}
       
     },
     
@@ -381,7 +385,7 @@ qx.Class.define("logbuch.module.Calendar",
       } 
       
       /*
-       * save column of current date
+       * save column of selected date
        */
       var column = this.getColumnFromDate( date );
       this.setSelectedDateColumn( column );      
@@ -411,7 +415,7 @@ qx.Class.define("logbuch.module.Calendar",
         date.getTime() < this.getFirstDateLoaded() - msday || 
         date.getTime() > this.getLastDateLoaded() + msday )
       {
-        this.error( "Date is not within loaded period" );
+        throw new Error( "Date is not within loaded period" );
       }
       var d1 = new Date( date.toDateString() ).getTime();
       var d2 = new Date( this.getFirstDateLoaded().toDateString() ).getTime();

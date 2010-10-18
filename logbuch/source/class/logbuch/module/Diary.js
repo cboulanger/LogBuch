@@ -84,6 +84,28 @@ qx.Class.define("logbuch.module.Diary",
       return this.tr("Diary entry");
     },       
     
+    
+    _getExplanation : function( row )
+    {
+      switch(row)
+      {
+        case 0:
+          return "Aha-Erlebnisse, Überraschungen, etc. Was hat mich besonders überrascht oder bewegt? ";
+        
+        case 1:
+          return "Inspirierende Gespräche, bewegende Momente, spontane Begegnungen, etc. aus denen ein Gedankenbaustein hervorgegangen ist.";
+        
+        case 2:
+          return "Stolpersteine, Hindernisse, etc., welche sich möglicherweise als Hemmnis auswirken.";
+          
+        case 3:
+          return "Was könnte verändert werden? Denkanstöße, Anregungen, Kritik, etc.";
+          
+        case 4:
+          return "Platz für Notizen..";
+          
+      }
+    },        
     dummy : null
   }
 });

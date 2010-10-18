@@ -354,6 +354,7 @@ class logbuch_service_Record
 	 * @param string $modelType
 	 * @param int|string $recordId
 	 * @return "OK"
+	 * FIXME remove entries
 	 */
 	function method_delete( $datasource, $modelType, $recordId )
 	{

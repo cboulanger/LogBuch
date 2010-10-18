@@ -181,18 +181,16 @@ extends qcl_data_model_db_ActiveRecord
 	  	$aclModel = new logbuch_model_AccessControlList();
 	  	$aclNames = $aclModel->getAclNames();
   	}
-  	$private = true;
   	foreach( $aclNames as $key )
   	{
   		$value = $this->get( $key );
   		if (  ( is_bool($value) and $value === true ) or 
   					( is_array($value) and count( $value ) > 0 ) ) 
   		{
-  			$private = false;
-  			break;
+  			return false;
   		}
   	}
-  	return $private;
+  	return true;
   }  
   
   /**

@@ -165,8 +165,7 @@ qx.Class.define("logbuch.module.Event",
        */
       var field1 = new qx.ui.form.TextArea().set({
         appearance  : "logbuch-field",
-        toolTipText : this._getTitleHint(),
-        height      : rowHeight        
+        height      : rowHeight
       });
       field1.addListener("focus",function(){
         this.fireDataEvent("focusRow",0);
@@ -186,9 +185,9 @@ qx.Class.define("logbuch.module.Event",
       });
       
       // on first appear, focus on first input field
-      this.addListener("appear",function(){
-        field1.focus();
-      },this);
+//      this.addListener("appear",function(){
+//        field1.focus();
+//      },this);
 
       // FIXME
 			function parseDate(input) 
@@ -284,7 +283,6 @@ qx.Class.define("logbuch.module.Event",
        */
       var field6 = new qx.ui.form.TextArea().set({
         appearance  : "logbuch-field",
-        placeholder : this.tr("Location, building, floor, room ..."),
         height      : rowHeight        
       });
       field6.addListener("focus",function(){
@@ -385,12 +383,6 @@ qx.Class.define("logbuch.module.Event",
     ---------------------------------------------------------------------------
     */ 
 
-    _getTitleHint : function()
-    {
-      return  "Bitte geben sie ein Stichwort, einen Doppelpunkt,<br /> " +
-              "und dann eine Zusammenfassung des Ereignisses ein. Beispiel:<br/>" +
-              "Teamtreffen: Treffen zur Abstimmung wegen Quartalsbudget";
-    },
     
     /*
     ---------------------------------------------------------------------------
@@ -416,9 +408,27 @@ qx.Class.define("logbuch.module.Event",
       return this.tr("Event");
     },    
     
-    invite : function()
+    _getExplanation : function( row )
     {
-      
+      switch(row)
+      {
+        case 0:
+          return "Geben Sie hier den Anlass des Ereignisses an. Sie können ein Stichwort angeben, das in der Kalenderübersicht angezeigt wird. Trennen Sie dieses Stichwort vom restlichen Text mit einem Doppelpunkt. <br/><br/>Beispiel:<br/><br/> Präsentation: Vorstellung der Produktevaluation";
+        
+        case 1:
+          return "Datum und Uhrzeit des Ereignisses.";
+        
+        case 2:
+          return "Ort, Straße, Gebäude, Etage, Raum etc.";
+          
+        case 3:
+          return "Geben Sie hier die Personen an, die an dem Ereignis beteiligt waren. Sie können hierbei nur Personen angeben, die im Logbuch registriert sind. Tippen Sie einige Buchstaben ein, um Vorschläge zu erhalten, oder 'alle', um eine Liste aller registrierten Personen zu bekommen. Nicht im LogBuch registrierte Personen müssen im Feld 'Notizen' eingegeben werden.";
+          
+        case 4: 
+          return "In diesem Feld können z.B. Gesprächsnotizen gespeichert werden.  Hier auch Externe/Gäste eintragen, die nicht im 'Wer?'-Feld eingetragen werden können.";
+          
+          
+      }
     },
     
     dummy : null

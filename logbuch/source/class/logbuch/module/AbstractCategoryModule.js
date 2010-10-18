@@ -276,7 +276,12 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       
       },this);
       
-    },    
+    },
+    
+    _getExplanation : function( row )
+    {
+      return "Keine Hilfe vorhanden.";
+    },
     
     _createRightColumn : function( grid, numRows )
     {
@@ -284,15 +289,32 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       var rightColumnWidth  = lc.getEvent().getRightColumnWidth();
       
       /*
+       * explanation
+       */
+      var explanationBox = new qx.ui.basic.Label().set({
+        appearance : "logbuch-field",
+        maxWidth   : rightColumnWidth,
+        rich       : true,
+        allowGrowY : true,
+        allowGrowX : true,
+        value      : "Hier erscheinen Hilfen zu den einzelnen Feldern, wenn Sie in die Felder klicken... "
+      });
+      grid.add( explanationBox, { row : 0, column : 3, rowSpan : numRows-1 } );
+      
+      this.addListener("focusRow", function(e){
+        explanationBox.setValue( this._getExplanation(e.getData()) || "");
+      },this);
+      
+      /*
        * attachments
        */
-      var name = this.getName() + "-attachments";
-      var attachments = new logbuch.module.Attachments( name, attachments ).set({
-        maxWidth : rightColumnWidth
-      });
-      this.__sandbox.register(name, attachments);
-      attachments.show();
-      grid.add( attachments, { row : 0, column : 3, rowSpan : numRows-1 } );
+//      var name = this.getName() + "-attachments";
+//      var attachments = new logbuch.module.Attachments( name, attachments ).set({
+//        maxWidth : rightColumnWidth
+//      });
+//      this.__sandbox.register(name, attachments);
+//      attachments.show();
+//      grid.add( attachments, { row : 0, column : 3, rowSpan : numRows-1 } );
 
       /*
        * buttons

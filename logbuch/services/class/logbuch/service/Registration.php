@@ -86,7 +86,8 @@ class logbuch_service_Registration
      * mail body
      */
     
-    $confirmationLink = qcl_server_Server::getUrl() .
+    $confirmationLink = //qcl_server_Server::getUrl() . // FIXME!!!
+      "http://www.logbuch-business-travel.de/logbuch/services/server.php" .
       "?service="   . "logbuch.registration" .
       "&method="    . "confirmEmail" .
       "&params="    . "$username:$email";

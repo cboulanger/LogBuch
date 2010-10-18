@@ -59,10 +59,19 @@ qx.Theme.define("logbuch.theme.Appearance",
     {
       style : function(states)
       {
+        var textColor;
+        if (states.disabled) {
+          textColor = "text-disabled";
+        } else if (states.showingPlaceholder) {
+          textColor = "text-placeholder";
+        } else {
+          textColor = "text-input";
+        }   
         return {
           padding         : 3,
           backgroundColor : "logbuch-field-background",
-          decorator       : "logbuch-field-border"
+          decorator       : "logbuch-field-border",
+          textColor       : "gray"
         };
       }
     },    
@@ -184,6 +193,14 @@ qx.Theme.define("logbuch.theme.Appearance",
     {
       style : function(states) // FIXME INHERIT
       {
+        var textColor;
+        if (states.disabled) {
+          textColor = "text-disabled";
+        } else if (states.showingPlaceholder) {
+          textColor = "text-placeholder";
+        } else {
+          textColor = "text-input";
+        }        
         return {
           font            : "logbuch-inputfield-input",
           minHeight       : 30,
@@ -192,7 +209,8 @@ qx.Theme.define("logbuch.theme.Appearance",
           paddingTop      : 3,
           paddingBottom   : 3,
           backgroundColor : states.disabled ? "logbuch-widget-background" : "logbuch-field-background",
-          decorator       : "logbuch-field-border"
+          decorator       : "logbuch-field-border",
+          textColor       : textColor
         };
       }
     },

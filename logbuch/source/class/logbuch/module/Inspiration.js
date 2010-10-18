@@ -80,6 +80,25 @@ qx.Class.define("logbuch.module.Inspiration",
     {
       return this.tr("Inspiration");
     },        
+    
+    _getExplanation : function( row )
+    {
+      switch(row)
+      {
+        case 0:
+          return "Anregungen, Ideen, Verbesserungsvorschläge, etc.";
+        
+        case 1:
+          return "Buchtipps Zeitungsartikel, Veranstaltungshinweise etc.";
+        
+        case 2:
+          return "Stolpersteine, Hindernisse, etc., welche sich möglicherweise als Hemmnis auswirken.";
+          
+        case 3:
+          return "Linktipps im Internet";
+          
+      }
+    },        
 
     
     dummy : null

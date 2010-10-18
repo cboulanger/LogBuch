@@ -257,6 +257,32 @@ qx.Class.define("logbuch.module.Documentation",
     {
       return this.tr("Documentation entry");
     },
+
+    _getExplanation : function( row )
+    {
+      switch(row)
+      {
+        case 0:
+          return "Welche Themen wurden besprochen? Welche Methoden / Formate wurden angewendet?";
+        
+        case 1:
+          return "Was war das Ergebnis der Beratung?<br/>Gibt es Zielvereinbarungen oder sonstige Todos?<br/>(ggf. Hinweis auf Eintragung unter Zielplanung) ";
+        
+        case 2:
+          return "Aha-Erlebnisse, Überraschungen, etc. Was hat mich besonders überrascht oder bewegt? ";
+          
+        case 3:
+          return "Stolpersteine, Hindernisse, etc., welche sich möglicherweise als Hemmnis auswirken.";
+          
+        case 4: 
+          return "Was könnte verändert werden? Denkanstöße, Anregungen, Kritik, etc.";
+          
+        case 5:
+          return "Platz für Notizen..";
+          
+      }
+    },    
+    
     
     dummy : null
   }
