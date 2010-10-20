@@ -111,9 +111,10 @@ extends logbuch_model_Model
   
   /**
    * Creates one or message object(s) with the category record data.
+   * @param string $messageName The name of the message
    * @return qcl_event_message_ClientMessage[]
    */
-  function createMessages()
+  function createMessages( $messageName )
   {
   	$activeUser = $this->getApplication()->getAccessController()->getActiveUser();
   	$data = $this->data();  	
@@ -129,7 +130,7 @@ extends logbuch_model_Model
   		$label = "Ereignis"; //$this->tr("Event");
   		$body  = $data['subject'];
   	}
-    $message = new qcl_event_message_ClientMessage( "logbuch/message", array(
+    $message = new qcl_event_message_ClientMessage( $messageName, array(
   		'date'					=> date("D M d Y H:i:s \G\M\TO (T)"),
   		'sender'				=> $this->authorName(),
 	 		'senderId'			=> $this->authorId(),

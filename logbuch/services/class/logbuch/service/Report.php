@@ -258,7 +258,8 @@ class logbuch_service_Report
 																nl2br($subcategory_extended_content) : null,
 								'dateStart'	=> $model->get( "dateStart" ),
 								'dateEnd'		=> $model->get( "dateEnd" ),
-							  'private'		=> $model->isPrivate()
+							  'private'		=> $model->isPrivate(),
+								'itemId'    => $model->id()
 							);	
 							//$this->debug( $entry, __CLASS__, __LINE__ );
 							$report[ $date ][ $category ][ $subcategory ][] = $entry;
@@ -569,9 +570,14 @@ class logbuch_service_Report
   						}
   					}
   					break;
-				}
-			}
-		}
+				} // end switch
+
+				/*
+				 * @todo attachments and comments
+				 */
+			} // end for-each
+
+		} // end for-each
 		echo "</table>";
 		//echo "<pre>" . print_r( $report ,true ) . "</pre>"; 
 		exit;

@@ -191,6 +191,9 @@ class logbuch_Application
     $this->getMessageBus()->registerOnBeforeBroadcastCallback(array(
     	new logbuch_service_Message(), "filterMessage"
     ));
+    
+    // hack FIXME
+    qcl_event_message_Bus::getInstance()->addChannel("logbuch/display-category-item");
   }
 
   /**

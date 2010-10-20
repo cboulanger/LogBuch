@@ -1,10 +1,10 @@
 <?php
 /* ************************************************************************
 
-   logBuch: Die Online-Plattform f�r Unternehmenszusammenarbeit
+   logBuch: Die Online-Plattform für Unternehmenszusammenarbeit
 
    Copyright:
-     2010 J�rgen Breiter (Konzeption) Christian Boulanger (Programmierung) 
+     2010 Jürgen Breiter (Konzeption) Christian Boulanger (Programmierung) 
 
    License:
      GPL: http://www.gnu.org/licenses/gpl.html
@@ -162,7 +162,13 @@ extends logbuch_model_Model
      API
   *****************************************************************************
   */
-  function createMessages()
+  
+  /**
+   * Creates one or message object(s) with the category record data.
+   * @param string $messageName The name of the message
+   * @return qcl_event_message_ClientMessage[]
+   */  
+  function createMessages($messageName)
   {
   	$activeUser = $this->getApplication()->getAccessController()->getActiveUser();
   	$fields = array( "heureka", "encounters", "stumblingBlock", "incentive", "miscellaneous" );
@@ -174,7 +180,7 @@ extends logbuch_model_Model
   	{
   		if( ! trim( $data[$field] ) ) continue;
   		$label = $transl[array_search($field, $fields)];
-	  	$messages[] = new qcl_event_message_ClientMessage( "logbuch/message", array(
+	  	$messages[] = new qcl_event_message_ClientMessage( $messageName, array(
 	  		'date'					=> date("D M d Y H:i:s \G\M\TO (T)"),
 	  		'initials'			=> $this->authorInitials(),
 	  		'sender'				=> $this->authorName(),

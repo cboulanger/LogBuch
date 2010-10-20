@@ -120,6 +120,7 @@ qx.Class.define("logbuch.module.Registration",
         marginTop : 20,
         enabled   : false
       });
+      grid.add( button, { row:0, column:1 } );
       button.addListener("execute",function(){
         if ( ! this.__startPasswordEntered )
         {
@@ -145,6 +146,7 @@ qx.Class.define("logbuch.module.Registration",
               else
               {
                 dialog.Dialog.alert( this.tr("Wrong password!"));
+                grid.add( button, { row:0, column:1 } );
               }
             }, this
           );
@@ -181,7 +183,7 @@ qx.Class.define("logbuch.module.Registration",
           }
         }
       },this);
-      grid.add( button, { row:0, column:1 } );
+      
       
     },
     

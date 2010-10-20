@@ -190,9 +190,10 @@ extends logbuch_model_Model
  
   /**
    * Creates one or message object(s) with the category record data.
+   * @param string $messageName The name of the message
    * @return qcl_event_message_ClientMessage[]
    */  
-  function createMessages()
+  function createMessages($messageName)
   {
   	$activeUser = $this->getApplication()->getAccessController()->getActiveUser();
   	$fields = array( "process", "result", "heureka", "stumblingBlock", "incentive", "miscellaneous" );
@@ -204,7 +205,7 @@ extends logbuch_model_Model
   	foreach( $fields as $field )
   	{
   		if( ! trim( $data[$field] ) ) continue;
-  		$messages[] = new qcl_event_message_ClientMessage( "logbuch/message", array(
+  		$messages[] = new qcl_event_message_ClientMessage( $messageName, array(
 	  		'date'					=> date("D M d Y H:i:s \G\M\TO (T)"),
 	  		'sender'				=> $this->authorName(),
 	  		'senderId'			=> $this->authorId(),

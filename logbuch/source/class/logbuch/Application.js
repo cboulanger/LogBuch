@@ -120,6 +120,12 @@ qx.Class.define("logbuch.Application",
        */
       core = new qcl.application.Core();
       
+      core.set({
+        applicationId   : "logbuch",
+        applicationName : "logBuch Nachhaltiger Business Travel in Berlin",
+        confirmQuit     : true
+      });
+      
       /*
        * create and show popup
        */
@@ -191,58 +197,16 @@ qx.Class.define("logbuch.Application",
       },this);
 
       /*
-       * get messages from the server but only
-       * if authenticated
+       * start message transport, using rpc-polling
        */
-      var queue = [];
-      core.subscribe("message", function(e){
-        
-
-        var msg = qx.lang.Object.clone(e.getData());
-        if ( msg.fromServer ) return; 
-        
-        msg.date          = msg.date.toString();
-        msg.itemDateStart = msg.itemDateStart.toString();
-        msg.itemDateEnd   = msg.itemDateEnd.toString();        
-        queue.push( msg );
-      }, this );
-      
-      /*
-       * periodically forward messages to the server and pick up the
-       * server messages
-       */      
-      var timerId = qx.util.TimerManager.getInstance().start(function(){
-        
-        if ( ! core.isAuthenticatedUser()  )
-        {
-          return;
-        }
-        core.getRpcManager().execute(
-          "logbuch.message","send", [queue], 
-          function(){},this
-        );
-        queue = [];
-
-      },10000,this,null,0);
-      
-      /*
-       * stop the polling on error
-       */
-      qx.event.message.Bus.subscribe("qcl.data.store.JsonRpc.error",function(e){
-        qx.util.TimerManager.getInstance().stop( timerId );
-      },this);
-      
-      /*
-       * resend messages received from the server
-       */
-      qx.event.message.Bus.subscribe("logbuch/message", function(e){
-        var msg = e.getData();
-        msg.fromServer    = true;
-        msg.date          = new Date( msg.date );
-        msg.itemDateStart = new Date( msg.itemDateStart );
-        msg.itemDateEnd   = new Date( msg.itemDateEnd );
-        core.publish("message", msg );
-      },this);
+      core.startMessageTransport({
+        mode          : "poll",
+        transport     : "rpc",
+        service       : "logbuch.message",
+        interval      : 10,
+        authenticated : true,
+        stopOnError   : false
+      });
       
       /*
        * run setup, then authenticate
@@ -324,8 +288,6 @@ qx.Class.define("logbuch.Application",
        APPLY METHODS
     ---------------------------------------------------------------------------
     */
-   
-    
    
     _applyDate : function( value, old )
     {
@@ -772,6 +734,31 @@ qx.Class.define("logbuch.Application",
         return this.__layoutConfigObject
       }
       return this.__layoutConfigModel;
-    }     
+    },
+    
+    /**
+     * Called before the page is closed.
+     * @return
+     */
+    close : function()
+    {  
+      return core.close();
+    },
+    
+    /**
+     * Called when the page is closed. Calls the terminate() method of the
+     * rpc manager. Override by definining a terminate() method in your application
+     * class
+     */
+    terminate : function()
+    {
+      core.terminate();
+    },
+    
+    dummy : function()
+    {
+      this.tr("Yes");
+      this.tr("No");
+    }
   }
 });

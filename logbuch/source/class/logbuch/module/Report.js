@@ -153,7 +153,6 @@ qx.Class.define("logbuch.module.Report",
         );      
       },this);
 
-      
       var hbox = new qx.ui.container.Composite( new qx.ui.layout.HBox(5) );
       
       /*
@@ -356,14 +355,14 @@ qx.Class.define("logbuch.module.Report",
           };
         }(vbox,boxes),this);        
         
-        var field1 = new qx.ui.form.CheckBox( this.tr("Photos") ).set({
-         textColor : "logbuch-category-" + category,
-         enabled : false
-        });
-        vbox.add( field1 );
-        form.add( field1, null, null, category + "_photos" );
+//        var field1 = new qx.ui.form.CheckBox( this.tr("Photos") ).set({
+//         textColor : "logbuch-category-" + category,
+//         enabled : false
+//        });
+//        vbox.add( field1 );
+//        form.add( field1, null, null, category + "_photos" );
     
-        var field2 = new qx.ui.form.CheckBox( this.tr("Discussions") ).set({
+        var field2 = new qx.ui.form.CheckBox( "Kommentare" ).set({ // FIXME
          textColor : "logbuch-category-" + category,
          enabled : false
         });

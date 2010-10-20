@@ -3,7 +3,7 @@
 
    logBuch: Software zur online-Dokumentation von Beratungsprozessen
    
-   Copyright: Konzeption:     J�rgen Breiter
+   Copyright: Konzeption:     Jürgen Breiter
               Programmierung: Christian Boulanger 
 
    Lizenz: GPL v.2
@@ -192,7 +192,7 @@ class logbuch_service_Category
 		{
 		  $authorModel->load( $model->get("personId") );
 		  $name = $authorModel->getFullName();
-		  return new qcl_ui_dialog_Alert("Die Veränderungen wurden nicht gespeichert. Nur der/die Verfasser/in des Datensatzes ($name) darf ihn bearbeiten."); // FIXME tr
+		  throw new JsonRpcException("Die Veränderungen wurden nicht gespeichert. Nur der/die Verfasser/in des Datensatzes ($name) darf ihn bearbeiten."); // FIXME tr
 		}
 		
 		/*
@@ -242,7 +242,7 @@ class logbuch_service_Category
     $model->set( $acl );
     		
 		$bus = qcl_event_message_Bus::getInstance();
-		foreach( $model->createMessages() as $message )
+		foreach( $model->createMessages( "logbuch/display-category-item" ) as $message )
 		{
 			$message->setAcl( $newAcl );
 			$message->setBroadcast( true );
@@ -286,7 +286,7 @@ class logbuch_service_Category
 			else
 			{
 				qcl_import("qcl_ui_dialog_Alert");
-				new qcl_ui_dialog_Alert( $this->tr( "You cannot delete this entry because you do not own it.") );	
+				throw new JsonRpcError( $this->tr( "You cannot delete this entry because you do not own it.") );	
 			}
 		}
 		return "OK";
@@ -295,6 +295,7 @@ class logbuch_service_Category
 	
 	/**
 	 * Returns the time period where this project has entries
+	 * FIXME in report class
 	 */
 	public function method_getDatePeriod()
 	{
@@ -323,8 +324,8 @@ class logbuch_service_Category
 			}			
 		}
 		$data = array();
-		$data['dateStart'] 	= date("Y/m/d", strtotime( $dateStart ) ); 
-	  $data['dateEnd'] 		= date("Y/m/d", strtotime( $dateEnd ) );		
+		$data['dateStart'] 	= date("Y/m/d", $dateStart ? strtotime( $dateStart ) : time() ); 
+	  $data['dateEnd'] 		= date("Y/m/d", $dateEnd   ? strtotime( $dateEnd )   : time() );		
 		return $data;
 	}
 	

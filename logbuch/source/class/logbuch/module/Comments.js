@@ -13,7 +13,7 @@
 ************************************************************************ */
 
 /* ************************************************************************
-
+asset(logbuch/icon/24/mail.png)
 ************************************************************************ */
 
 /**
@@ -48,7 +48,10 @@ qx.Class.define("logbuch.module.Comments",
     
     itemId :
     {
-      check : "Integer"
+      check    : "Integer",
+      nullable : true,
+      event     : "changeItemId",
+      apply     : "_applyItemId"
     }
   },
   
@@ -74,9 +77,24 @@ qx.Class.define("logbuch.module.Comments",
     
     /*
     ---------------------------------------------------------------------------
-       PRIVATE MEMBERS
+       APPLY METHODS
     ---------------------------------------------------------------------------
     */       
+    
+    _applyItemId : function ( value, old )
+    {
+      if( old )
+      {
+        this.__sandbox.unsubscribeFromChannel( this.getChannelName( old ), this.__receiveCommentFunc, this);
+      }
+      
+      if( value )
+      {
+        this.__sandbox.subscribeToChannel( this.getChannelName( value ), this.__receiveCommentFunc, this);
+      }
+      
+      this.__list.setModel( new qx.data.Array() );
+    },
 
     
     /*
@@ -101,41 +119,82 @@ qx.Class.define("logbuch.module.Comments",
 	  {
       this.base(arguments, false);
       this.setLayout(new qx.ui.layout.VBox(5));
-      this.setAppearance("logbuch-access-control");
+      this.setAppearance("logbuch-field");
       this.setVisibility("visible");
       
       /*
        * comment list
        */
       var list = this.__list = new qx.ui.list.List().set({
-        selectionMode : "single",
-        itemHeight : 70,
-        labelPath: "label",
-        iconPath: "icon",
-        iconOptions : {
-          converter : function(value){
-            if ( value ){
-              return "../html/fancyupload/uploads/64/" + value; //FIXME 
-            }
-            return  "../html/fancyupload/assets/person.jpg";
-          }
-        },
-        delegate : {
-          configureItem : function(item) {
-            item.setRich(true);
-          }
-        }
+        selectionMode   : "single",
+        backgroundColor : "logbuch-field-background",
+        decorator       : "logbuch-field-border",
+        itemHeight      : 70,
+        labelPath       : "label",
+        iconPath        : "icon",
+        iconOptions     : {
+                            converter : function(value){
+                              if ( value ){
+                                return "../html/fancyupload/uploads/64/" + value; //FIXME 
+                              }
+                              return  "../html/fancyupload/assets/person.jpg";
+                            }
+                          },
+        delegate        : {
+                            configureItem : function(item) {
+                              item.setAppearance("comments-listitem");
+                              item.setRich(true);
+                              item.setFont("small");
+                              item.getChildControl("icon").setAlignY("top");
+                            }
+                          }
       });
       this.add( list, {flex:1} );
       list.setModel( new qx.data.Array() );
       
-      this.__sandbox.subscribe("logbuch/message",function(e){
-        var comment = e.getData();
-        if( comment.category == this.getCategory() && comment.itemId == this.getItemId() )
+      /*
+       * enlarge the currently selected list item
+       */
+      this.__selIndex = null;
+      var rowConfig = list.getPane().getRowConfig();
+      var pane = list.getPane();
+      list.getSelection().addListener("change",function(){
+        if ( this.__selIndex !== null )
         {
+          rowConfig.setItemSize( this.__selIndex, 70 );
+        }
+        if ( list.getSelection().getLength() > 0 )
+        {
+          var selection   = list.getSelection();
+          var item        = selection.getItem(0);
+          this.__selIndex = list.getModel().indexOf( item );
+          var height      = 16 * ( Math.floor( item.getLabel().length / 28 ) + 2 );
+          rowConfig.setItemSize( this.__selIndex, Math.max( 70, height ) );
           
+          // scroll
+          var scrollY = this.__selIndex * 70;
+          if ( pane.getScrollY() > scrollY )
+          {
+            pane.setScrollY( scrollY );  
+          }
+        }
+        else
+        {
+           selIndex = null;
         }
       },this);
+      
+      /*
+       * Add a comment list item
+       */
+      this.__receiveCommentFunc = function(e){
+        var data = e.getData();
+        if ( "label" in data && "icon" in data )
+        {
+          list.getModel().push( qx.data.marshal.Json.createModel( data ) );
+          list.getPane().scrollRowIntoView( list.getModel().getLength() -1 );
+        }
+      };
       
       /*
        * controls
@@ -149,6 +208,7 @@ qx.Class.define("logbuch.module.Comments",
       var commentField = new qx.ui.form.TextArea().set({
         appearance  : "logbuch-field",
         height      : 50,
+        font        : "small",
         liveUpdate  : true
       });
       hbox.add( commentField, {flex:1} );
@@ -157,8 +217,9 @@ qx.Class.define("logbuch.module.Comments",
        * send button
        */
       var button = new qx.ui.form.Button().set({
-        label     : "Senden", //FIXME
-        height    : 25
+        icon        : "logbuch/icon/24/mail.png",
+        maxHeight   : 25,
+        alignY      : "middle"
       }); 
       hbox.add( button );
       
@@ -167,20 +228,26 @@ qx.Class.define("logbuch.module.Comments",
       },this);
       
       button.addListener("execute",function(){
-        this.__sandbox.publish( "logbuch/comment", {
+        this.__sandbox.publishToChannel( this.getChannelName(), {
+          date      : (new Date()).toString(),
+          message   : commentField.getValue(),
           category  : this.getCategory(),
-          itemId    : this.getItemId(), 
-          sender    : this.__sandbox.getActiveUserData().fullname, // FIXME
-          icon      : this.__sandbox.getActiveUserData().icon, // FIXME
-          message   : commentField.getValue()
-        });
+          itemId    : this.getItemId()
+        }, true );
         commentField.setValue(null);
       },this);
       
     },
+    
+    getChannelName : function( itemId )
+    {
+      return "logbuch/comment/" + this.getCategory() + "/" + ( itemId || this.getItemId() );
+    },
+    
+    
     dummy : null
   },
-
+  
   /*
    *****************************************************************************
       DESTRUCT

@@ -247,7 +247,10 @@ qx.Class.define("logbuch.module.Calendar",
       this.__sandbox.subscribe("change-date-today", this._onSandboxChangeDateToday, this);
       this.__sandbox.subscribe("activate-category", this._onSandboxActivateCategory, this);
       this.__sandbox.subscribe("reload-calendar", this._onReloadCalendar, this);
-      this.__sandbox.subscribe("message", this._onMessage, this);
+      
+      this.__sandbox.callOnceWhenAuthenticated(function(){
+        this.__sandbox.subscribeToChannel("logbuch/display-category-item", this._onDisplayCategoryItem, this);
+      },this);
     },
     
     /**
@@ -259,7 +262,8 @@ qx.Class.define("logbuch.module.Calendar",
       this.__sandbox.unsubscribe("change-date-today", this._onSandboxChangeDateToday, this);
       this.__sandbox.unsubscribe("activate-category", this._onSandboxActivateCategory, this);
       this.__sandbox.unsubscribe("reload-calendar", this._onReloadCalendar, this);
-      this.__sandbox.unsubscribe("message", this._onMessage, this);
+      
+      this.__sandbox.unsubscribeFromChannel("logbuch/display-category-item", this._onDisplayCategoryItem, this);
     },
     
     /*
@@ -589,11 +593,27 @@ qx.Class.define("logbuch.module.Calendar",
     /**
      * Listens for messages that contain item data to display in the calendar.
      * @param e {qx.event.message.Message}
+     * 
      */
-    _onMessage : function( e )
+    _onDisplayCategoryItem : function( e )
     {
       var data = e.getData(); 
+      
+      /*
+       * unmarshal dates
+       */
+      data.date          = new Date( data.date );
+      data.itemDateStart = new Date( data.itemDateStart );
+      data.itemDateEnd   = new Date( data.itemDateEnd );
+      
+      /*
+       * get row from category
+       */
       var row  = this.getRowFromCategory( data.category );
+      
+      /*
+       * get column from start date
+       */
       try
       {
         var col  = this.getColumnFromDate( data.itemDateStart );
@@ -603,6 +623,10 @@ qx.Class.define("logbuch.module.Calendar",
         // FIXME
         return;
       }
+      
+      /*
+       * display in calendar
+       */
       var label = data.label || "";
       var text = "<b>" + label + "</b> (" + data.initials + ")";
       if ( data.isPrivate )
@@ -660,7 +684,8 @@ qx.Class.define("logbuch.module.Calendar",
        */
       var dateCellRenderer = new qx.ui.virtual.cell.Date( this.__dateFormatter );
       dateCellRenderer.set({
-        appearance : "logbuch-datecell"
+        appearance : "logbuch-datecell",
+        paddingTop : 6 // FIXME
       });     
       
       /*

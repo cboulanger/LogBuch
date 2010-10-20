@@ -304,6 +304,20 @@ qx.Theme.define("logbuch.theme.Appearance",
     
     //"datefield/textfield" : "logbuch-field",
     
-    "logbuch-access-control" : "logbuch-field"
+    "logbuch-access-control" : "logbuch-field",
+    
+   "comments-listitem" :
+    {
+      alias : "atom",
+
+      style : function(states)
+      {
+        return {
+          padding   : states.dragover ? [4, 4, 2, 4] : 4,
+          // textColor : states.selected ? "text-selected" : undefined,
+          decorator : states.selected ? "comments-selected" : undefined
+        };
+      }
+    }    
   }
 });

@@ -124,7 +124,7 @@
 		'queueSizeLimit' : 99,
 		'fileDesc'		 	 : 'jpg, gif',
 		'fileExt'		 		 : '*.jpg;*.gif;*.png',
-		'sizeLimit'      : '3512000',//max size bytes - 500kb
+		'sizeLimit'      : '1512000',//max size bytes - 500kb
 		'checkScript'    : 'scripts/check.php', //if we take this out, it will never replace files, otherwise asks if we want to replace
 		'onComplete'     : function (evt, queueid, obj, response, data){
 											  //console.log(response);
@@ -242,13 +242,19 @@
         <a href="javascript:jQuery('#uploadify').uploadifyClearQueue()">Abbrechen</a>
       </div>
 	    <h4>LogBuch Bildergalerie</h4> 
-	    <p>In diesem Fenster werden die Bilder angezeigt, die mit dem gerade im LogBuch geöffneten 
-	    Datensatz verknüpft sind. Für jeden Datensatz werden die Bilder separat gespeichert.</p>
-  	  <p>Solange keine Bilder vorhanden sind, sehen Sie eine animierte Ladeanzeige. Sie können Bilder von Ihrem Computer hochladen, indem Sie auf "BROWSE" klicken und dann die Bilder auswählen. 
-  	   Der Hochladevorgang kann mit "Abbrechen" beendet werden. Die maximale Bildgröße beträgt etwa 1,5MB.</p>
-  	   <p>Um zum LogBuch zurückzukehren, schließen Sie bitte dieses Fenster.</p>
+	    <p>
+	     In diesem Fenster werden die Bilder angezeigt, die mit dem gerade im LogBuch geöffneten 
+	     Datensatz verknüpft sind. Für jeden Datensatz werden die Bilder separat gespeichert.</p>
+  	  <p>
+  	   Sie können Bilder von Ihrem Computer hochladen, indem Sie auf "BROWSE" klicken und dann die Bilder auswählen. 
+  	   Der Hochladevorgang kann mit "Abbrechen" beendet werden. Zur Zeit können Bilder nicht gelöscht
+  	   werden. 
+  	  </p>
+  	  <p>
+  	    <b>Die maximale Bildgröße beträgt zur Zeit 1,5MB</b>.
+  	  </p>
+  	  <p>Um zum LogBuch zurückzukehren, schließen Sie bitte dieses Fenster.</p>
 	  </div>
-
   </div>
 </body>
 </html>

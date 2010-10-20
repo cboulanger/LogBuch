@@ -15,6 +15,7 @@
 
 qcl_import("qcl_data_controller_Controller");
 qcl_import("logbuch_model_AccessControlList");
+qcl_import("logbuch_model_Comment");
 
 /**
  * 
@@ -24,23 +25,147 @@ class logbuch_service_Message
 {
 
 	/**
-	 * Sends the messages from one client to all others
+	 * Broadcasts the messages from one client to all others
 	 * @param $msgQueue
 	 */
-	function method_send( $msgQueue )
+	function method_broadcast( $msgQueue )
 	{
-		// FIXME try this again:
+		// FIXME is this the right place to do this?
 		$this->getApplication()->getAccessController()->getUserModel()->cleanup();
 		qcl_access_model_Session::getInstance()->cleanup();
 		qcl_event_message_db_Message::getInstance()->cleanup();
 		
-		foreach( $msgQueue as $message )
+		/*
+		 * broadcast to all 
+		 */
+		foreach( $msgQueue as $messageData )
 		{
-			// FIXME no messages for anonymous clients!
-			$this->broadcastClientMessage("logbuch/message", $message, true );
+		  $channel = $messageData->channel;
+		  $data    = object2array( $messageData->data );
+		  $aclData = null;
+		  $prefix = implode("/", array_slice( explode("/",$channel), 0,2 ) );
+		  switch( $prefix  )
+		  {
+		    case "logbuch/comment":
+		      $personModel = $this->getDatasourceModel("demo")->getInstanceOfType("person"); // FIXME
+		      $personModel->loadByUserId( $this->getActiveUser()->id() );
+		      $categoryModel = $this->getDatasourceModel("demo")->getInstanceOfType($data['category']); // FIXME
+		      $categoryModel->load( (int) $data['itemId'] );
+		      $aclData = $categoryModel->aclData();
+		      
+		      /*
+		       * add missing data to the outgoing message
+		       */
+		      $data['senderId'] = $personModel->id(); // FIXME
+		      $data['icon'] = $personModel->get( "image" );
+		      $data['label'] = 
+		        "<b>" . $personModel->getFullName() . // "<br/>" .
+		        //date( "d.m.Y H:i", strtotime( $data['date'] ) ) . 
+		        "</b><br/>" .
+		        $this->createLinks( $data['message'] );
+		        
+		       /*
+		        * save a copy in the database
+		        */
+		       $commentModel = $this->getDatasourceModel("demo")->getInstanceOfType("comment");
+		       $commentModel->create(array(
+		          'channel' => $channel,
+		          'message' => $data['message']
+		       ));
+		       $commentModel->save();
+		       $personModel->linkModel( $commentModel );
+		       break;
+		  }
+		  $this->getMessageBus()->broadcast( $channel, $data, $aclData);
+			
 		}
 		return "OK";
 	}
+	
+	/**
+	 * from http://buildinternet.com/2010/05/how-to-automatically-linkify-text-with-php-regular-expressions/
+	 * @param $text
+	 */
+  protected function createLinks($text)
+  {
+      $text= preg_replace("/(^|[\n ])([\w]*?)((ht|f)tp(s)?:\/\/[\w]+[^ \,\"\n\r\t<]*)/is", "$1$2<a href=\"$3\" target=\"_blank\">$3</a>", $text);
+      $text= preg_replace("/(^|[\n ])([\w]*?)((www|ftp)\.[^ \,\"\t\n\r<]*)/is", "$1$2<a href=\"http://$3\" target=\"_blank\">$3</a>", $text);
+      $text= preg_replace("/(^|[\n ])([a-z0-9&\-_\.]+?)@([\w\-]+\.([\w\-\.]+)+)/i", "$1<a href=\"mailto:$2@$3\">$2@$3</a>", $text);
+      return($text);
+  }	
+	
+	/**
+	 * Subscribes the client to a channel
+	 * @param unknown_type $channel
+	 */
+	public function method_subscribe( $channel )
+	{
+	  qcl_event_message_Bus::getInstance()->addChannel( $channel );
+    $aclData = null;
+    $parts = explode("/",$channel);
+    $prefix = implode("/", array_slice( $parts, 0, 2 ) );
+    switch( $prefix  )
+    {
+      case "logbuch/comment":
+         
+        $commentModel = $this->getDatasourceModel("demo")->getInstanceOfType("comment");
+        $query = $commentModel->findWhere(array(
+            'channel' => $channel
+         ));
+         
+        if ( $commentModel->foundNothing() )
+        {
+          break;
+        }
+
+        $personModel = $this->getDatasourceModel("demo")->getInstanceOfType("person"); // FIXME
+        while( $commentModel->loadNext($query) )
+        {
+          try 
+          {
+            $personModel->load( $commentModel->get("PersonId") ); // FIXME
+          }
+          catch( qcl_data_model_RecordNotFoundException $e )
+          {
+            // no person for this comment, delete
+            $commentModel->delete();
+            continue;
+          }
+          $data = array();
+          $data['senderId'] = $personModel->id(); // FIXME
+          $data['icon'] = $personModel->get( "image" );
+          $data['label'] = 
+            "<b>" . $personModel->getFullName() . // "<br/>" .
+            //$commentModel->getCreated()->format("d.m.Y H.i") . 
+            "</b><br/>" .
+            $this->createLinks( $commentModel->get("message") );        
+
+          // FIXME add ACL for security  
+          $this->getMessageBus()->publishClientMessage( $channel, $data );
+        }
+    }
+	  return "OK";	
+	}
+	
+  /**
+   * Unsubscribes the client from a channel
+   * @param unknown_type $channel
+   */	
+	public function method_unsubscribe( $channel )
+	{
+	  qcl_event_message_Bus::getInstance()->removeChannel( $channel );
+	  return "OK";
+	}
+	
+  /**
+   * Subscribes the client to a channel
+   * @param unknown_type $channel
+   */ 
+  public function method_unsubscribeAšš( $channel )
+  {
+    qcl_event_message_Bus::getInstance()->removeAllChannels();
+    return "OK";
+  }	
 	
 	/**
 	 * Returns all messages in a specific period and category and 
@@ -75,7 +200,7 @@ class logbuch_service_Message
 				$bus = qcl_event_message_Bus::getInstance();
 				while( $model->loadNext() )
 				{
-					foreach( $model->createMessages() as $message )
+					foreach( $model->createMessages( "logbuch/display-category-item" ) as $message )
 					{
 						$message->setAcl( $model->aclData() );
 						$data = $message->getData();
@@ -94,7 +219,9 @@ class logbuch_service_Message
 	/**
 	 * Filters message according to acl
 	 * @param qcl_event_message_ClientMessage $message
-	 * 		The message to dispatch
+	 * 		The message to dispatch. The message data must be an object
+	 *    which contains at least a 'senderId' property by which the 
+	 *    sender can be identified. FIXME
 	 * @param qcl_access_model_Session $sessionModel
 	 * 		The loaded model of the session that is to receive the message
 	 * @param qcl_access_model_User $userModel
@@ -163,7 +290,7 @@ class logbuch_service_Message
 		/*
 		 * load sender
 		 */
-		$sender->load( $data['senderId'] );
+		$sender->load( $data['senderId'] ); // FIXME
 		
 		/*
 		 * load recipient

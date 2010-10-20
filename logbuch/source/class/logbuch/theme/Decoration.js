@@ -100,7 +100,18 @@ qx.Theme.define("logbuch.theme.Decoration",
         width : 1,
         color : "logbuch-field-border"
       }
-    }
+    },
+    
+    "comments-selected" :
+    {
+      decorator : qx.ui.decoration.Single,
+
+      style :
+      {
+        width: 2,
+        color : "#33508D"
+      }
+    }    
     
   }
 });

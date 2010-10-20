@@ -13,7 +13,12 @@
 ************************************************************************ */
 
 /* ************************************************************************
-#asset(logbuch/*)
+#asset(logbuch/icon/24/documents.png)
+#asset(logbuch/icon/24/cloud.png)
+#asset(logbuch/icon/24/photo.png)
+#asset(logbuch/icon/24/cancel.png)
+#asset(logbuch/icon/24/save.png)
+#asset(logbuch/icon/24/calendar.png)
 ************************************************************************ */
 
 /**
@@ -56,6 +61,13 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       check    : "String",
       nullable : true,
       event    : "changeAuthorLabel"
+    },
+    
+    itemId :
+    {
+      check    : "Integer",
+      nullable : true,
+      event    : "changeItemId"
     }
   },
   
@@ -80,7 +92,14 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
      * field name is sent as data
      * @type qx.event.type.Data
      */
-    "edit-extended-field" : "qx.event.type.Data"
+    "edit-extended-field" : "qx.event.type.Data",
+    
+    /**
+     * Can be used to indicated that a field is edited in extended mode. The
+     * field name is sent as data
+     * @type qx.event.type.Data
+     */
+    "load" : "qx.event.type.Event"    
     
   },  
   
@@ -159,6 +178,13 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
 	        marginBottom     : lc.getWorkspace().getMarginBottom()                          
 		    });
       }
+      
+      /*
+       * remove item id when hidden FIXME
+       */
+      this.addListener("disappear",function(){        
+        this.setItemId(null);
+      },this);
     },
     
     /**
@@ -278,9 +304,14 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       
     },
     
+    _getInitialExplanation : function( row )
+    {
+      return "Hier erscheinen Hilfen zu den einzelnen Feldern, wenn Sie in die Felder klicken.";
+    },
+    
     _getExplanation : function( row )
     {
-      return "Keine Hilfe vorhanden.";
+      return "Keine Hilfe vorhanden";
     },
     
     _createRightColumn : function( grid, numRows )
@@ -303,7 +334,7 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
         rich       : true,
         allowGrowY : true,
         allowGrowX : true,
-        value      : "Hier erscheinen Hilfen zu den einzelnen Feldern, wenn Sie in die Felder klicken... "
+        value      : this._getInitialExplanation()
       });
       stack.add( explanationBox );
       
@@ -328,92 +359,110 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
        */
       var hbox = new qx.ui.container.Composite( new qx.ui.layout.HBox(5) ).set({
         marginTop    : ( numRows == 7 ) ? 0 : 10,
-        maxHeight    : 30,
+        maxHeight    : 35,
         maxWidth     : rightColumnWidth
       });
       
       /*
        * attachment box button
        */
-      var button = new qx.ui.form.Button("Anhänge"); 
+      var button = new qx.ui.form.Button().set({
+        icon : "logbuch/icon/24/documents.png",
+        toolTipText : "Anhänge" // FIXME
+      }); 
       button.addListener("execute",function(){
         attachmentBox.set({
           category : this.getName(),
-          itemId   : "" + this._controller.getModel().getId()
+          itemId   : "" + this._controller.getModel().getId() // FIXME
         });
         attachmentBox.load();
         stack.setSelection( [attachmentBox] );
       },this);
-      hbox.add(button);           
+      hbox.add(button);        
+      
+      /*
+       * commments
+       */
+      var commentBox = new logbuch.module.Comments("comments_" + this.getName() ).set({
+        category : this.getName(),
+        maxWidth : rightColumnWidth
+      });
+      commentBox.init( this.__sandbox );
+      commentBox.build();
+      this.bind( "itemId", commentBox, "itemId" );
+      stack.add( commentBox );
+      
+      /*
+       * comment box button
+       */
+      var button = new qx.ui.form.Button().set({
+        icon : "logbuch/icon/24/cloud.png",
+        toolTipText : "Kommentare" // FIXME
+      }); 
+      button.addListener("execute",function(){
+        stack.setSelection( [commentBox] );
+      },this);
+      hbox.add(button);            
       
       
       /*
        * Photo Gallery
        */
-      var button2 = new qx.ui.form.Button( "Bilder" ).set({
-        toolTipText :this.tr("Photo Gallery")
-      });
-      button2.addListener("execute",function(){
-        
-        var galleryUrl = "../html/gallery/index.php" +
-                        "?category="  + this.getName() + 
-                        "&itemId="    + this._controller.getModel().getId() + 
-                        "&sessionId=" + this.__sandbox.getSessionId() + 
-                        "&nocache="   + (new Date).getTime();  
-                        
-        if ( ! logbuch.__galleryWindow || logbuch.__galleryWindow.closed )
-        {
-          logbuch.__galleryWindow = window.open(galleryUrl);
-          if ( ! logbuch.__galleryWindow )
-          {
-            dialog.Dialog.alert("Kann die Fotogalerie nicht öffnen. Bitte deaktivieren Sie den Popup-Blocker.");
-            return;
-          }
-          this.addListener("appear",function(){
-            if ( logbuch.__galleryWindow )
-            {
-              logbuch.__galleryWindow.location.href = "../html/gallery/index.php" +
-                        "?category="  + this.getName() + 
-                        "&itemId="    + this._controller.getModel().getId() + 
-                        "&sessionId=" + this.__sandbox.getSessionId() + 
-                        "&nocache="   + (new Date).getTime(); 
-            }
-          },this);
-            this.addListener("disappear",function(){
-            if ( logbuch.__galleryWindow )
-            {
-              logbuch.__galleryWindow.location.href = "about:blank";
-            }
-          },this);          
-        }
-        else
-        {
-          logbuch.__galleryWindow.location.href = galleryUrl;
-        }
-        logbuch.__galleryWindow.focus();
-      },this);
-      hbox.add(button2);
-      
-//      
-//      // discussion
-//      var button3 = new qx.ui.form.Button( null, "logbuch/icon/24/cloud.png" ).set({
-//        toolTipText :this.tr("Discussion")
+//      var button2 = new qx.ui.form.Button().set({
+//        icon : "logbuch/icon/24/photo.png",
+//        toolTipText : "Bilder" // FIXME
 //      });
-//      button3.addListener("execute",this.showDiscussion,this);
-//      hbox.add(button3);
-//      
-//      // upload
-//      var button1 = new qx.ui.form.Button( null, "logbuch/icon/24/arrow-up.png").set({
-//        toolTipText : this.tr("Upload Files")
-//      });
-//      button1.addListener("execute",this.uploadPhotos,this);
-//      hbox.add(button1);
+//      button2.addListener("execute",function(){
+//        
+//        var galleryUrl = "../html/gallery/index.php" +
+//                        "?category="  + this.getName() + 
+//                        "&itemId="    + this._controller.getModel().getId() + 
+//                        "&sessionId=" + this.__sandbox.getSessionId() + 
+//                        "&nocache="   + (new Date).getTime();  
+//                        
+//        if ( ! logbuch.__galleryWindow || logbuch.__galleryWindow.closed )
+//        {
+//          logbuch.__galleryWindow = window.open(galleryUrl);
+//          if ( ! logbuch.__galleryWindow )
+//          {
+//            dialog.Dialog.alert("Kann die Fotogalerie nicht öffnen. Bitte deaktivieren Sie den Popup-Blocker.");
+//            return;
+//          }
+//          this.addListener("appear",function(){
+//            if ( logbuch.__galleryWindow )
+//            {
+//              logbuch.__galleryWindow.location.href = "../html/gallery/index.php" +
+//                        "?category="  + this.getName() + 
+//                        "&itemId="    + this._controller.getModel().getId() + 
+//                        "&sessionId=" + this.__sandbox.getSessionId() + 
+//                        "&nocache="   + (new Date).getTime(); 
+//            }
+//          },this);
+//            this.addListener("disappear",function(){
+//            if ( logbuch.__galleryWindow && ! logbuch.__galleryWindow.closed )
+//            {
+//              logbuch.__galleryWindow.location.href = "about:blank";
+//            }
+//          },this);          
+//        }
+//        else
+//        {
+//          logbuch.__galleryWindow.location.href = galleryUrl;
+//        }
+//        logbuch.__galleryWindow.focus();
+//      },this);
+//      hbox.add(button2);
+
 
       // spacer
       hbox.add( new qx.ui.core.Spacer(), {flex:1});
       
       // close
-      var button = new qx.ui.form.Button(this.tr("Close")); //,"logbuch/icon/24/cancel.png").set({
+      var button = new qx.ui.form.Button().set({
+        icon        : "logbuch/icon/24/calendar.png",
+        toolTipText : "Zurück zur Kalenderübersicht" // FIXME
+        //label : "Schließen" // FIXME
+      });
       button.addListener("execute",this.close,this);
       hbox.add(button);      
       
@@ -445,30 +494,30 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
     _createItemActionButtonPanel : function()
     {
       var hbox = new qx.ui.container.Composite( new qx.ui.layout.HBox(5) ).set({
-        height    : 30  // FIXME
+        height    : 35  // FIXME
       });
       
       // save 
-      var button = new qx.ui.form.Button(this.tr("Save"));//,"logbuch/icon/24/save.png").set({
+      var button = new qx.ui.form.Button().set({
+        icon : "logbuch/icon/24/save.png",
+        toolTipText :  this.tr("Save")
+      });
       button.addListener("execute",this.save,this);
       hbox.add(button);
       this.__saveButton = button;
       
       
       // delete 
-      var deleteButton = new qx.ui.form.Button(this.tr("Delete"));//,"logbuch/icon/24/save.png").set({
+      var deleteButton = new qx.ui.form.Button().set({
+        icon : "logbuch/icon/24/cancel.png",
+        toolTipText :  this.tr("Delete")      
+      });
       deleteButton.addListener("execute",this.deleteItem,this);
       deleteButton.setEnabled(false);
       this.__deleteButton = deleteButton;
       hbox.add(deleteButton);
       
-      // invite/Send
-//      var button = new qx.ui.form.Button(null,"logbuch/icon/24/mail.png").set({
-//        toolTipText : this.tr("Send")
-//      });
-//      button.addListener("execute",this.send,this);
-//      hbox.add(button,{flex:1});
-      
+
       return hbox;
     },
     
@@ -593,6 +642,7 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
         "logbuch.category","read",[ this.getName(), itemData.id ],
         this._populateForms, this
       );
+      this.fireEvent("load" );
     },
     
     /**
@@ -602,6 +652,8 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
      */
     _populateForms : function( data )
     {
+      
+      this.setItemId( data.item.id );
       this.__sandbox.hideNotification();
       
       if( data.authorLabel )
@@ -814,15 +866,7 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
     },
     
     
-    showDiscussion : function()
-    {
-      
-    },
-    
-    showAttachments : function()
-    {
-      
-    },
+
     
     dummy : null
   },

@@ -113,6 +113,11 @@ class logbuch_model_ProjectDatasource
           'model'    => array(
             'class'    => "logbuch_model_Attachment"
           )
+        ),
+        'comment'  => array(
+          'model'    => array(
+            'class'    => "logbuch_model_Comment"
+          )
         )
       ) );
     }
