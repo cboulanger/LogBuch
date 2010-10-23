@@ -143,6 +143,9 @@ qx.Class.define("logbuch.module.Documentation",
 	        appearance  : "logbuch-field",
 	        height      : rowHeight
 	      });
+        
+        this.bind("editable",field,"readOnly",{converter:function(value){return !value;}});
+        
         hbox.add(field,{flex:1});
         var _this = this;
         
@@ -163,7 +166,10 @@ qx.Class.define("logbuch.module.Documentation",
         // listens for click on label
         label.addListener("click",function(field){
           return function(){
-            field.focus();
+            if ( ! field.isReadOnly() )
+            {
+              field.focus();
+            }
           };
         }(field), this);
         
@@ -182,7 +188,10 @@ qx.Class.define("logbuch.module.Documentation",
         // on click, extend the editor field
         img.addListener("click",function(field,name,label){
           return function(){
-            field.focus();
+            if ( ! field.isReadOnly() )
+            {
+              field.focus();  
+            }
 			      _this._extendField(field, name,label);
           };
         }(field,fields[i].name,fields[i].label),this);

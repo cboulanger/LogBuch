@@ -50,14 +50,25 @@ qx.Class.define("logbuch.module.Attachments",
     
     category :
     {
-      check : "String",
-      nullable : true
+      check     : "String",
+      nullable  : true,
+      event     : "changeCategory",
+      apply     : "_applyCategory"
     },
     
     itemId :
     {
-      check : "String",
-      nullable : true
+      check     : "String",
+      nullable  : true,
+      event     : "changeItemId",
+      apply     : "_applyItemId"
+    },
+    
+    editable :
+    {
+      check     : "Boolean",
+      init      : false,
+      event     : "changeEditable"
     }
     
   },  
@@ -84,10 +95,19 @@ qx.Class.define("logbuch.module.Attachments",
     
     /*
     ---------------------------------------------------------------------------
-       PRIVATE MEMBERS
+       APPLY METHODS
     ---------------------------------------------------------------------------
     */       
 
+    _applyCategory : function( value, old )
+    {
+      // FIXME 
+    },
+    
+    _applyItemId : function( value, old )
+    {
+      //
+    },
     
     /*
     ---------------------------------------------------------------------------
@@ -143,6 +163,7 @@ qx.Class.define("logbuch.module.Attachments",
         "?category="  + this.getCategory() + 
         "&itemId="    + this.getItemId() + 
         "&sessionId=" + this.__sandbox.getSessionId() + 
+        "&editable="  + ( this.getEditable() ? "1" : "0" ) + 
         "&nocache="   + (new Date).getTime()
       );
       

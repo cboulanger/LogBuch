@@ -152,10 +152,14 @@ class logbuch_service_Category
 		));
 	  
 	  /*
-	   * whether to allow to delete the item
+	   * whether to allow to  or editdelete the item
 	   */
-	  //$personModel->loadByUserId( $this->getActiveUser()->id() )
-	  $data['allowDelete'] = true; // FIXME 
+		$authorId = $personModel->id();
+	  $personModel->loadByUserId( $this->getActiveUser()->id() );
+	  $isAuthor = $authorId == $personModel->id();
+	  
+	  $data['deletable'] = $isAuthor;  
+	  $data['editable'] = $isAuthor; 
 	  
 		return $data;
 	}

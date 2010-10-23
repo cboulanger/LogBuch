@@ -68,6 +68,20 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       check    : "Integer",
       nullable : true,
       event    : "changeItemId"
+    },
+    
+    editable :
+    {
+      check   : "Boolean",
+      init    : false,
+      event   : "changeEditable"
+    },
+    
+    deletable :
+    {
+      check   : "Boolean",
+      init    : false,
+      event   : "changeEditable"
     }
   },
   
@@ -343,6 +357,10 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
         explanationBox.setValue( this._getExplanation(e.getData()) || "");
       },this);
       stack.setSelection( [explanationBox] );
+      this.addListener("appear", function(){
+        stack.setSelection( [explanationBox] );
+      },this);
+      
       
       /*
        * attachments
@@ -352,6 +370,7 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       });
       attachmentBox.init( this.__sandbox );
       attachmentBox.build();
+      this.bind("editable",attachmentBox,"editable");
       stack.add( attachmentBox );
       
       /*
@@ -498,14 +517,13 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       });
       
       // save 
-      var button = new qx.ui.form.Button().set({
+      var saveButton = new qx.ui.form.Button().set({
         icon : "logbuch/icon/24/save.png",
         toolTipText :  this.tr("Save")
       });
-      button.addListener("execute",this.save,this);
-      hbox.add(button);
-      this.__saveButton = button;
-      
+      saveButton.addListener("execute",this.save,this);
+      this.bind( "editable", saveButton, "enabled" );
+      hbox.add(saveButton);
       
       // delete 
       var deleteButton = new qx.ui.form.Button().set({
@@ -513,8 +531,7 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
         toolTipText :  this.tr("Delete")      
       });
       deleteButton.addListener("execute",this.deleteItem,this);
-      deleteButton.setEnabled(false);
-      this.__deleteButton = deleteButton;
+      this.bind( "deletable", deleteButton, "enabled" );
       hbox.add(deleteButton);
       
 
@@ -652,15 +669,34 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
      */
     _populateForms : function( data )
     {
-      
-      this.setItemId( data.item.id );
       this.__sandbox.hideNotification();
       
+      /*
+       * record id
+       */
+      this.setItemId( data.item.id );
+      
+      /*
+       * make the module fields editable or not 
+       */
+      this.setEditable( data.editable );
+      
+      /*
+       * make record deletable or not
+       */
+      this.setDeletable( data.deletable );
+      
+      /*
+       * author label
+       */
       if( data.authorLabel )
       {
         this.setAuthorLabel( data.authorLabel );
       }
       
+      /*
+       * form data
+       */
       var aclModel  = qx.data.marshal.Json.createModel( data.acl ); 
       var itemModel = qx.data.marshal.Json.createModel( data.item );
       
@@ -669,10 +705,10 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       
       this.__itemModel = itemModel; // save for resetting
       this.__oldData   = data.item;
-
-            
-      this.__deleteButton.setEnabled( data.allowDelete );
       
+      /*
+       * show category 
+       */
       this.__sandbox.publish("activate-category", this.getName() );
       
       this.show();
@@ -843,10 +879,8 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       }
       
       this._form.reset();
-      this.__sandbox.publish("activate-category",null);      
-      this.__deleteButton.setEnabled( false );
+      this.__sandbox.publish("activate-category",null);
       this.hide();
-      
     },
     
     

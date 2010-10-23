@@ -137,7 +137,19 @@ qx.Class.define("logbuch.Application",
        */
       core.setServerUrl("../services/server.php");
       core.setAccessService("logbuch.access");
-      core.setConfigService("logbuch.config");      
+      core.setConfigService("logbuch.config");
+      
+      /*
+       * start message transport, using rpc-polling
+       */
+      core.startMessageTransport({
+        mode          : "poll",
+        transport     : "rpc",
+        service       : "logbuch.message",
+        interval      : 10,
+        authenticated : true,
+        stopOnError   : false
+      });      
       
       /*
        * visual modules
@@ -174,20 +186,28 @@ qx.Class.define("logbuch.Application",
        * determine ui changes on application state change / authentication
        */
       core.addListener("changeActiveUser", function(e){
-        core.publish("authenticated", ! e.getData().isAnonymous() );
-        var state = core.getApplicationState("view");
-        core.setApplicationState( "view", 
-          e.getData().isAnonymous() 
-            ? ( state == "register" ? "register" : "login" ) 
-            : ( state == "login" ? "main" : state ) 
-        );
-      },this);       
+        new qx.util.DeferredCall( function(){
+          core.publish("authenticated", ! e.getData().isAnonymous() );
+          var state = core.getApplicationState("view");
+          core.setApplicationState( "view", 
+            e.getData().isAnonymous() 
+              ? ( state == "register" ? "register" : "login" ) 
+              : ( state == "login" ? "main" : state ) 
+          );
+        },this).schedule();
+      },this);
       core.onApplicationStateChange( "view", this._updateView, this );      
       
       /*
-       *  allow incoming server dialogs
+       *  Allow incoming server dialogs. 
+       *  Needs to be done for each authentication
        */
-      core.allowServerDialogs(true);
+      core.subscribe("authenticated",function(e){
+        if( e.getData() )
+        {
+          core.allowServerDialogs(true);
+        }
+      },this);
 
       /*
        * save the current date in the application state
@@ -196,18 +216,6 @@ qx.Class.define("logbuch.Application",
         core.getStateManager().setState("date", e.getData().getTime() );
       },this);
 
-      /*
-       * start message transport, using rpc-polling
-       */
-      core.startMessageTransport({
-        mode          : "poll",
-        transport     : "rpc",
-        service       : "logbuch.message",
-        interval      : 10,
-        authenticated : true,
-        stopOnError   : false
-      });
-      
       /*
        * run setup, then authenticate
        */
@@ -241,7 +249,7 @@ qx.Class.define("logbuch.Application",
           core.logout( function(){
             core.hideNotification();
           },this);
-        },this);
+        },this);          
         
         /*
          * load config values and continue 
@@ -263,6 +271,8 @@ qx.Class.define("logbuch.Application",
        */
       core.getStateManager().setHistorySupport(true);
       core.getStateManager().updateState();
+      
+      this.info("Starting message transport...");
       
       this._finalize();
     },    

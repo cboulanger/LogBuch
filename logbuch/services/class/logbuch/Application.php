@@ -102,9 +102,9 @@ class logbuch_Application
     /*
      * log filters
      */
-    $this->getLogger()->setFilterEnabled( QCL_LOG_SETUP, true );
+    //$this->getLogger()->setFilterEnabled( QCL_LOG_SETUP, true );
     //$this->getLogger()->setFilterEnabled( LOGBUCH_LOG_APPLICATION, true );
-    //$this->getLogger()->setFilterEnabled( QCL_LOG_LOCALE, true );
+    //$this->getLogger()->setFilterEnabled( QCL_LOG_ACCESS, true );
 
     /*
      * log request
@@ -113,7 +113,7 @@ class logbuch_Application
     {
       $request = qcl_server_Request::getInstance();
       $this->log( sprintf(
-        "Starting LogBuch service: %s.%s( %s ) ...",
+        "Starting LogBuch service: %s.%s( %s )",
         $request->getService(), 
         $request->getMethod(), 
         json_encode($request->getParams())
@@ -192,8 +192,6 @@ class logbuch_Application
     	new logbuch_service_Message(), "filterMessage"
     ));
     
-    // hack FIXME
-    qcl_event_message_Bus::getInstance()->addChannel("logbuch/display-category-item");
   }
 
   /**

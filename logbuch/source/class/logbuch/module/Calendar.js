@@ -228,6 +228,13 @@ qx.Class.define("logbuch.module.Calendar",
       this.setDate( date );
       
       /*
+       * clear calendar on logout
+       */
+      this.__sandbox.subscribe("logout",function(){
+        this.reset();
+      },this);
+      
+      /*
        * mark date column
        */
       try
@@ -247,10 +254,7 @@ qx.Class.define("logbuch.module.Calendar",
       this.__sandbox.subscribe("change-date-today", this._onSandboxChangeDateToday, this);
       this.__sandbox.subscribe("activate-category", this._onSandboxActivateCategory, this);
       this.__sandbox.subscribe("reload-calendar", this._onReloadCalendar, this);
-      
-      this.__sandbox.callOnceWhenAuthenticated(function(){
-        this.__sandbox.subscribeToChannel("logbuch/display-category-item", this._onDisplayCategoryItem, this);
-      },this);
+      this.__sandbox.subscribe("authenticated", this._onAuthenticated, this);
     },
     
     /**
@@ -262,8 +266,8 @@ qx.Class.define("logbuch.module.Calendar",
       this.__sandbox.unsubscribe("change-date-today", this._onSandboxChangeDateToday, this);
       this.__sandbox.unsubscribe("activate-category", this._onSandboxActivateCategory, this);
       this.__sandbox.unsubscribe("reload-calendar", this._onReloadCalendar, this);
-      
-      this.__sandbox.unsubscribeFromChannel("logbuch/display-category-item", this._onDisplayCategoryItem, this);
+      this.__sandbox.unsubscribe("authenticated", this._onAuthenticated, this);
+      // FIXME unsubscribe channel
     },
     
     /*
@@ -274,20 +278,8 @@ qx.Class.define("logbuch.module.Calendar",
     _applyDate : function( date, old )
     {
       if ( old && date.getTime() == old.getTime() ) return;
-      this.load( date, old );
-    },
-    
-    _onReloadCalendar : function()
-    {
-      this.load();
-    },
-    
-        
-    
-    // FIXME load visible Area first and other areas later
-    load : function( date, old)
-    {
       date = date || this.getDate();
+      
       var df = new  qx.util.format.DateFormat();
       var msday = 24*60*60*1000;
       
@@ -316,35 +308,6 @@ qx.Class.define("logbuch.module.Calendar",
         var lastLoaded = new Date( ( new Date( date.getTime() + msAheadBefore )).toDateString() );        
         this.setLastDateLoaded( lastLoaded );
         //console.log( "last loaded: " + (lastLoaded) );
-        
-        /*
-         * if not authenticated, defer until we have an authenticated
-         * user
-         */
-        if ( ! this.__sandbox.isAuthenticatedUser() )
-        {
-          this.__sandbox.callOnceWhenAuthenticated( function(){
-            this._applyDate( date, old );
-          },this);
-          return;
-        }
-        
-        /*
-         * request messages in the given period
-         */
-        this.__data = []; // delete cache
-        this.__sandbox.showNotification( this.tr("Loading LogBuch data ...") );
-        qx.util.TimerManager.getInstance().start(function(){
-	         this.__sandbox.rpcRequest(
-	          "logbuch.message","collect", 
-	          [ this.getFirstDateLoaded().toDateString(), this.getLastDateLoaded().toDateString() ],
-            function()
-            {
-              this.__sandbox.hideNotification();
-            }, this
-	        );        
-        },null,this,null,100); //FIXME
-        
         
         /*
          * determine non-work days
@@ -404,6 +367,58 @@ qx.Class.define("logbuch.module.Calendar",
       },null,this,null,100);
       
       this.__sandbox.publish("change-date", date );
+    },
+    
+    _onReloadCalendar : function()
+    {
+      this.load();
+    },
+    
+    /**
+     * Called when user has been authenticated
+     * @param e {qx.event.type.Data}
+     */
+    _onAuthenticated : function(e)
+    {
+      if ( e.getData() )
+      {
+        this.__sandbox.subscribeToChannel(
+          "logbuch/display-category-item", this._onDisplayCategoryItem, this,
+          this.load, this          
+        );  
+      }
+    },
+    
+    /**
+     * Load category items
+     */
+    load : function()
+    {
+      /*
+       * clear data
+       */
+      this.reset();
+      
+      /*
+       * request messages in the given period
+       */
+      if( this.__sandbox.isAuthenticatedUser() )
+      {
+        this.__sandbox.showNotification( this.tr("Loading LogBuch data ...") );
+        this.__sandbox.rpcRequest(
+          "logbuch.message","collect", 
+          [ this.getFirstDateLoaded().toDateString(), 
+            this.getLastDateLoaded().toDateString() ],
+          function()
+          {
+            this.__sandbox.hideNotification();
+          }, this
+        );        
+      }
+      else
+      {
+        this.error("Cannot load calendar data without authenticated user");
+      }
     },
     
     /**
@@ -1084,6 +1099,12 @@ qx.Class.define("logbuch.module.Calendar",
           date      : date
         });
       }      
+    },
+    
+    reset : function()
+    {
+      this.__data = []; // delete cache
+      this.__scroller.getPane().fullUpdate();
     }
     
   },

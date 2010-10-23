@@ -167,11 +167,14 @@ qx.Class.define("logbuch.module.Event",
         appearance  : "logbuch-field",
         height      : rowHeight
       });
+      
+      this.bind("editable",field1,"readOnly",{converter:function(value){return !value;}});
+      
       field1.addListener("focus",function(){
         this.fireDataEvent("focusRow",0);
       },this);
       this.addListener("focusRow",function(e){
-        if( e.getData() == 0 ) 
+        if( e.getData() == 0 && ! field1.isReadOnly() ) 
         { 
           field1.focus(); 
         }
@@ -220,7 +223,7 @@ qx.Class.define("logbuch.module.Event",
         this.fireDataEvent("focusRow",1);
       },this);      
       this.addListener("focusRow",function(e){
-        if( e.getData() == 1 ) { field2.focus(); }
+        if( e.getData() == 1  ) { field2.focus(); }
       },this);      
       form.add( field2, null, null, "dateStart" );
       vbox.add( field2 );
@@ -338,11 +341,14 @@ qx.Class.define("logbuch.module.Event",
         appearance  : "logbuch-field",
         height      : rowHeight        
       });
+      
+      this.bind("editable",field6,"readOnly",{converter:function(value){return !value;}});
+      
       field6.addListener("focus",function(){
         this.fireDataEvent("focusRow",2);
       },this);   
       this.addListener("focusRow",function(e){
-        if( e.getData() == 2 ) { field6.focus(); }
+        if( e.getData() == 2 && ! field6.isReadOnly() ) { field6.focus(); }
       },this);      
       form.add( field6, null, null, "location" );
       grid.add( field6, { row: 2, column : 1, colSpan : 2 });      
@@ -407,11 +413,14 @@ qx.Class.define("logbuch.module.Event",
         appearance  : "logbuch-field",
         height      : rowHeight
       });
+      
+      this.bind("editable",field8,"readOnly",{converter:function(value){return !value;}});
+      
       field8.addListener("focus",function(){
         this.fireDataEvent("focusRow",4);
       },this);   
       this.addListener("focusRow",function(e){
-        if( e.getData() == 4 ) { field8.focus(); }
+        if( e.getData() == 4  && ! field8.isReadOnly() ) { field8.focus(); }
       },this);       
       form.add( field8, null, null, "notes" );
       grid.add( field8, { row: 4, column : 1, colSpan : 2 })

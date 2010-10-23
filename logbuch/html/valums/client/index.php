@@ -48,6 +48,7 @@
        */
       $category   = getParam('category');
       $itemId     = getParam('itemId');
+      $editable   = getParam('editable');
       $deleteFile = str_replace( "..", "", getParam('delete') );
       
       /*
@@ -65,24 +66,47 @@
       $serverUrl = "../server/upload.php?" . 
       								"category=$category" .
       								"&itemId=$itemId" .
+                      "&editable=$editable" .
                       "&sessionId=$sessionId";      
     ?>
-    <script>        
+    <?php if ( $editable ):?>
+    <script>  
+        var __isUploading = false;
         function createUploader(){            
             var uploader = new qq.FileUploader({
                 element: document.getElementById('file-uploader-demo1'),
                 action: '<?php echo $serverUrl; ?>',
-                debug: true,
-                template: '<div class="qq-uploader">' + 
+                debug: false,
+                template: 
+                  '<div class="qq-uploader">' + 
                   '<div class="qq-upload-drop-area"><span>Dateien hier ablegen</span></div>' +
-                  '<div class="qq-upload-button">Hier klicken, um Datei hochzuladen oder per Drag & Drop Datei hier ablegen. Um eine Datei zu löschen, klicken Sie auf das [&nbsp;X&nbsp;]</div>' +
+                  '<div class="qq-upload-button">Hier klicken, um Datei hochzuladen oder per Drag & Drop Datei hier ablegen.' +
+                  'Um eine Datei zu löschen, klicken Sie auf das [&nbsp;X&nbsp;]' + 
+                      '</div>' +
                   '<ul class="qq-upload-list"></ul>' + 
                '</div>',
-               onComplete : function(){ document.location.reload(); } 
+               onProgress : function(id, fileName, loaded, total){
+                 //top.console.warn("Progress: " + [ id, fileName, loaded, total]);
+                 //  
+                 __isUploading = true;
+               },
+               onComplete: function(id, fileName, responseJSON){
+                 //top.console.warn("complete: " +[id, fileName, responseJSON]);
+                 __isUploading = false;
+                 setTimeout(function(){
+                   if ( ! __isUploading )
+                   {
+                     this.document.location.reload();
+                   }
+                 },2000);
+               }
             });
         }
         window.onload = createUploader;     
     </script>
+    <?php else: ?>
+      <h3>Anhänge</h3>
+    <?php endif; ?>
     <ul>
       <?php 
         $prefix  = $category . "_" . $itemId;
@@ -93,6 +117,7 @@
           $deleteUrl = "?category=$category" .
           						 	"&itemId=$itemId" .
                       	"&sessionId=$sessionId" .
+                        "&editable=$editable" .
                         "&delete=$basename";
           $deleteJs  =  "var loc=window.location,v=confirm(". 
                           "'Wollen Sie wirklich die Datei \'$filename\' löschen?');".
@@ -101,9 +126,10 @@
           echo 
           	"<li>" .
           		"<a target='_blank' href='$file'><b>$filename</b></a>&nbsp;" .
-              "[<a href='#' onclick=\"$deleteJs\">&nbsp;X&nbsp;</a>]" . 
+              ( $editable ? "[<a href='#' onclick=\"$deleteJs\">&nbsp;X&nbsp;</a>]" : "" ) . 
           	"</li>";
         }
+        
       ?>  
     </ul>
 </body>

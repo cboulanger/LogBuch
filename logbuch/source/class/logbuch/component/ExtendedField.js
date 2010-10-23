@@ -49,6 +49,11 @@ qx.Class.define("logbuch.component.ExtendedField",
     this.base(arguments);
     
     this.hide();
+    
+    field.addListener("disappear",function(){
+      this.hide();
+    },this);    
+    
     this.setLayout(new qx.ui.layout.VBox(5));
     this.setAppearance("logbuch-category-page");
     
@@ -61,6 +66,9 @@ qx.Class.define("logbuch.component.ExtendedField",
     hbox.add( new qx.ui.core.Spacer(), {flex:1} );
     var img = new qx.ui.basic.Image( "logbuch/icon/16/cancel.png" );
     img.setOpacity(0.5);
+    img.addListener("click",function(){
+      this.hide();
+    },this);
     hbox.add(img);
     this.add( hbox );
     
@@ -86,9 +94,15 @@ qx.Class.define("logbuch.component.ExtendedField",
     
     // bi-directionally bind field
     field.bind("value", shortfield, "value" );
+    field.bind("readOnly", shortfield, "readOnly" );
     shortfield.bind("value", field ,"value" );
     
-    this.addListener("appear",shortfield.focus,shortfield);
+    this.addListener("appear",function(){
+      if( ! shortfield.getInputControl().isReadOnly() )
+      {
+        shortfield.focus();
+      }
+    },this);
     
     /*
      * long field
@@ -108,6 +122,7 @@ qx.Class.define("logbuch.component.ExtendedField",
       },null,this,null,50);
     },this);
     
+    field.bind("readOnly", longfield, "readOnly" );
     
     
     // add to form model 
