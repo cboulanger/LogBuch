@@ -28,7 +28,7 @@
  *    Published when user double-clicks on a calendar cell. Data is an object with
  *    key "date" (Date) and "category" (String).    
  * 
- * message (Object)
+ * message (Object) FIXME
  *    Publishes a new category item as a message item. The message object has the 
  *    following structure: {
  *      subject     : String,           // The message subject
@@ -44,4 +44,10 @@
  *      category : String,
  *      date     : Date
  *    }
+ *    
+ *  organizations-updated 
+ *      When there has been an update to the organization data
+ *      
+ *  users-updated
+ *      When there has been an update to the user data
  */

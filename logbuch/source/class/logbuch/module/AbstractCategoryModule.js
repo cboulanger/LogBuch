@@ -198,6 +198,7 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
        */
       this.addListener("disappear",function(){        
         this.setItemId(null);
+        this.__sandbox.removeApplicationState("itemId");
       },this);
     },
     
@@ -354,22 +355,35 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       
       this.addListener("focusRow", function(e){
         stack.setSelection( [explanationBox] );
+        attachmentButton.setValue(false);
+        commentButton.setValue(false);
         explanationBox.setValue( this._getExplanation(e.getData()) || "");
       },this);
       stack.setSelection( [explanationBox] );
-      this.addListener("appear", function(){
-        stack.setSelection( [explanationBox] );
-      },this);
-      
       
       /*
        * attachments
        */
       var attachmentBox = new logbuch.module.Attachments("attachments_" + this.getName() ).set({
-        maxWidth : rightColumnWidth
+        maxWidth : rightColumnWidth,
+        category : this.getName()
       });
       attachmentBox.init( this.__sandbox );
       attachmentBox.build();
+      
+      this._controller.bind("model.id", attachmentBox, "itemId", {
+        converter : function( id ) {
+          attachmentBox.getIframe().setSource("about:blank");
+          if ( id ){
+            attachmentBox.setItemId( "" + id );
+            //attachmentButton.setEnabled(false);
+            attachmentBox.load();
+            return "" + id;            
+          }
+          return ""; // FIXME
+        }
+      });
+      
       this.bind("editable",attachmentBox,"editable");
       stack.add( attachmentBox );
       
@@ -385,19 +399,33 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       /*
        * attachment box button
        */
-      var button = new qx.ui.form.Button().set({
+      var attachmentButton = new qx.ui.form.ToggleButton().set({
         icon : "logbuch/icon/24/documents.png",
-        toolTipText : "Anhänge" // FIXME
-      }); 
-      button.addListener("execute",function(){
-        attachmentBox.set({
-          category : this.getName(),
-          itemId   : "" + this._controller.getModel().getId() // FIXME
-        });
-        attachmentBox.load();
+        toolTipText : "Anhänge"//, // FIXME
+//        enabled : false
+      });
+      
+      attachmentBox.bind("length", attachmentButton, "label", {
+        converter : function( v ){
+          attachmentButton.setEnabled(true);
+          switch ( v )
+          {
+            case 1: 
+              return "1 Anhang";
+            default:
+              return v + " Anhänge";
+          }
+        }
+      });
+      
+      attachmentButton.addListener("execute",function(){
+        attachmentButton.setValue(true);
         stack.setSelection( [attachmentBox] );
+        commentButton.setValue(false);        
       },this);
-      hbox.add(button);        
+      
+      
+      hbox.add(attachmentButton);        
       
       /*
        * commments
@@ -414,14 +442,35 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       /*
        * comment box button
        */
-      var button = new qx.ui.form.Button().set({
+      var commentButton = new qx.ui.form.ToggleButton().set({
         icon : "logbuch/icon/24/cloud.png",
-        toolTipText : "Kommentare" // FIXME
+        toolTipText : "Kommentare"//, // FIXME
+//        enabled : false
       }); 
-      button.addListener("execute",function(){
+      commentButton.addListener("execute",function(){
+        commentButton.setValue(true);
         stack.setSelection( [commentBox] );
+        attachmentButton.setValue(false);
       },this);
-      hbox.add(button);            
+      
+      commentBox.bind("length", commentButton, "label", {
+        converter : function( v ){
+          commentButton.setEnabled(true);
+          switch ( v )
+          {
+            case 1: 
+              return "1 Kommentar";
+            default:
+              return v + " Kommentare";
+          }
+        }
+      });      
+      hbox.add(commentButton);
+      
+      this.addListener("disappear", function(){
+        commentButton.setValue(false);
+        attachmentButton.setValue(false);
+      },this);
       
       
       /*
@@ -472,20 +521,15 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
 //      },this);
 //      hbox.add(button2);
 
-
-      // spacer
-      hbox.add( new qx.ui.core.Spacer(), {flex:1});
+      grid.add( hbox, { row : numRows-1, column : 3 } );
       
-      // close
-      var button = new qx.ui.form.Button().set({
-        icon        : "logbuch/icon/24/calendar.png",
-        toolTipText : "Zurück zur Kalenderübersicht" // FIXME
-        //label : "Schließen" // FIXME
-      });
-      button.addListener("execute",this.close,this);
-      hbox.add(button);      
-      
-      grid.add( hbox, { row : numRows-1, column : 3 } );     
+      /*
+       * show the explanation box
+       */
+      this.addListener("appear", function(){
+         stack.setSelection( [attachmentBox] );
+         attachmentButton.setValue(true);
+      },this);      
     },
     
     
@@ -516,24 +560,48 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
         height    : 35  // FIXME
       });
       
-      // save 
+      /*
+       * save
+       */ 
       var saveButton = new qx.ui.form.Button().set({
         icon : "logbuch/icon/24/save.png",
         toolTipText :  this.tr("Save")
       });
       saveButton.addListener("execute",this.save,this);
       this.bind( "editable", saveButton, "enabled" );
+//      this.addListener("changeItemId",function(e){
+//        if( ! e.getData() ){
+//          saveButton.setEnabled(false);
+//        }
+//      },this);
       hbox.add(saveButton);
       
-      // delete 
+      /*
+       * delete
+       */ 
       var deleteButton = new qx.ui.form.Button().set({
         icon : "logbuch/icon/24/cancel.png",
         toolTipText :  this.tr("Delete")      
       });
       deleteButton.addListener("execute",this.deleteItem,this);
       this.bind( "deletable", deleteButton, "enabled" );
+//      this.addListener("changeItemId",function(e){
+//        if( ! e.getData() ){
+//          deleteButton.setEnabled(false);
+//        }
+//      },this);      
       hbox.add(deleteButton);
       
+      /*
+       * close
+       */
+      var closeButton = new qx.ui.form.Button().set({
+        icon        : "logbuch/icon/24/calendar.png",
+        toolTipText : "Zurück zur Kalenderübersicht" // FIXME
+        //label : "Schließen" // FIXME
+      });
+      closeButton.addListener("execute",this.close,this);
+      hbox.add(closeButton);            
 
       return hbox;
     },
@@ -655,6 +723,7 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       this._form.reset();
       this.__sandbox.showNotification(this.tr("Loading record ..."));
       this.__sandbox.publish("activate-category", this.getName() );
+      this.setItemId( null );
       this.__sandbox.rpcRequest(
         "logbuch.category","read",[ this.getName(), itemData.id ],
         this._populateForms, this
@@ -713,6 +782,78 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       
       this.show();
     },
+    
+    _check : function()
+    {
+      var data = this.getData();
+      var oldData = this.__oldData;
+      var oldContainsValues = false;
+      var newContainsValues = false;
+      var valuesChanged = false; 
+      for ( var field in data )
+      {
+        switch ( field )
+        {
+          case "id":
+            break;
+            
+          case "dateStart": 
+          case "dateEnd":
+          case "timeStart":
+          case "timeEnd":
+            if ( oldData[field] != data[field] )
+            {
+              valuesChanged = true;
+            }
+            break;
+            
+          case "participants":
+            if ( qx.lang.Type.isArray( oldData[field] ) && oldData[field].count > 0 )
+            {
+              oldContainsValues = true;
+            }
+            if ( qx.lang.Type.isArray( data[field] ) && data[field].count > 0 )
+            {
+              newContainsValues = true;
+              qx.lang.Array.equals( oldData[field], data[field] )
+              {
+                valuesChanged = true; 
+              }
+            }
+            break;
+            
+          default:
+            if ( oldData[field] )
+            {
+              oldContainsValues = true;
+            }
+            if ( data[field] ) 
+            {
+              newContainsValues = true;
+              if ( oldData[field] != data[field] )
+              {
+                valuesChanged = true;
+              }              
+            }
+            break;
+        }
+      }
+//
+//      console.warn( oldData );
+//      console.warn( data );
+//      console.warn( "oldContainsValues: " + oldContainsValues );
+//      console.warn( "newContainsValues: " + newContainsValues );
+//      console.warn( "valuesChanged: "  + valuesChanged);
+      
+      return {
+        data : data,
+        oldData : oldData,
+        oldContainsValues : oldContainsValues,
+        newContainsValues : newContainsValues,
+        valuesChanged : valuesChanged
+      } 
+    },
+      
         
     
     /**
@@ -720,6 +861,13 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
      */
     save : function()
     {
+      var check = this._check();
+      if ( ! check.newContainsValues ) 
+      {
+        dialog.Dialog.warning("Sie haben in diesem Datensatz keine Eingaben gemacht. Bitte füllen Sie mindestens ein Feld aus.");
+        return;
+      }
+      
       this.fireDataEvent("focusRow",null);
       var acl = logbuch.module.AccessControl.getInstance();
       acl.set({
@@ -793,83 +941,24 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
      */
     close : function()
     {
-      var data = this.getData();
-      var oldData = this.__oldData;
-      var oldContainsValues = false;
-      var newContainsValues = false;
-      var valuesChanged = false; 
-      for ( var field in data )
-      {
-        switch ( field )
-        {
-          case "id":
-            break;
-            
-          case "dateStart": 
-          case "dateEnd":
-          case "timeStart":
-          case "timeEnd":
-            if ( oldData[field] != data[field] )
-            {
-              valuesChanged = true;
-            }
-            break;
-            
-          case "participants":
-            if ( qx.lang.Type.isArray( oldData[field] ) && oldData[field].count > 0 )
-            {
-              oldContainsValues = true;
-            }
-            if ( qx.lang.Type.isArray( data[field] ) && data[field].count > 0 )
-            {
-              newContainsValues = true;
-              qx.lang.Array.equals( oldData[field], data[field] )
-              {
-                valuesChanged = true; 
-              }
-            }
-            break;
-            
-          default:
-            if ( oldData[field] )
-            {
-              oldContainsValues = true;
-            }
-            if ( data[field] ) 
-            {
-              newContainsValues = true;
-	            if ( oldData[field] != data[field] )
-	            {
-	              valuesChanged = true;
-	            }              
-            }
-            break;
-        }
-      }
-//
-//      console.warn( oldData );
-//      console.warn( data );
-//      console.warn( "oldContainsValues: " + oldContainsValues );
-//      console.warn( "newContainsValues: " + newContainsValues );
-//      console.warn( "valuesChanged: "  + valuesChanged);
-//      
-      if ( ! oldContainsValues && ! newContainsValues ) 
+      var check = this._check();
+      if ( ! check.oldContainsValues && ! check.newContainsValues ) 
       {
         this._delete();
         return;
       }
-      else if ( valuesChanged )
+      else if ( check.valuesChanged )
       {
         dialog.Dialog.confirm( "Sie haben im Datensatz Veränderungen vorgenommen. Wollen Sie diese speichern?", function(save){ // FIXME
           if( save )
           {
-            this._controller.setModel( qx.data.marshal.Json.createModel( data ) ); // hack
+            this._controller.setModel( qx.data.marshal.Json.createModel( check.data ) ); // hack
             this.save(); 
             return;
           }
           else
           {
-            if ( ! oldContainsValues ) 
+            if ( ! check.oldContainsValues ) 
             {
               this._delete();
               return;

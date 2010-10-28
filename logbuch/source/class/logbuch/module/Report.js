@@ -418,7 +418,7 @@ qx.Class.define("logbuch.module.Report",
           "logbuch.category", "createReport", [ data ],
           function(url)
           {
-            window.open(url);
+            window.open(url,"logbuch_report");
           }
         );
       },this);

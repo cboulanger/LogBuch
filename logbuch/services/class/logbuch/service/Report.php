@@ -459,10 +459,16 @@ class logbuch_service_Report
 						$count = count( $subcategory['subject'] );
 						for( $i=0; $i < $count; $i++)
 						{
+              $url = "../build/#" . ( sprintf( 
+                "sessionId~%s^time~%s^view~main^itemId~%s",
+                $this->getSessionId(),
+                strtotime( $subcategory['subject'][$i]['dateStart'] ) . "000",
+                urlencode($category_name . "/" . $subcategory['subject'][$i]['itemId'])
+              ) );						  
 							echo 
 								"<tr>" .
 									"<td>" .
-										"<b>Ereignis</b>" . 
+										"<b><a href='$url' target='logbuch'>Ereignis</a></b>" . 
 										"<br />" . 
 											date("H:m", strtotime( $subcategory['subject'][$i]['dateStart'] ) ) . " - " .
 											date("H:m", strtotime( $subcategory['subject'][$i]['dateEnd'] ) ) .
@@ -498,6 +504,7 @@ class logbuch_service_Report
 								echo
 									"</td>" .
 								"</tr>";
+        								
 						}
 						break;
 						
@@ -505,10 +512,16 @@ class logbuch_service_Report
 						$count = count( $subcategory['subject'] );
 						for( $i=0; $i < $count; $i++)
 						{
+              $url = "../build/#" . ( sprintf( 
+                "sessionId~%s^time~%s^view~main^itemId~%s",
+                $this->getSessionId(),
+                strtotime( $subcategory['subject'][$i]['dateStart'] ) . "000",
+                urlencode($category_name . "/" . $subcategory['subject'][$i]['itemId'])
+              ) );  						  
 							echo 
 								"<tr>" .
 									"<td>" .
-										"<b>Ziel</b>" . 
+										"<b><a href='$url' target='logbuch'>Ziel</a></b>" . 
 										"<br />" .
 //										"Zieldefinition am " .
 //											date("d.m.Y", strtotime( $subcategory['subject'][$i]['dateStart'] ) ) .
@@ -544,6 +557,7 @@ class logbuch_service_Report
 							echo
 								"</td>" .
 							"</tr>";	
+
 						}
 						break;				
 	
@@ -551,11 +565,17 @@ class logbuch_service_Report
 						foreach ( $subcategory as $subcategory_name => $entries )
 						{
 							foreach( $entries as $entry )
-							{								
+							{						
+                $url = "../build/#" . ( sprintf( 
+                  "sessionId~%s^time~%s^view~main^itemId~%s",
+                  $this->getSessionId(),
+                  strtotime( $entry['dateStart'] ) . "000",
+                  urlencode( $category_name . "/" . $entry['itemId'] )
+                ) );							  		
 								echo 
 								"<tr>".
 									"<td>" .
-										"<b>"    . $categoryMap[$category_name]['label'] . "</b>" . 
+										"<b><a href='$url' target='logbuch'>"    . $categoryMap[$category_name]['label'] . "</a></b>" . 
 										"<br />" . $categoryMap[$category_name]['fields'][$subcategory_name] .
 									"</td>" .
 								  "<td align='center'>" . 
@@ -571,6 +591,7 @@ class logbuch_service_Report
   					}
   					break;
 				} // end switch
+				
 
 				/*
 				 * @todo attachments and comments

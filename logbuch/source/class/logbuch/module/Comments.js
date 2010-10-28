@@ -52,7 +52,17 @@ qx.Class.define("logbuch.module.Comments",
       nullable : true,
       event     : "changeItemId",
       apply     : "_applyItemId"
-    }
+    },
+    
+    /*
+     * number of comments
+     */
+    length :
+    {
+      check     : "Integer",
+      init      : 0,
+      event     : "changeLength"
+    }    
   },
   
   /*
@@ -150,7 +160,18 @@ qx.Class.define("logbuch.module.Comments",
                           }
       });
       this.add( list, {flex:1} );
+      
+      /*
+       * empty list
+       */
       list.setModel( new qx.data.Array() );
+      
+      /*
+       * bind comment count
+       */
+      list.bind("model.length",this,"length",{
+        converter : function(e){return list.getModel().getLength();}
+      });
       
       /*
        * enlarge the currently selected list item
@@ -170,6 +191,9 @@ qx.Class.define("logbuch.module.Comments",
           this.__selIndex = list.getModel().indexOf( item );
           var height      = 16 * ( Math.floor( item.getLabel().length / 28 ) + 2 );
           rowConfig.setItemSize( this.__selIndex, Math.max( 70, height ) );
+          
+          //listItem.getChildControl("icon").setHeight(300); 
+          //listItem.getChildControl("label").setHeight(300); 
           
           // scroll
           var scrollY = this.__selIndex * 70;

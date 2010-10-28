@@ -403,7 +403,7 @@ class logbuch_service_Record
 		}
 		else 
 		{
-			$model->findAll();	
+			$model->findAllOrderBy($orderBy);	
 		}
 		$listModel = array();
 		while( $model->loadNext() )

@@ -189,16 +189,23 @@ qx.Class.define("logbuch.module.PersonForm",
           controller.bindProperty("value", "model", null, item, id);
         }
       });
-      organizationField.addListener("appear",function(){
-	     this.__sandbox.rpcRequest( 
-	        "logbuch.record", "list", 
+      
+      /*
+       * load list on appear and when organizations change
+       */
+      var loadOrganizationListFunc = function(){
+       this.__sandbox.rpcRequest( 
+          "logbuch.record", "list", 
           [ null, "organization" ],
-	        function( listModel ){
+          function( listModel ){
             listModel.unshift( { label: ""+this.tr("Please select the organization"), icon:null, value:null});
-	          selectBoxController1.setModel( qx.data.marshal.Json.createModel(listModel) );
-	        }, this
-	      );
-      },this);
+            selectBoxController1.setModel( qx.data.marshal.Json.createModel(listModel) );
+          }, this
+        );
+      };
+      organizationField.addListener("appear", loadOrganizationListFunc, this);
+      this.__sandbox.subscribeToChannel( "organizations-updated", loadOrganizationListFunc, this);
+      
       // only manager can change organization
       organizationField.addListener("changeEditable",function(e){
         if ( e.getData() )

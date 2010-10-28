@@ -124,9 +124,11 @@ extends logbuch_model_Model
   		$s = explode( ":", $data['subject'] );
   		$label = $s[0];
   		$body  = $s[1];
+      $subject = date( "H:i", strtotime( $data['dateStart'] ) ) . ": " . $label;  		
   	}
   	else
   	{
+  	  $subject = date( "H:i", strtotime( $data['dateStart'] ) );
   		$label = "Ereignis"; //$this->tr("Event");
   		$body  = $data['subject'];
   	}
@@ -135,7 +137,7 @@ extends logbuch_model_Model
   		'sender'				=> $this->authorName(),
 	 		'senderId'			=> $this->authorId(),
     	'initials'			=> $this->authorInitials(),
-  		'subject'				=> date( "H:i", strtotime( $data['dateStart'] ) ) . ": " . $label,
+  		'subject'				=> $subject,
     	'label'					=> $label,
   		'body'					=> $body,
   		'category'			=> "event",

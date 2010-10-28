@@ -116,6 +116,11 @@ qx.Class.define("logbuch.Application",
       }
       
       /*
+       * window name
+       */
+      window.name = "logbuch"
+      
+      /*
        * application core providing application functionality
        */
       core = new qcl.application.Core();
@@ -210,11 +215,46 @@ qx.Class.define("logbuch.Application",
       },this);
 
       /*
-       * save the current date in the application state
+       * synchronize current date with the application state
        */
       core.subscribe("change-date",function(e){
-        core.getStateManager().setState("date", e.getData().getTime() );
+        if ( ! e.getData() instanceof Date ) return;
+        this.__doNotChangeDate = true;
+        core.setApplicationState("time", e.getData().getTime() );
+        this.__doNotChangeDate = false;
       },this);
+      core.onApplicationStateChange( "time", function(e){
+        if ( this.__doNotChangeDate ) return;
+        var time = parseInt( e.getData().value);
+        if ( ! time || isNaN( time ) ) {
+          this.warn( "Invalid time " + e.getData().value );
+          return;
+        }
+        core.publish("change-date", new Date( time ) );
+      },this );
+      core.subscribe("logout", function(){
+        core.removeApplicationState("time");    
+      },this);       
+      
+      /*
+       * load a category item from the state
+       */
+      core.subscribe("load-category-item",function(e){
+        var data = e.getData();
+        this.__doNotLoadCategoryItem = true;
+        core.setApplicationState( "itemId", data.id );
+        this.__doNotLoadCategoryItem = false;
+      },this);
+      core.onApplicationStateChange( "itemId", function(e){
+        var itemId = e.getData().value;
+        if ( ! itemId || this.__doNotLoadCategoryItem ) {
+          return;
+        }
+        core.publish("load-category-item", {
+          category : itemId.substr(0, itemId.indexOf("/") ), // FIXME
+          id : itemId
+        } );
+      },this );
 
       /*
        * run setup, then authenticate

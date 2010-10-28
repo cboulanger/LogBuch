@@ -69,6 +69,16 @@ qx.Class.define("logbuch.module.Attachments",
       check     : "Boolean",
       init      : false,
       event     : "changeEditable"
+    },
+    
+    /*
+     * number of attachments
+     */
+    length :
+    {
+      check     : "Integer",
+      init      : 0,
+      event     : "changeLength"
     }
     
   },  
@@ -137,6 +147,12 @@ qx.Class.define("logbuch.module.Attachments",
         decorator : null
       });
       this.add( this.__iframe, {flex:1} );
+      
+      // communication with iframe
+      this.__iframe.addListener("load",function(){
+        this.__iframe.getDocument().__parentWidget = this;
+      },this);      
+      
     },
     
  
@@ -166,7 +182,11 @@ qx.Class.define("logbuch.module.Attachments",
         "&editable="  + ( this.getEditable() ? "1" : "0" ) + 
         "&nocache="   + (new Date).getTime()
       );
-      
+    },
+    
+    getIframe: function()
+    {
+      return this.__iframe;
     },
     
     dummy : null

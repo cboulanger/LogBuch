@@ -70,7 +70,7 @@
                       "&sessionId=$sessionId";      
     ?>
     <?php if ( $editable ):?>
-    <script>  
+      <script>     
         var __isUploading = false;
         function createUploader(){            
             var uploader = new qq.FileUploader({
@@ -80,7 +80,7 @@
                 template: 
                   '<div class="qq-uploader">' + 
                   '<div class="qq-upload-drop-area"><span>Dateien hier ablegen</span></div>' +
-                  '<div class="qq-upload-button">Hier klicken, um Datei hochzuladen oder per Drag & Drop Datei hier ablegen.' +
+                  '<div class="qq-upload-button"><b>Hier</b> klicken, um Datei hochzuladen oder per Drag & Drop Datei hier ablegen.' +
                   'Um eine Datei zu löschen, klicken Sie auf das [&nbsp;X&nbsp;]' + 
                       '</div>' +
                   '<ul class="qq-upload-list"></ul>' + 
@@ -96,32 +96,42 @@
                  setTimeout(function(){
                    if ( ! __isUploading )
                    {
-                     this.document.location.reload();
+                     var url = document.__parentWidget.getIframe().getSource();
+                     url = url.substr(0, url.lastIndexOf("&") ) + "&nocache=" + (new Date).getTime();
+                     document.__parentWidget.getIframe().setSource(url);
                    }
                  },2000);
                }
             });
         }
-        window.onload = createUploader;     
-    </script>
+        window.onload = function(){
+         createUploader();
+        };
+    </script>             
     <?php else: ?>
+    <script>
+       window.onload = function(){
+        };
+    </script>
       <h3>Anhänge</h3>
     <?php endif; ?>
     <ul>
       <?php 
         $prefix  = $category . "_" . $itemId;
+        $count = 0;
         foreach( glob( "../server/uploads/$prefix*") as $file )
         {
+          $count++;
           $filename  = implode("_", array_slice( explode("_", basename( $file ) ), 3 ) );
           $basename  = basename( $file );
-          $deleteUrl = "?category=$category" .
+          $deleteUrl = "../html/valums/client/index.php" . 
+                        "?category=$category" .
           						 	"&itemId=$itemId" .
                       	"&sessionId=$sessionId" .
                         "&editable=$editable" .
                         "&delete=$basename";
-          $deleteJs  =  "var loc=window.location,v=confirm(". 
-                          "'Wollen Sie wirklich die Datei \'$filename\' löschen?');".
-                           "if(v)loc.href='$deleteUrl';" .
+          $deleteJs  =  "if(confirm('Wollen Sie wirklich die Datei \'$filename\' löschen?')){".
+                           "document.__parentWidget.getIframe().setSource('$deleteUrl');};" .
                          "return false;";
           echo 
           	"<li>" .
@@ -129,8 +139,13 @@
               ( $editable ? "[<a href='#' onclick=\"$deleteJs\">&nbsp;X&nbsp;</a>]" : "" ) . 
           	"</li>";
         }
-        
       ?>  
     </ul>
+    <!--<p>[ <a href="#" onclick='var url = document.__parentWidget.getIframe().getSource();url = url.substr(0, url.lastIndexOf("&") ) + "&nocache=" + (new Date).getTime();document.__parentWidget.getIframe().setSource(url);return false;' >Neu laden</a> ]</p>-->
+    <script>
+      window.setTimeout(function(){
+        document.__parentWidget.setLength(<?php echo $count; ?>);
+      },500);
+    </script>
 </body>
 </html>

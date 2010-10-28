@@ -97,16 +97,23 @@ qx.Class.define("logbuch.module.UserList",
 	      });
 	      this.__organizationSelectBox = selectBoxController1;
 	      selectBoxController1.addListener("changeSelection",this._loadList,this);
-	      organizationField.addListenerOnce("appear",function(){
-	       this.__sandbox.rpcRequest( 
-	          "logbuch.record", "list", 
-	          [ null, "organization" ],
-	          function( listModel ){
-	            listModel.unshift( { label: ""+this.tr("All participating organizations"), icon:null, value:null});
-	            selectBoxController1.setModel( qx.data.marshal.Json.createModel(listModel) );
-	          }, this
-	        );
-	      },this);   
+	      
+        /*
+         * (re) load organization list on appear and on change
+         */
+        var loadOrganizationListFunc = function(){
+         this.__sandbox.rpcRequest( 
+            "logbuch.record", "list", 
+            [ null, "organization", null, "name"],
+            function( listModel ){
+              listModel.unshift( { label: ""+this.tr("All participating organizations"), icon:null, value:null});
+              selectBoxController1.setModel( qx.data.marshal.Json.createModel(listModel) );
+            }, this
+          );
+        };
+        organizationField.addListenerOnce("appear",loadOrganizationListFunc,this);   
+        this.__sandbox.subscribeToChannel("organizations-updated",loadOrganizationListFunc, this);
+        
 	      this.add( organizationField );
 	      
 	      /*
@@ -166,7 +173,20 @@ qx.Class.define("logbuch.module.UserList",
       if ( modelType == "organization" )
       {
         list.addListener("appear", this._loadList, this );
+        this.__sandbox.subscribeToChannel("organizations-updated",function(){
+          if ( this.isSeeable() )
+          {
+            this._loadList();
+          }
+        }, this);
       }
+
+      /*
+       * remove selection on appear
+       */
+      list.addListener("appear",function(){
+        list.getSelection().removeAll();
+      },this);
       
       /*
        * load data in external editor when selected
@@ -307,12 +327,12 @@ qx.Class.define("logbuch.module.UserList",
       /*
        * filter
        */
-      
+      var where, orderBy;
       if (  this.__organizationSelectBox )
       {
         var orgSel  = this.__organizationSelectBox.getSelection();
 	      var roleSel = this.__roleSelectBox.getSelection();
-	      var where  = {};
+	      where  = {};
 	      if ( orgSel.length > 0 && orgSel.getItem(0) !== null )
 	      {
 	        where['organizationId'] = orgSel.getItem(0);
@@ -325,12 +345,12 @@ qx.Class.define("logbuch.module.UserList",
 	      {
 	        where = null;
 	      }
-        var orderBy = "familyName";
+        orderBy = "familyName";
       }
       else
       {
-        var where = null;
-        var orderBy = "name";
+        where = null;
+        orderBy = "name";
       }
      
       /*
@@ -339,7 +359,8 @@ qx.Class.define("logbuch.module.UserList",
       this.__isLoading = true;
       this.__sandbox.showNotification(this.tr("Loading list ..."));
       this.__sandbox.rpcRequest( 
-        "logbuch.record", "list", [ null, this.__modelType, where, orderBy ],
+        "logbuch.record", "list", 
+        [ null, this.__modelType, where, orderBy ],
         function( data ){
           this.__isLoading = false;
           this.__sandbox.hideNotification();

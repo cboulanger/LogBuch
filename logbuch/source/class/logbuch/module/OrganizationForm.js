@@ -135,6 +135,7 @@ qx.Class.define("logbuch.module.OrganizationForm",
               'id'     : this.__id,
               'data'   : data
             });
+            this.__sandbox.publishToChannel("organizations-updated",true,true);
           }, this
         );
       }, this );

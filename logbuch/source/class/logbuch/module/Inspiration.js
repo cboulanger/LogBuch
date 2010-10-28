@@ -81,6 +81,11 @@ qx.Class.define("logbuch.module.Inspiration",
       return this.tr("Inspiration");
     },        
     
+    /**
+     * Returns help text depending on row
+     * @param {} row
+     * @return {String}
+     */
     _getExplanation : function( row )
     {
       switch(row)
@@ -92,11 +97,7 @@ qx.Class.define("logbuch.module.Inspiration",
           return "Buchtipps Zeitungsartikel, Veranstaltungshinweise etc.";
         
         case 2:
-          return "Stolpersteine, Hindernisse, etc., welche sich möglicherweise als Hemmnis auswirken.";
-          
-        case 3:
           return "Linktipps im Internet";
-          
       }
     },        
 

@@ -222,9 +222,17 @@ qx.Class.define("logbuch.module.Calendar",
       this.add( this.__scroller );
       
       /*
-       * Scroll to today
+       * Scroll to today if no date has been given
        */
-      var date = new Date();
+      var date, time = parseInt( this.__sandbox.getApplicationState("time") );
+      if ( ! time || isNaN( time ) )
+      {
+        date = new Date();  
+      }
+      else
+      {
+        date = new Date( time );
+      }
       this.setDate( date );
       
       /*
@@ -1048,7 +1056,7 @@ qx.Class.define("logbuch.module.Calendar",
           msglist.addMessage( new logbuch.component.Message( 
             data.date,
             data.sender  + " (" + data.initials + ")",
-            data.subject,
+            data.label + ": " + data.subject,
             data.body,
             data.category,
             data.itemId
