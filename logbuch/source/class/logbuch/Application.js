@@ -286,8 +286,10 @@ qx.Class.define("logbuch.Application",
          */
         core.subscribe("logout", function(){
           core.showNotification( this.tr("Logging out ...") );
-          core.logout( function(){
-            core.hideNotification();
+          core.unsubscribeFromAllChannels(function(){
+            core.logout( function(){
+              core.hideNotification();
+            },this);
           },this);
         },this);          
         
@@ -682,6 +684,7 @@ qx.Class.define("logbuch.Application",
       
       right.addListener("completed",function(){
         core.setApplicationState("view", "main" );
+        core.publish("reload-calendar");
       },this);      
       
       left.setUserData("buddy",right);

@@ -159,9 +159,8 @@ class logbuch_service_Message
 	
   /**
    * Subscribes the client to a channel
-   * @param unknown_type $channel
    */ 
-  public function method_unsubscribeAšš( $channel )
+  public function method_unsubscribeAll()
   {
     qcl_event_message_Bus::getInstance()->removeAllChannels();
     return "OK";

@@ -1,10 +1,10 @@
 <?php
 /* ************************************************************************
 
-   logBuch: Die Online-Plattform fŸr Unternehmenszusammenarbeit
+   logBuch: Die Online-Plattform fÃ¼r Unternehmenszusammenarbeit
 
    Copyright:
-     2010 JŸrgen Breiter (Konzeption) Christian Boulanger (Programmierung) 
+     2010 JÃ¼rgen Breiter (Konzeption) Christian Boulanger (Programmierung) 
 
    License:
      GPL: http://www.gnu.org/licenses/gpl.html
@@ -96,7 +96,7 @@ class logbuch_service_Registration
     $adminName   = "Annegret Zimmermann";
     $adminEmail  = "annegret.zimmermann@de.tuv.com"; // $app->getIniValue("email.admin");
     
-    $body  = utf8_encode( sprintf( "
+    $body = ( sprintf( "
 Sehr geehrte/r %s,
 
 Sie wurden beim LogBuch 'Sustainable Business Travel' registriert.
@@ -108,7 +108,7 @@ Startpasswort ein:
 
 %s
 
-Um das LogBuch aufzurufen, benötigen Sie einen modernen Internetbrowser:
+Um das LogBuch aufzurufen, benÃ¶tigen Sie einen modernen Internetbrowser:
 
 - FireFox ab Version 3.0
 - Internet Explorer ab Version 8.0
@@ -117,9 +117,9 @@ Um das LogBuch aufzurufen, benötigen Sie einen modernen Internetbrowser:
 
 Bei Fragen zum LogBuch wenden Sie sich bitte an %s
 
-Wir wünschen Ihnen produktives Arbeiten mit dem LogBuch.
+Wir wÃ¼nschen Ihnen produktives Arbeiten mit dem LogBuch.
 
-", $name, $password, $confirmationLink, $adminEmail ) ); 
+",  $name , $password, $confirmationLink, $adminEmail ) ); 
     
     /*
      * send mail

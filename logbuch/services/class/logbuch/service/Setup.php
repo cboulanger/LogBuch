@@ -156,10 +156,13 @@ class logbuch_service_Setup
 		}
 		catch( InvalidArgumentException $e )
 		{
-			$this->getDatasourceManager()->createDatasource("demo", "project", array(
-				'database' => "logbuch_devel_user"
-			) );
-			$datasourceModel = $this->getDatasourceModel( "demo" );
+		  try {
+  			$this->getDatasourceManager()->createDatasource("demo", "project", array(
+  				'database' => "logbuch_devel_user"
+  			) );
+		  }
+		  catch( qcl_data_model_RecordExistsException $e ){}
+		  $datasourceModel = $this->getDatasourceModel( "demo" );
 		}    
 
     /*
