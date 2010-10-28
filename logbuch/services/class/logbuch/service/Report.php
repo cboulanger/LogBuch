@@ -262,6 +262,20 @@ class logbuch_service_Report
 								'itemId'    => $model->id()
 							);	
 							//$this->debug( $entry, __CLASS__, __LINE__ );
+							
+							/*
+							 * attachments
+							 */
+  						$prefix  = $category . "_" . $model->id();
+              foreach( glob( "../html/valums/server/uploads/$prefix*") as $file )
+              {
+                $filename  = implode("_", array_slice( explode("_", basename( $file ) ), 3 ) );
+                $entry['attachments'][$filename] = basename( $file );             
+              }
+              
+							/*
+							 * save entry
+							 */
 							$report[ $date ][ $category ][ $subcategory ][] = $entry;
 						}
 					}
@@ -504,6 +518,25 @@ class logbuch_service_Report
 								echo
 									"</td>" .
 								"</tr>";
+								
+								/*
+								 * attachments
+								 */
+								$attachments = $subcategory['subject'][$i]['attachments'];
+								if ( is_array( $attachments ) )
+								{
+								  echo "<tr><td/><td/><td>Anhänge: ";
+								  $att= array();
+								  foreach( $attachments as $filename => $basename )
+								  {
+								    $url = sprintf(
+								      "server.php?service=logbuch.report&method=download&params=%s,%s&sessionId=%s",
+								       $filename, $basename, $this->getSessionId()
+								    );
+								    $att[] = "<a href='$url' target='_blank'>$filename</a>";
+								  }
+								  echo implode( ", ", $att ) . "</td></tr>";
+								}
         								
 						}
 						break;
@@ -558,6 +591,25 @@ class logbuch_service_Report
 								"</td>" .
 							"</tr>";	
 
+		            /*
+                 * attachments
+                 */
+                $attachments = $subcategory['subject'][$i]['attachments'];
+                if ( is_array( $attachments ) )
+                {
+                  echo "<tr><td/><td/><td>Anhänge: ";
+                  $att= array();
+                  foreach( $attachments as $filename => $basename )
+                  {
+                    $url = sprintf(
+                      "server.php?service=logbuch.report&method=download&params=%s,%s&sessionId=%s",
+                       $filename, $basename, $this->getSessionId()
+                    );
+                    $att[] = "<a href='$url' target='_blank'>$filename</a>";
+                  }
+                  echo implode( ", ", $att ) . "</td></tr>";
+                }
+
 						}
 						break;				
 	
@@ -587,6 +639,25 @@ class logbuch_service_Report
     								( $entry['extended'] ? "<br />" . $entry['extended'] : "") .  
   								"</td>" .
   						  "</tr>";
+    								
+							  /*
+                 * attachments
+                 */
+                $attachments = $entry['attachments'];
+                if ( is_array( $attachments ) )
+                {
+                  echo "<tr><td/><td/><td>Anhänge: ";
+                  $att= array();
+                  foreach( $attachments as $filename => $basename )
+                  {
+                    $url = sprintf(
+                      "server.php?service=logbuch.report&method=download&params=%s,%s&sessionId=%s",
+                       $filename, $basename, $this->getSessionId()
+                    );
+                    $att[] = "<a href='$url' target='_blank'>$filename</a>";
+                  }
+                  echo implode( ", ", $att ) . "</td></tr>";
+                }    								
   						}
   					}
   					break;
@@ -602,6 +673,65 @@ class logbuch_service_Report
 		echo "</table>";
 		//echo "<pre>" . print_r( $report ,true ) . "</pre>"; 
 		exit;
+	}
+	
+  /**
+   * Returns the content type according to the file extension
+   */
+  protected function getContentType( $file )
+  {
+    $file_extension = strtolower(substr(strrchr($file,"."),1));
+    switch( $file_extension )
+    {
+      case "pdf": $ctype="application/pdf"; break;
+      case "txt": $ctype="text/plain"; break;
+      case "exe": die("Not allowed");
+      case "zip": $ctype="application/zip"; break;
+      case "doc": $ctype="application/msword"; break;
+      case "xls": $ctype="application/vnd.ms-excel"; break;
+      case "ppt": $ctype="application/vnd.ms-powerpoint"; break;
+      case "gif": $ctype="image/gif"; break;
+      case "png": $ctype="image/png"; break;
+      case "jpg": $ctype="image/jpg"; break;
+      default: $ctype="application/octet-stream";
+    }
+    return $ctype;
+  }
+	
+	public function method_download( $filename, $basename )
+	{
+    qcl_import("qcl_io_filesystem_local_File");
+    $path   = realpath("../html/valums/server/uploads/$basename");
+    $file   = new qcl_io_filesystem_local_File( "file://" . $path);
+    $size   = $file->size();
+    $ctype  = $this->getContentType( $filename );
+    
+    /*
+     * headers
+     */
+    header("Pragma: public");
+    header("Expires: 0");
+    header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+    header("Content-Type: $ctype" );
+    
+    if ( substr( $ctype, 0, 6 ) != "image/" )
+    {
+      header("Content-Disposition: attachment; filename=\"$filename\"");  
+    }
+    header("Content-Transfer-Encoding: binary");
+    header("Content-Length: $size" );
+
+
+    /*
+     * stream file content to client
+     */
+    $file->open("r");
+    while ( $data = $file->read(8*1024) )
+    {
+      echo $data;
+    }
+    $file->close();
+    exit;
 	}
 }
 ?>
