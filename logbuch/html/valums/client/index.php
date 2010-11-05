@@ -32,14 +32,11 @@
 		}
     </style>	
 </head>
-<body>		
-	<div id="file-uploader-demo1">		
-		<noscript>			
-			<p>Please enable JavaScript to use file uploader.</p>
-			<!-- or put a simple form for upload here -->
-		</noscript>         
-	</div>
-    
+<body>
+	  <!-- The uploader drop / click target -->
+	  <div id="uploader-target">
+	   <noscript>Please enable javascript</noscript>
+	  </div>		   
     <script src="fileuploader.js" type="text/javascript"></script>
     <?php 
       
@@ -74,7 +71,7 @@
         var __isUploading = false;
         function createUploader(){            
             var uploader = new qq.FileUploader({
-                element: document.getElementById('file-uploader-demo1'),
+                element: document.getElementById('uploader-target'),
                 action: '<?php echo $serverUrl; ?>',
                 debug: false,
                 template: 
@@ -125,17 +122,22 @@
           $filename  = implode("_", array_slice( explode("_", basename( $file ) ), 3 ) );
           $basename  = basename( $file );
           $deleteUrl = "../html/valums/client/index.php" . 
-                        "?category=$category" .
-          						 	"&itemId=$itemId" .
-                      	"&sessionId=$sessionId" .
-                        "&editable=$editable" .
-                        "&delete=$basename";
-          $deleteJs  =  "if(confirm('Wollen Sie wirklich die Datei \'$filename\' löschen?')){".
-                           "document.__parentWidget.getIframe().setSource('$deleteUrl');};" .
-                         "return false;";
+            "?category=$category" .
+					 	"&itemId=$itemId" .
+          	"&sessionId=$sessionId" .
+            "&editable=$editable" .
+            "&delete=$basename";
+          $deleteJs  =  
+            "if(confirm('Wollen Sie wirklich die Datei \'$filename\' löschen?')){".
+               "document.__parentWidget.getIframe().setSource('$deleteUrl');};" .
+             "return false;";
+          $url = sprintf(
+            "../../../services/server.php?service=logbuch.file&method=download&params=%s,%s&sessionId=%s",
+             $filename, $basename,$sessionId
+          );       
           echo 
           	"<li>" .
-          		"<a target='_blank' href='$file'><b>$filename</b></a>&nbsp;" .
+          		"<a target='_blank' href='$url'><b>$filename</b></a>&nbsp;" .
               ( $editable ? "[<a href='#' onclick=\"$deleteJs\">&nbsp;X&nbsp;</a>]" : "" ) . 
           	"</li>";
         }

@@ -67,38 +67,10 @@
        {
          "manifest" : "${CONTRIB_LIB}/qcl/trunk/Manifest.json"
        },
-       /* qcl-php
-       {
-         "manifest" : "${CONTRIB_LIB}/qcl-php/trunk/Manifest.json"
-       },
-       // PHP JSON-RPC server
-       {
-         "manifest" : "${CONTRIB_LIB}/RpcPhp/trunk/Manifest.json"
-       },    
-       // HtmlEditor
-       {
-         "manifest" : "${CONTRIB_LIB}/HtmlEditor/trunk/Manifest.json"
-       },*/ 
        // Dialogs 
        {
          "manifest" : "${CONTRIB_LIB}/Dialog/trunk/Manifest.json"
        },       
-       // CollapsablePanel
-       {
-         "manifest" : "${CONTRIB_LIB}/CollapsablePanel/trunk/Manifest.json"
-       },
-       // Persist
-       {
-         "manifest" : "${CONTRIB_LIB}/Persist/trunk/Manifest.json"
-       }, 
-       // VirtualData
-       {
-         "manifest" : "${CONTRIB_LIB}/VirtualData/trunk/Manifest.json"
-       },
-       // Upload widget
-       {
-         "manifest" : "${CONTRIB_LIB}/UploadWidget/0.3/Manifest.json"
-       },
        // Token Field
        {
          "manifest" : "${CONTRIB_LIB}/TokenField/trunk/Manifest.json"
@@ -106,39 +78,27 @@
       ]
     },
     
-    // load third-party scripts before loading qooxdoo
-    "common":
-    {
-      "add-script" :
-      [
-        // persist library: http://pablotron.org/software/persist-js/
-        //{ "uri" : "../build/resource/persist/persist-all-min.js" },
-        // promise library  
-        //{ "uri" : "resource/logbuch/script/promise.js" }
-      ]
-    },
-    
     // source generation only
     "source-script":
     {
       // download contrib code to location that is accessible to web server in source version
-      "cache" :
-      {
-        "downloads" : "contrib"
-      }
+      //"cache" :
+      //{
+      //  "downloads" : "contrib"
+      //}
     },
     
     // build generation only
     "build" :
     {
       // don't optimize privates
-      "compile-options" :
-      { 
-        "code" :
-        {
-          "=optimize" : ["variables", "basecalls", "strings"]
-        }
-      }
+      //"compile-options" :
+      //{ 
+      //  "code" :
+      //  {
+      //    "=optimize" : ["variables", "basecalls", "strings"]
+      //  }
+      //}
     }
   }
 }

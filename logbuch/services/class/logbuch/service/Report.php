@@ -101,11 +101,12 @@ class logbuch_service_Report
 			 * load model records
 			 */
 			$query = new qcl_data_db_Query(array(
-				'where' => array(
-						"dateStart" => array( ">=", $dateStart ),
-					 	"dateStart"	=> array( "<=", $dateEnd )
-				),
-				'orderBy' => "dateStart"
+        'where'        => "DATE(dateStart) BETWEEN :start AND :end",
+        'orderBy'      => "dateStart",
+        'parameters'   => array(
+          ':start' => $dateStart,
+			    ':end'   => $dateEnd
+			  )
 			));			
 			$model->find( $query );
 			
@@ -224,7 +225,10 @@ class logbuch_service_Report
 				 */
 				foreach( $data as $key => $value )
 				{
-					if ( $value == false ) continue;
+					if ( $value == false or in_array( substr( $key, strlen( $category ) +1 ), array("documents","comments","photos"))) 
+					{
+					  continue;
+					}
 					
 					if ( substr( $key, 0, strlen( $category ) ) == $category )
 					{
@@ -266,12 +270,15 @@ class logbuch_service_Report
 							/*
 							 * attachments
 							 */
-  						$prefix  = $category . "_" . $model->id();
-              foreach( glob( "../html/valums/server/uploads/$prefix*") as $file )
-              {
-                $filename  = implode("_", array_slice( explode("_", basename( $file ) ), 3 ) );
-                $entry['attachments'][$filename] = basename( $file );             
-              }
+							if ( isset( $data[ $category . "_documents" ] ) && $data[ $category . "_documents" ] === true )
+							{
+    						$prefix  = $category . "_" . $model->id();
+                foreach( glob( "../html/valums/server/uploads/$prefix*") as $file )
+                {
+                  $filename  = implode("_", array_slice( explode("_", basename( $file ) ), 3 ) );
+                  $entry['attachments'][$filename] = basename( $file );             
+                }
+							}
               
 							/*
 							 * save entry
@@ -530,7 +537,7 @@ class logbuch_service_Report
 								  foreach( $attachments as $filename => $basename )
 								  {
 								    $url = sprintf(
-								      "server.php?service=logbuch.report&method=download&params=%s,%s&sessionId=%s",
+								      "server.php?service=logbuch.file&method=download&params=%s,%s&sessionId=%s",
 								       $filename, $basename, $this->getSessionId()
 								    );
 								    $att[] = "<a href='$url' target='_blank'>$filename</a>";
@@ -602,7 +609,7 @@ class logbuch_service_Report
                   foreach( $attachments as $filename => $basename )
                   {
                     $url = sprintf(
-                      "server.php?service=logbuch.report&method=download&params=%s,%s&sessionId=%s",
+                      "server.php?service=logbuch.file&method=download&params=%s,%s&sessionId=%s",
                        $filename, $basename, $this->getSessionId()
                     );
                     $att[] = "<a href='$url' target='_blank'>$filename</a>";
@@ -651,7 +658,7 @@ class logbuch_service_Report
                   foreach( $attachments as $filename => $basename )
                   {
                     $url = sprintf(
-                      "server.php?service=logbuch.report&method=download&params=%s,%s&sessionId=%s",
+                      "server.php?service=logbuch.file&method=download&params=%s,%s&sessionId=%s",
                        $filename, $basename, $this->getSessionId()
                     );
                     $att[] = "<a href='$url' target='_blank'>$filename</a>";
@@ -673,65 +680,6 @@ class logbuch_service_Report
 		echo "</table>";
 		//echo "<pre>" . print_r( $report ,true ) . "</pre>"; 
 		exit;
-	}
-	
-  /**
-   * Returns the content type according to the file extension
-   */
-  protected function getContentType( $file )
-  {
-    $file_extension = strtolower(substr(strrchr($file,"."),1));
-    switch( $file_extension )
-    {
-      case "pdf": $ctype="application/pdf"; break;
-      case "txt": $ctype="text/plain"; break;
-      case "exe": die("Not allowed");
-      case "zip": $ctype="application/zip"; break;
-      case "doc": $ctype="application/msword"; break;
-      case "xls": $ctype="application/vnd.ms-excel"; break;
-      case "ppt": $ctype="application/vnd.ms-powerpoint"; break;
-      case "gif": $ctype="image/gif"; break;
-      case "png": $ctype="image/png"; break;
-      case "jpg": $ctype="image/jpg"; break;
-      default: $ctype="application/octet-stream";
-    }
-    return $ctype;
-  }
-	
-	public function method_download( $filename, $basename )
-	{
-    qcl_import("qcl_io_filesystem_local_File");
-    $path   = realpath("../html/valums/server/uploads/$basename");
-    $file   = new qcl_io_filesystem_local_File( "file://" . $path);
-    $size   = $file->size();
-    $ctype  = $this->getContentType( $filename );
-    
-    /*
-     * headers
-     */
-    header("Pragma: public");
-    header("Expires: 0");
-    header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-    header("Content-Type: $ctype" );
-    
-    if ( substr( $ctype, 0, 6 ) != "image/" )
-    {
-      header("Content-Disposition: attachment; filename=\"$filename\"");  
-    }
-    header("Content-Transfer-Encoding: binary");
-    header("Content-Length: $size" );
-
-
-    /*
-     * stream file content to client
-     */
-    $file->open("r");
-    while ( $data = $file->read(8*1024) )
-    {
-      echo $data;
-    }
-    $file->close();
-    exit;
 	}
 }
 ?>

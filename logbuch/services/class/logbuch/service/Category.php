@@ -303,8 +303,8 @@ class logbuch_service_Category
 	 */
 	public function method_getDatePeriod()
 	{
-		$dateStart = null;
-		$dateEnd   = null;
+		$dateStart = time();
+		$dateEnd   = time();
 		
 		$dsModel = $this->getDatasourceModel("demo");
 		foreach( array("event","goal","documentation","diary","inspiration") as $type )
@@ -312,24 +312,25 @@ class logbuch_service_Category
 			$model = $dsModel->getInstanceOfType($type);
 			$date = $model->getQueryBehavior()->fetchValues("dateStart", new qcl_data_db_Query(array(
 				'orderBy' 			=> "dateStart",
-				'numberOfRows'	=> 1
+				'numberOfRows'	=> 5
 			)));
-			if ( ! $dateStart or strtotime( $date[0] ) < strtotime( $dateStart ) )
+			if ( count( $date) and strtotime( $date[0] ) < $dateStart )
 			{
-				$dateStart = $date[0];
+				$dateStart = strtotime( $date[0] );
 			}
 			$date = $model->getQueryBehavior()->fetchValues("dateStart", new qcl_data_db_Query(array(
 				'orderBy' 			=> "dateEnd DESC",
 				'numberOfRows'	=> 1
 			)));
-			if ( ! $dateEnd or strtotime( $date[0] ) > strtotime( $dateEnd ) )
+			if ( count( $date ) and strtotime( $date[0] ) > $dateEnd )
 			{
-				$dateEnd = $date[0];
-			}			
+				$dateEnd = strtotime( $date[0] );
+			}
+			//$this->debug( $type . ": " . date("Y/m/d",  $dateStart ) . " - " . date("Y/m/d",  $dateEnd ) , __CLASS__, __LINE__ );
 		}
 		$data = array();
-		$data['dateStart'] 	= date("Y/m/d", $dateStart ? strtotime( $dateStart ) : time() ); 
-	  $data['dateEnd'] 		= date("Y/m/d", $dateEnd   ? strtotime( $dateEnd )   : time() );		
+		$data['dateStart'] 	= date("Y/m/d",  $dateStart ); 
+	  $data['dateEnd'] 		= date("Y/m/d",  $dateEnd );		
 		return $data;
 	}
 	

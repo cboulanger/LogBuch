@@ -192,10 +192,10 @@ qx.Class.define("logbuch.Application",
        */
       core.addListener("changeActiveUser", function(e){
         new qx.util.DeferredCall( function(){
-          core.publish("authenticated", ! e.getData().isAnonymous() );
+          core.publish("authenticated", e.getData() && ! e.getData().isAnonymous()  );
           var state = core.getApplicationState("view");
           core.setApplicationState( "view", 
-            e.getData().isAnonymous() 
+            e.getData() && e.getData().isAnonymous() 
               ? ( state == "register" ? "register" : "login" ) 
               : ( state == "login" ? "main" : state ) 
           );

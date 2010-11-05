@@ -362,16 +362,15 @@ qx.Class.define("logbuch.module.Report",
 //        vbox.add( field1 );
 //        form.add( field1, null, null, category + "_photos" );
     
-        var field2 = new qx.ui.form.CheckBox( "Kommentare" ).set({ // FIXME
-         textColor : "logbuch-category-" + category,
-         enabled : false
-        });
-        vbox.add( field2 );
-        form.add( field2, null, null, category + "_discussions" );
+//        var field2 = new qx.ui.form.CheckBox( "Kommentare" ).set({ // FIXME
+//         textColor : "logbuch-category-" + category,
+//         enabled : false
+//        });
+//        vbox.add( field2 );
+//        form.add( field2, null, null, category + "_discussions" );
         
         var field3 = new qx.ui.form.CheckBox( this.tr("Documents") ).set({
-         textColor : "logbuch-category-" + category,
-         enabled : false
+         textColor : "logbuch-category-" + category
         });
         vbox.add( field3 );
         form.add( field3, null, null, category + "_documents" );          
@@ -419,6 +418,7 @@ qx.Class.define("logbuch.module.Report",
           function(url)
           {
             window.open(url,"logbuch_report");
+            set
           }
         );
       },this);
