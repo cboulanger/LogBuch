@@ -173,6 +173,7 @@ class logbuch_service_Message
 	 * @param array $categories
 	 * @param array $acl
 	 * 		Associated array with the acces control list for the messages
+	 * @todo Do we need the acl part? If yes, re-implement
 	 */
 	function method_collect( $date_start, $date_end, $categories=array(), $acl = array() )
 	{
@@ -191,13 +192,20 @@ class logbuch_service_Message
 			$model = $this->getDatasourceModel( "demo" )->getModelOfType( $category );
 			try 
 			{
-				$where = array_merge( $acl, array(
-					"dateStart"  => array( ">=", $dateStart ),
-				 	"dateStart"	 => array( "<=", $dateEnd )
-				));
-				$model->findWhere( $where );
+//				$where = array_merge( $acl, array(
+//					"dateStart"  => array( ">=", $dateStart ),
+//				 	"dateStart"	 => array( "<=", $dateEnd )
+//				));
+        $query = new qcl_data_db_Query(array(
+          'where'       => "dateStart BETWEEN :dateStart AND :dateEnd",
+          'parameters'  => array(
+            ':dateStart'  => $dateStart,
+            ':dateEnd'    => $dateEnd 
+          )
+        ));
+				$model->find( $query );
 				$bus = qcl_event_message_Bus::getInstance();
-				while( $model->loadNext() )
+				while( $model->loadNext( $query ) )
 				{
 					foreach( $model->createMessages( "logbuch/display-category-item" ) as $message )
 					{

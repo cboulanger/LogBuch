@@ -1,10 +1,10 @@
 <?php
 /* ************************************************************************
 
-   logBuch: Die Online-Plattform fŸr Unternehmenszusammenarbeit
+   logBuch: Die Online-Plattform fï¿½r Unternehmenszusammenarbeit
 
    Copyright:
-     2010 JŸrgen Breiter (Konzeption) Christian Boulanger (Programmierung) 
+     2010 Jï¿½rgen Breiter (Konzeption) Christian Boulanger (Programmierung) 
 
    License:
      GPL: http://www.gnu.org/licenses/gpl.html
@@ -139,19 +139,36 @@ extends logbuch_model_Model
   	$transl = array( "Idee", "Quelle", "Links");
   	$data = $this->data();
   	$messages = array();
+  	
+  	
+  	
   	qcl_import( "qcl_event_message_ClientMessage" );  
   	foreach( $fields as $field )
   	{
   		if( ! trim( $data[$field] ) ) continue;
-  		$label = $transl[array_search($field, $fields)];	
+  		
+  		$label   = $transl[array_search($field, $fields)];
+      $subject = $data[ $field ];
+  		$body    = $data[ $field . '_extended' ];
+  		
+      $prefix  = "inspiration_" . $this->id();
+      $attachments = count( glob( "../html/valums/server/uploads/$prefix*") );
+      if ( $attachments > 0 )
+      {
+        $label = "<img src='resource/logbuch/icon/12/attachment.png'/>" . $label;
+        $body  .= " ($attachments " . ( $attachments > 1 ?  "AnhÃ¤nge" : "Anhang") . ")";
+      }
+      $body .= " [Doppelklicken zum Ã¶ffnen...]";      		
+  		
+  		
 	  	$messages[] = new qcl_event_message_ClientMessage( $messageName, array(
 	  		'date'					=> date("D M d Y H:i:s \G\M\TO (T)"),
 	  		'initials'			=> $this->authorInitials(),
 	  		'sender'				=> $this->authorName(),
 	  		'senderId'			=> $this->authorId(),
-	  		'subject'				=> $data[ $field ],
-	  		'label'					=> $transl[array_search($field, $fields)],
-	  		'body'					=> $data[ $field . '_extended' ],
+        'label'         => $label,      
+        'subject'       => $subject,
+        'body'          => $body,
 	  		'category'			=> "inspiration",
 	  		'itemId'				=> "inspiration/" . $this->id(),
 	  		'itemDateStart'	=> date("D M d Y H:i:s \G\M\TO (T)", strtotime( $data['dateStart']) ), 

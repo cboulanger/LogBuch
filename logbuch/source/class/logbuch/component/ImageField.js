@@ -42,7 +42,7 @@ qx.Class.define("logbuch.component.ImageField",
   members :
   {
   
-    __iframeSrc : "../html/fancyupload/single.html?323452345",
+    __iframeSrc : "../html/fancyupload/single.html?456765454",
     __iframeBody : null,
     __image : null,
     
@@ -71,18 +71,18 @@ qx.Class.define("logbuch.component.ImageField",
           control = new qx.ui.embed.Iframe(this.__iframeSrc).set({
             scrollbar : "no"
           });
-					var font = qx.theme.manager.Font.getInstance().resolve("small");
-					control.addListenerOnce( "load",function(e){
-				    var body = control.getBody();
-				    qx.bom.element.Style.setStyles(body, font.getStyles());
-				    this.__iframeBody = body;
+          var font = qx.theme.manager.Font.getInstance().resolve("small");
+          control.addListenerOnce( "load",function(e){
+            var body = control.getBody();
+            qx.bom.element.Style.setStyles(body, font.getStyles());
+            this.__iframeBody = body;
             body.__imageField = this;
-            var img = body.getElementById("photo");
+            var img = body.getElementsByTagName("img")[0];
             img.src = "assets/upload.png";
             img.onerror = function(){
               img.src = "assets/upload.png";
-            }
-				  }, this);          
+            };            
+          }, this);          
           this._formElement = new qx.ui.form.TextField();
           this._add(control, {flex : 1});
           
@@ -114,9 +114,17 @@ qx.Class.define("logbuch.component.ImageField",
       this._formElement.setValue( value );
       if ( ! this.__iframeBody )
       {
-        this.getInputControl().addListenerOnce("load", function(){
-          this._applyValue( value, old );
-        },this);
+        if ( ! this.__iframeLoadEvent )
+        {
+          this.__iframeLoadEvent = true;
+          this.getInputControl().addListenerOnce("load", function(){
+            this._applyValue( value, old );
+          },this);
+        }
+        else
+        {
+          return;
+        }
       }
       else
       {
@@ -135,13 +143,13 @@ qx.Class.define("logbuch.component.ImageField",
             var src = "uploads/" + value;  
           }
         }
+        
         qx.util.TimerManager.getInstance().start( function(){
-	        var photo = this.__iframeBody.getElementById("photo");
-	        photo.src = src;        
+          var photo = this.__iframeBody.getElementsByTagName("img")[0];
+          photo.src = src;
         }, null, this, null, 50);
       }
     },
-    
     // FIXME!
     _applyEnabled : function( value, old )
     {

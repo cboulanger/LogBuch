@@ -17,7 +17,10 @@
 ************************************************************************ */
 
 /**
- * The header
+ * The calender
+ * FIXME needs to be rewritten using UTC time instead of local time to get
+ * around DST/time zone offset bugs!
+ * @todo use prefetching!
  */
 qx.Class.define("logbuch.module.Calendar",
 {
@@ -105,14 +108,15 @@ qx.Class.define("logbuch.module.Calendar",
     },
     
     /**
-     * Period of days that are displayed
+     * Period of days that are displayed. Must be a number divisible by 7
      * Needs to be set before the calender is rendered
      * @type Integer
+     * FIXME needs to be rewritten using weeks instead of days
      */
     daysLoaded :
     {
       check : "Integer",
-      init  : 90
+      init  : 7*12
     },
 
     /**
@@ -310,12 +314,21 @@ qx.Class.define("logbuch.module.Calendar",
       {
         var msAheadBefore = Math.floor( this.getDaysLoaded() / 2 ) * msday;
         var firstLoaded = new Date( ( new Date( date.getTime() - msAheadBefore ) ).toDateString());
+        // back to week start
+        var delta = firstLoaded.getDay() - qx.locale.Date.getWeekStart();
+        if ( delta < 0 )
+        {
+          delta = 6;
+        }        
+        firstLoaded = new Date( firstLoaded.getTime() - ( delta * msday ) );
+        firstLoaded = new Date( firstLoaded.toDateString() );
         this.setFirstDateLoaded( firstLoaded );
-        //console.log( "first loaded: " + (firstLoaded) );
+        //console.warn( "first loaded: " + firstLoaded );
         
-        var lastLoaded = new Date( ( new Date( date.getTime() + msAheadBefore )).toDateString() );        
+        // FIXME edge case with DST change in date period!
+        var lastLoaded = new Date( ( new Date( firstLoaded.getTime() + ( this.getDaysLoaded() -1 ) * msday )).toDateString() );
         this.setLastDateLoaded( lastLoaded );
-        //console.log( "last loaded: " + (lastLoaded) );
+        //console.warn( "last loaded: " + lastLoaded );
         
         /*
          * determine non-work days
@@ -330,7 +343,15 @@ qx.Class.define("logbuch.module.Calendar",
           }
           d.setDate(d.getDate()+1);
         }
-        this.setNotAWorkDayCols( days );    
+        this.setNotAWorkDayCols( days );   
+        
+        /*
+         * if the data has been loaded once, reload
+         */
+        if ( this.__loaded )
+        {
+          this.load();
+        }
       }      
       
       /*
@@ -345,7 +366,7 @@ qx.Class.define("logbuch.module.Calendar",
         {
           delta = 6;
         }
-        //console.log([date.getDay(),qx.locale.Date.getWeekStart()])
+        //console.log([date,date.getDay(),qx.locale.Date.getWeekStart()])
         //console.log( "Delta: " + delta );
         
         var firstVisible = new Date( date.getTime() - ( delta * msday ) );
@@ -354,6 +375,13 @@ qx.Class.define("logbuch.module.Calendar",
         //console.log( "change first visible: " + firstVisible );
         
         var lastVisible = new Date( firstVisible.getTime() + ( 6 * msday ) );
+        
+        // damn timezone offset!
+        var delta = Math.abs( firstVisible.getTimezoneOffset() ) - Math.abs( lastVisible.getTimezoneOffset() );
+        if ( delta )
+        {
+          lastVisible = new Date( lastVisible.getTime() + delta * 60000 );
+        }        
         this.setLastDateVisible( lastVisible );
         //console.log( "change last visible: " + lastVisible );
       } 
@@ -403,6 +431,11 @@ qx.Class.define("logbuch.module.Calendar",
     load : function()
     {
       /*
+       * mark that the data has been loaded
+       */
+      this.__loaded = true;
+      
+      /*
        * clear data
        */
       this.reset();
@@ -443,9 +476,16 @@ qx.Class.define("logbuch.module.Calendar",
       {
         throw new Error( "Date is not within loaded period" );
       }
-      var d1 = new Date( date.toDateString() ).getTime();
-      var d2 = new Date( this.getFirstDateLoaded().toDateString() ).getTime();
-      var column = Math.floor( (d1-d2)/ msday );
+      var d1 = new Date( date.toDateString() ),
+          d2 = new Date( this.getFirstDateLoaded().toDateString() ),
+          d3 = null;
+      var delta = Math.abs( d1.getTimezoneOffset() ) - Math.abs( d2.getTimezoneOffset() );
+      if ( delta )
+      {
+        var d3 = new Date( d2.getTime() - delta * 60000 );
+      }
+      var column = Math.floor( (d1.getTime() - (d3||d2).getTime() ) / msday );
+      //console.warn([date,d1,d2,delta,d3,column,this.getDateFromColumn(column)]);          
       return column;
     },
     
@@ -489,14 +529,16 @@ qx.Class.define("logbuch.module.Calendar",
      */
     getDateFromColumn : function( column )
     {
-      var d1 = this.getFirstDateLoaded();
-      var d2 = new Date( d1.getTime() +  ( 86400000 * column ) );
+      var d1 = this.getFirstDateLoaded(),
+          d2 = new Date( d1.getTime() +  ( 86400000 * column ) ),
+          d3 = null;
       var delta = Math.abs( d1.getTimezoneOffset() ) - Math.abs( d2.getTimezoneOffset() );
       if ( delta )
       {
-        d2 = new Date( d2.getTime() + delta * 60000 );
+        var d3 = new Date( d2.getTime() + delta * 60000 );
       }
-      return d2;
+      //console.log([column,d1,d2,delta,d3]);
+      return d3 || d2;
     },    
     
     /**
@@ -590,6 +632,7 @@ qx.Class.define("logbuch.module.Calendar",
       
       var category = this.getCategoryFromRow( e.getRow() );  
       var date = this.getDateFromColumn( e.getColumn() ); // FIXME period
+      //console.log("User clicked on category " + category + ", date " + date);
       this._handleCellAction( date, category );
     },
 
@@ -627,7 +670,7 @@ qx.Class.define("logbuch.module.Calendar",
        */
       data.date          = new Date( data.date );
       data.itemDateStart = new Date( data.itemDateStart );
-      data.itemDateEnd   = new Date( data.itemDateEnd );
+      //data.itemDateEnd   = new Date( data.itemDateEnd );
       
       /*
        * get row from category
@@ -643,7 +686,8 @@ qx.Class.define("logbuch.module.Calendar",
       }
       catch( e )
       {
-        // FIXME
+        // FIXME! Server sends unneccesary data!
+        this.warn( e + " " + data.itemDateStart );
         return;
       }
       
