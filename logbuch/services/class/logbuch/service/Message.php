@@ -16,6 +16,7 @@
 qcl_import("qcl_data_controller_Controller");
 qcl_import("logbuch_model_AccessControlList");
 qcl_import("logbuch_model_Comment");
+qcl_import("qcl_util_registry_Session");
 
 /**
  * 
@@ -36,6 +37,37 @@ class logbuch_service_Message
 		qcl_event_message_db_Message::getInstance()->cleanup();
 		
 		/*
+		 * person
+		 */
+		try 
+		{
+      $personModel = $this->getDatasourceModel("demo")->getInstanceOfType("person"); // FIXME
+      $personModel->loadByUserId( $this->getActiveUser()->id() );		
+		}
+		catch ( Exception $e )
+		{
+		  return "OK"; // FIXME
+		}
+		
+		/*
+		 * record time users are logged in
+		 */
+		$time = time();
+		if ( qcl_util_registry_Session::has("lastPing") )
+		{
+		  $seconds = (int) $time - qcl_util_registry_Session::get("lastPing");
+		  $personModel->set( "worktime", $personModel->get("worktime") + $seconds );
+		  $personModel->save();
+		}
+		else
+		{
+		  // count the logins
+      $personModel->set( "countLogins", $personModel->get("countLogins") + 1 );
+      $personModel->save();		  
+		}
+		qcl_util_registry_Session::set( "lastPing", $time );
+		
+		/*
 		 * broadcast to all 
 		 */
 		foreach( $msgQueue as $messageData )
@@ -47,8 +79,6 @@ class logbuch_service_Message
 		  switch( $prefix  )
 		  {
 		    case "logbuch/comment":
-		      $personModel = $this->getDatasourceModel("demo")->getInstanceOfType("person"); // FIXME
-		      $personModel->loadByUserId( $this->getActiveUser()->id() );
 		      $categoryModel = $this->getDatasourceModel("demo")->getInstanceOfType($data['category']); // FIXME
 		      $categoryModel->load( (int) $data['itemId'] );
 		      $aclData = $categoryModel->aclData();

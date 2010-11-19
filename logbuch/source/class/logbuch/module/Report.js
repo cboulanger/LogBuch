@@ -418,7 +418,6 @@ qx.Class.define("logbuch.module.Report",
           function(url)
           {
             window.open(url,"logbuch_report");
-            set
           }
         );
       },this);

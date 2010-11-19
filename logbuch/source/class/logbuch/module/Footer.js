@@ -236,7 +236,22 @@ qx.Class.define("logbuch.module.Footer",
       button.addListener("execute",function(){
         this.__sandbox.setApplicationState("view","organizations");
       },this);
-      menu.add( button );      
+      menu.add( button ); 
+      
+      /*
+       * Time sheet
+       */
+      var button = new qx.ui.menu.Button( "Zeiterfassung" );// FIXME
+      this.__sandbox.bindPermissionState("logbuch.members.manage", button, "visibility", {
+        converter : function( v ){ return v ? "visible" : "excluded"; }
+      });      
+      button.addListener("execute",function(){
+        window.open(
+          "../services/server.php?" + 
+          "service=logbuch.report&method=createTimesheet&params=&sessionId=" + this.__sandbox.getSessionId()
+        );
+      },this);
+      menu.add( button );        
            
       /*
        * project setup

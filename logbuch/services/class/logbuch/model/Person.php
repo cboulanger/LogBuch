@@ -141,7 +141,25 @@ class logbuch_model_Person
       'sqltype' 	=> 'int(1)',
     	'nullable'	=> false,
     	'init'			=> false
-    )
+    ),
+    
+    /**
+     * Enter description here ...
+     */
+    'worktime' => array (
+      'check'     => 'integer',
+      'sqltype'   => 'int(11)',
+      'init'      => 0
+    ),    
+    
+    /**
+     * Enter description here ...
+     */
+    'countLogins' => array (
+      'check'     => 'integer',
+      'sqltype'   => 'int(11)',
+      'init'      => 0
+    ),      
  );
 
   /**
