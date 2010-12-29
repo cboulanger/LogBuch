@@ -477,6 +477,7 @@ qx.Class.define("logbuch.Application",
       if ( view == "undefined" )
       {
         core.setApplicationState("view", this._isRegisteredUser() ? "main" : "login" );
+        return;
       }
       
       
@@ -505,6 +506,13 @@ qx.Class.define("logbuch.Application",
       
       // setup
       this._showIfTrue( this.__setupDialog, view == "setup" && core.hasPermission("logbuch.setup") );
+      
+      // deferred loading of item
+      if ( view == "main" && core.getApplicationState("showItem") )
+      {
+        core.setApplicationState("itemId", core.getApplicationState("showItem") );
+        core.removeApplicationState("showItem");
+      }
     },
     
     /**

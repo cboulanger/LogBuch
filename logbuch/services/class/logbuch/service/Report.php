@@ -697,7 +697,9 @@ class logbuch_service_Report
 </head>
 <body>
 <h1>Zeiterfassung LogBuch</h1>	  
-<p>Diese Auswertung erfasst nur die Zeiträume, in denen die Benutzer/innen seit Beginn des Projekts im 
+<p>
+Diese Auswertung erfasst nur die Zeiträume, in denen die Benutzer/innen seit Beginn 
+der Zeiterfassung im 
 LogBuch angemeldet waren. Sie sagt nichts darüber hinaus, ob in dieser Zeit auch 
 Aktivität erfolgte. Deswegen ist es nötig, die Benutzer/innen dazu anzuhalten, 
 sich jedes Mal nach dem Ende ihrer Arbeit im LogBuch auch wieder abzumelden.</p>	  
@@ -725,7 +727,6 @@ table.sample td {
   border-style: solid;
   border-color: black;
   background-color: white;
-  -moz-border-radius: ;
 }
 </style>	  
 <table class="sample">
@@ -751,7 +752,7 @@ EOF;
       echo sprintf(
         "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>",
         $personModel->get("familyName") . ", " . $personModel->get("givenName"),
-        $personModel->get("countLogins"),
+        (int) $personModel->get("countLogins"),
         $this->getHms( $personModel->get("worktime") ),
         $this->getHms( floor( $personModel->get("worktime") / max( array( 1, $personModel->get("countLogins") ) ) ) )
       );

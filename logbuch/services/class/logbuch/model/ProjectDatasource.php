@@ -122,5 +122,23 @@ class logbuch_model_ProjectDatasource
       ) );
     }
   }
+
+  /**
+   * Returns the singleton instance a person model object
+   * @return logbuch_model_Person
+   */
+  function getPersonModel()
+  {
+    return $this->getInstanceOfType("person");
+  }    
+  
+  /**
+   * Creates a new person model object
+   * @return logbuch_model_Person
+   */
+  function createPersonModel()
+  {
+    return $this->createInstanceOfType("person");
+  }  
 }
 ?>

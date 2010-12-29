@@ -186,13 +186,12 @@ class logbuch_Application
     ) );
     
     /*
-     * filter messages by registering a callback
+     * register callback to filter messages by ACLs
      */
     qcl_import("logbuch_service_Message");
     $this->getMessageBus()->registerOnBeforeBroadcastCallback(array(
     	new logbuch_service_Message(), "filterMessage"
     ));
-    
   }
 
   /**

@@ -22,6 +22,15 @@ extends qcl_core_Object
 		}
 	}
 	
+  /**
+   * Returns a singleton instance of this class
+   * @return logbuch_model_AccessControlList
+   */
+  public static function getInstance()
+  {
+    return qcl_getInstance( __CLASS__ );
+  }  	
+	
 	/**
 	 * Returns an array of names of the acl properties
 	 * @return array

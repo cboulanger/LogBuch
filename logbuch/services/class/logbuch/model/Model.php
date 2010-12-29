@@ -34,7 +34,18 @@ extends qcl_data_model_db_ActiveRecord
    * The model properties
    */
   private $properties = array(
-        
+
+    /**
+     * Flag that can be used to indicate that
+     * the record has been newly created
+     */
+    'new' => array (
+      'check'     => 'boolean',
+      'sqltype'   => 'tinyint(1)',
+      'nullable'  => false,
+      'init'      => false
+    ),     
+  
     /**
      * Enter description here ...
      */
@@ -104,6 +115,16 @@ extends qcl_data_model_db_ActiveRecord
       'nullable'  => false,
     	'init'			=> array()
     ),
+    
+    /**
+     * Enter description here ...
+     */
+    'notify' => array (
+      'check'     => 'boolean',
+      'sqltype'   => 'tinyint(1) NOT NULL DEFAULT 1',
+      'nullable'  => false,
+      'init'      => true
+    ),      
     
     /**
      * Enter description here ...

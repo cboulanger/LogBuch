@@ -198,6 +198,10 @@ qx.Class.define("logbuch.module.AccessControl",
       field7.addListener("changeTokenIds",function(e){
         field6.setValue( e.getData().length > 0);
       },this);
+      
+      var field8 = new qx.ui.form.CheckBox( "E-Mail-Benachrichtigung" );
+      container.add( field8 );
+      form.add( field8, null, null, "notify" );      
 
       
       /*

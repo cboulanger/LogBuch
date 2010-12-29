@@ -13,15 +13,16 @@
 
 ************************************************************************ */
 
-qcl_import("qcl_data_controller_Controller");
-qcl_import("logbuch_model_AccessControlList");
+qcl_import("logbuch_service_Controller");
 qcl_import("qcl_ui_dialog_Alert");
+qcl_import("logbuch_model_AccessControlList");
+qcl_import("logbuch_service_Notification");
 
 /**
  *
  */
 class logbuch_service_Category
-  extends qcl_data_controller_Controller
+  extends logbuch_service_Controller
 {
 
 	/**
@@ -62,6 +63,7 @@ class logbuch_service_Category
 			);
 		}
 		$itemData["personId"] = $personModel->id();
+		$itemData["new"] = true;
 		
 		/*
 		 * acl
@@ -150,7 +152,12 @@ class logbuch_service_Category
 		$data['acl'] = $model->data( array(
 			'include' 	=> $aclModel->getAclNames()
 		));
-	  
+
+    /*
+     * whether to notify by email
+     */
+    $data['acl']['notify'] = $model->get("notify");
+    		
 	  /*
 	   * whether to allow to  or editdelete the item
 	   */
@@ -178,11 +185,11 @@ class logbuch_service_Category
 		 */
 		$model = $this->getDatasourceModel( "demo" )->getModelOfType( $category ); // FIXME
 		$model->load( $id );
-		
+    		
 		/*
 		 * only owner can update record
 		 */
-		$authorModel = $this->getDatasourceModel( "demo" )->getModelOfType( "person" ); //FIXME
+		$authorModel = $this->getDatasourceModel( "demo" )->getPersonModel(); //FIXME
 		try 
 		{
 		  $authorModel->loadByUserId( $this->getActiveUser()->id() );
@@ -244,23 +251,53 @@ class logbuch_service_Category
      * set new acl 
      */
     $model->set( $acl );
-    		
+    
+    /*
+     * publish messages
+     */
 		$bus = qcl_event_message_Bus::getInstance();
+		$dataArr = array();
 		foreach( $model->createMessages( "logbuch/display-category-item" ) as $message )
 		{
 			$message->setAcl( $newAcl );
 			$message->setBroadcast( true );
 			$message->setExcludeOwnSession( false );
 			$data = $message->getData();
+			$dataArr[] = $data;
 			$data['isPrivate'] = $model->isPrivate();
 			$message->setData( $data );			
-			$bus->dispatch($message);
+			$bus->publish($message);
 		}
 		
-		/*
-		 * save  
-		 */
-		$model->save();
+    /*
+     * notify
+     */
+    if ( $model->get("new") )
+    {
+      unset( $acl->notify );
+      $author = $authorModel->getFullName();
+      $subject = "Neuer Logbuch-Eintrag";
+      $body = "Sehr geehrte/r LogBuch-Teilnehmer/in,\n\n";
+      $body .= "$author hat einen neuen Eintrag erstellt: \n\n";
+      foreach ( $dataArr as $data )
+      {
+        $body .= $data['label'] . ": " . $data['subject'] . "\n";
+      }
+
+      $body .= "\nSie können den Eintrag unter dem folgenden Link abrufen: \n\n";
+      $body .= dirname( dirname( qcl_server_Server::getUrl() ) ) . 
+            "/build/#showItem~" . urlencode($data['itemId']); // FIXME
+      
+      $notification = new logbuch_service_Notification();
+      $notification->notifyAll("demo", $subject, $body, $acl); // FIXME
+      $model->set("new", false);
+    }
+    
+    /*
+     * save  
+     */
+    $model->save();    
+    
 		return "OK";
 	}
 	
