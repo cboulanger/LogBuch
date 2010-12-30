@@ -78,7 +78,7 @@ qx.Class.define("logbuch.module.OrganizationForm",
       /*
        *  name
        */
-      field = new logbuch.component.InputField( this.tr("Organization name" ) );
+      var field = new logbuch.component.InputField( this.tr("Organization name" ) );
       field.setRequired(true);
       field.addToForm( form, "name" );
       formContainer.add( field );
@@ -111,7 +111,7 @@ qx.Class.define("logbuch.module.OrganizationForm",
       /*
        * buttons
        */
-      hbox = new qx.ui.container.Composite( new qx.ui.layout.HBox(5) );
+      var hbox = new qx.ui.container.Composite( new qx.ui.layout.HBox(5) );
       hbox.add( new qx.ui.core.Spacer(), {flex:1} );
       this.add(hbox);
       

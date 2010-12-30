@@ -106,10 +106,10 @@ qx.Class.define("logbuch.module.Registration",
       /*
        * personal password
        */
-      field2 =  new logbuch.component.InputField( this.tr("Enter personal passwort" ), null, "password" );
+      var field2 =  new logbuch.component.InputField( this.tr("Enter personal passwort" ), null, "password" );
       grid.add( field2, { row:1, column:0 } );    
       
-      field3 =  new logbuch.component.InputField( this.tr("Repeat personal passwort" ), null, "password" );
+      var field3 =  new logbuch.component.InputField( this.tr("Repeat personal passwort" ), null, "password" );
       grid.add( field3, { row:2, column:0 } );
       
       /*

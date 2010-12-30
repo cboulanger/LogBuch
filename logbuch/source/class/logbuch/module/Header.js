@@ -110,7 +110,7 @@ qx.Class.define("logbuch.module.Header",
       /*
        * logged in user
        */
-      userNameLabel = new qx.ui.basic.Label().set({
+      var userNameLabel = new qx.ui.basic.Label().set({
         appearance  : "title-project"
       });
       this.__sandbox.subscribe("authenticated",function(e){

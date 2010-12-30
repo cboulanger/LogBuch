@@ -3,7 +3,7 @@
 
    logBuch: Software zur online-Dokumentation von Beratungsprozessen
    
-   Copyright: Konzeption:     JŸrgen Breiter
+   Copyright: Konzeption:     Jï¿½rgen Breiter
               Programmierung: Christian Boulanger 
 
    Lizenz: GPL v.2
@@ -83,13 +83,19 @@ class logbuch_service_Message
 		      $categoryModel->load( (int) $data['itemId'] );
 		      $aclData = $categoryModel->aclData();
 		      
+		      // FIXME hack to make author of entry a recipient
+		      $aclData['moreMembers'] = array_unique( array_merge(
+		        $aclData['moreMembers'], array( $categoryModel->get("personId") )  
+		      ));
+		      
 		      /*
 		       * add missing data to the outgoing message
 		       */
+		      $author = $personModel->getFullName();
 		      $data['senderId'] = $personModel->id(); // FIXME
 		      $data['icon'] = $personModel->get( "image" );
 		      $data['label'] = 
-		        "<b>" . $personModel->getFullName() . // "<br/>" .
+		        "<b>$author"  . // "<br/>" .
 		        //date( "d.m.Y H:i", strtotime( $data['date'] ) ) . 
 		        "</b><br/>" .
 		        $this->createLinks( $data['message'] );
@@ -104,9 +110,32 @@ class logbuch_service_Message
 		       ));
 		       $commentModel->save();
 		       $personModel->linkModel( $commentModel );
+		          
+           /*
+            * notify if requested
+            */
+           if ( $categoryModel->get("notify")  )
+           {
+              $subject = "Neuer Logbuch-Kommentar";
+              $body = "Sehr geehrte/r LogBuch-Teilnehmer/in,\n\n";
+              $body .= "Es wurde ein neuer Kommentar geschrieben: \n\n";
+              $body .=  strip_tags( str_replace("<br/>", "\n\n", $data['label'] ) ) . "\n\n";         
+              $body .= "\nSie kÃ¶nnen den Eintrag unter dem folgenden Link abrufen: \n\n";
+              $body .= dirname( dirname( qcl_server_Server::getUrl() ) ) . 
+                    "/build/#" . urlencode( 
+                    "showItem~" . $data['category'] . "/" . $data['itemId'] .
+                    "^showComments~1" ); // FIXME
+                    
+              $body .= "\n\n---\n\nBitte antworten Sie nicht auf diese E-Mail.";
+                                  
+              qcl_import("logbuch_service_Notification");
+              $notification = new logbuch_service_Notification();
+              $notification->notifyAll("demo", $subject, $body, $aclData); // FIXME
+            }
+
 		       break;
 		  }
-		  $this->getMessageBus()->broadcast( $channel, $data, $aclData);
+		  $this->getMessageBus()->broadcast( $channel, $data, $aclData );
 			
 		}
 		return "OK";

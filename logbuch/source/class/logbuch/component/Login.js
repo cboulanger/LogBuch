@@ -106,7 +106,7 @@ qx.Class.define("logbuch.component.Login",
     /*
      * register button
      */
-    registerButton = new qx.ui.form.Button( this.tr("Register") ).set({
+    var registerButton = new qx.ui.form.Button( this.tr("Register") ).set({
       maxHeight : 25
     });
     registerButton.addListener("execute", function(){

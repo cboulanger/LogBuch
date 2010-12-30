@@ -33,13 +33,11 @@
   
     // qooxdoo
     "APPLICATION"    : "logbuch", 
-    //"QOOXDOO_PATH"   : "../../qooxdoo-contrib/qooxdoo/1.2",
-    "QOOXDOO_PATH"   : "../../qooxdoo-contrib/qooxdoo/1.3-pre",
+    "QOOXDOO_PATH"   : "../../qooxdoo-contrib/qooxdoo/1.3",
+    //"QOOXDOO_PATH"   : "../../qooxdoo-contrib/qooxdoo/1.3-pre",
     "QXTHEME"        : "logbuch.theme.Theme",
     "LOCALES"        : [ "en","de" ],
     "ROOT"           : ".",
-    //"CACHE"          : "${TMPDIR}/cache/1.2",
-    "CACHE"          : "${TMPDIR}/cache/1.3-pre",
     "OPTIMIZE"       : ["variables", "basecalls", "strings"],
 
     // Contributions: download them from the repository (a)
@@ -53,7 +51,7 @@
     
     // API Viewer
     "API_INCLUDE" : [ "qx.*","${APPLICATION}.*", "qcl.*" ], 
-    "API_EXCLUDE" : ["qx.legacy.*","qx.test.*","htmleditor.*"]
+    "API_EXCLUDE" : [ "qx.test.*"]
   },
   
   "jobs" :

@@ -272,7 +272,7 @@ class logbuch_service_Category
     /*
      * notify
      */
-    if ( $model->get("new") )
+    if ( $acl->notify && $model->get("new") )
     {
       unset( $acl->notify );
       $author = $authorModel->getFullName();
@@ -281,12 +281,17 @@ class logbuch_service_Category
       $body .= "$author hat einen neuen Eintrag erstellt: \n\n";
       foreach ( $dataArr as $data )
       {
-        $body .= $data['label'] . ": " . $data['subject'] . "\n";
+        $body .= 
+          date("d.m.Y", strtotime( $data['itemDateStart']) ) . "\n" .
+          $data['label'] . ": " . 
+          $data['subject'] . "\n\n";
       }
 
       $body .= "\nSie können den Eintrag unter dem folgenden Link abrufen: \n\n";
       $body .= dirname( dirname( qcl_server_Server::getUrl() ) ) . 
             "/build/#showItem~" . urlencode($data['itemId']); // FIXME
+      
+      $body .= "\n\n---\n\nBitte antworten Sie nicht auf diese E-Mail.";
       
       $notification = new logbuch_service_Notification();
       $notification->notifyAll("demo", $subject, $body, $acl); // FIXME

@@ -69,7 +69,8 @@
     <?php if ( $editable ):?>
       <script>     
         var __isUploading = false;
-        function createUploader(){            
+        function createUploader(){    
+            var fileList = [];        
             var uploader = new qq.FileUploader({
                 element: document.getElementById('uploader-target'),
                 action: '<?php echo $serverUrl; ?>',
@@ -89,13 +90,16 @@
                },
                onComplete: function(id, fileName, responseJSON){
                  //top.console.warn("complete: " +[id, fileName, responseJSON]);
+                 fileList.push( fileName );
                  __isUploading = false;
                  setTimeout(function(){
-                   if ( ! __isUploading )
+                   if ( ! __isUploading && fileList.length )
                    {
                      var url = document.__parentWidget.getIframe().getSource();
                      url = url.substr(0, url.lastIndexOf("&") ) + "&nocache=" + (new Date).getTime();
-                     document.__parentWidget.getIframe().setSource(url);
+                     document.__parentWidget.getIframe().setSource(url); // FIXME -> into .onUploadCompleted
+                     document.__parentWidget.onUploadCompleted(fileList);
+                     fileList = [];
                    }
                  },2000);
                }
@@ -107,8 +111,7 @@
     </script>             
     <?php else: ?>
     <script>
-       window.onload = function(){
-        };
+       //window.onload = function(){};
     </script>
       <h3>Anhänge</h3>
     <?php endif; ?>

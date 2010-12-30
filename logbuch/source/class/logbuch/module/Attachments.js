@@ -189,6 +189,15 @@ qx.Class.define("logbuch.module.Attachments",
       return this.__iframe;
     },
     
+    onUploadCompleted : function(fileList)
+    {
+      this.__sandbox.rpcRequest( 
+        "logbuch.notify", "attachment", 
+        [ this.getCategory(),  this.getItemId(), fileList ] 
+      );
+      // @todo reload
+    },
+    
     dummy : null
   },
 

@@ -384,6 +384,7 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
         }
       });
       
+      
       this.bind("editable",attachmentBox,"editable");
       stack.add( attachmentBox );
       
@@ -423,7 +424,18 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
         stack.setSelection( [attachmentBox] );
         commentButton.setValue(false);        
       },this);
-      
+
+      /*
+       * show attachments if requested
+       */
+      this.addListener("appear",function(){
+        if( ! this.__sandbox.getApplicationState("showComments") ) // FIXME
+        {
+          stack.setSelection( [attachmentBox] );
+          attachmentButton.setValue(true);
+          commentButton.setValue(false);
+        }
+      },this);      
       
       hbox.add(attachmentButton);        
       
@@ -465,11 +477,27 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
           }
         }
       });      
+      
+      
+      /*
+       * show comments if requested
+       */
+      this.addListener("appear",function(){
+        if( this.__sandbox.getApplicationState("showComments") )
+        {
+          stack.setSelection( [commentBox] );
+          commentButton.setValue(true);
+          attachmentButton.setValue(false);
+        }
+      },this);          
+      
       hbox.add(commentButton);
       
       this.addListener("disappear", function(){
         commentButton.setValue(false);
         attachmentButton.setValue(false);
+        //this.__sandbox.removeApplicationState("showAttachments");
+        this.__sandbox.removeApplicationState("showComments");
       },this);
       
       
@@ -522,14 +550,7 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
 //      hbox.add(button2);
 
       grid.add( hbox, { row : numRows-1, column : 3 } );
-      
-      /*
-       * show the explanation box
-       */
-      this.addListener("appear", function(){
-         stack.setSelection( [attachmentBox] );
-         attachmentButton.setValue(true);
-      },this);      
+            
     },
     
     
@@ -657,11 +678,6 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
     getModel : function()
     {
       return this._controller.getModel() || this._controller.createModel();
-    },
-    
-    setModel : function()
-    {
-      return this._controller.setModel(model);
     },
     
     getData : function()

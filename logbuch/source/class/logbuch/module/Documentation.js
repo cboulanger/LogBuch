@@ -14,7 +14,7 @@
 
 /* ************************************************************************
 #require(logbuch.module.AccessControl)
-#require(logbuch.module.ExtendedField)
+#require(logbuch.component.ExtendedField)
 #asset(logbuch/*)
 #asset(logbuch/icon/16/button-show-panel.png)
 ************************************************************************ */

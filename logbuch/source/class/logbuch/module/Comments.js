@@ -204,7 +204,7 @@ qx.Class.define("logbuch.module.Comments",
         }
         else
         {
-           selIndex = null;
+           this.__selIndex = null;
         }
       },this);
       
@@ -219,6 +219,13 @@ qx.Class.define("logbuch.module.Comments",
           list.getPane().scrollRowIntoView( list.getModel().getLength() -1 );
         }
       };
+      
+      /*
+       * scroll down on appear
+       */
+      list.addListener("appear",function(){
+        list.getPane().scrollRowIntoView( list.getModel().getLength() -1 );      
+      },this);
       
       /*
        * controls
