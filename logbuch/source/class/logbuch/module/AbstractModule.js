@@ -161,6 +161,7 @@ qx.Class.define("logbuch.module.AbstractModule",
     
     /**
      * Returns the category module's name
+     * @todo rename to getCategory
      * @return {String}
      */
     getName : function()

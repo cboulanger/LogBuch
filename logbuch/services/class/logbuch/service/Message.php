@@ -3,7 +3,7 @@
 
    logBuch: Software zur online-Dokumentation von Beratungsprozessen
    
-   Copyright: Konzeption:     J�rgen Breiter
+   Copyright: Konzeption:     Jürgen Breiter
               Programmierung: Christian Boulanger 
 
    Lizenz: GPL v.2
@@ -13,7 +13,7 @@
 
 ************************************************************************ */
 
-qcl_import("qcl_data_controller_Controller");
+qcl_import("logbuch_service_Controller");
 qcl_import("logbuch_model_AccessControlList");
 qcl_import("logbuch_model_Comment");
 qcl_import("qcl_util_registry_Session");
@@ -22,7 +22,7 @@ qcl_import("qcl_util_registry_Session");
  * 
  */
 class logbuch_service_Message
-  extends qcl_data_controller_Controller
+  extends logbuch_service_Controller
 {
 
 	/**
@@ -41,7 +41,7 @@ class logbuch_service_Message
 		 */
 		try 
 		{
-      $personModel = $this->getDatasourceModel("demo")->getInstanceOfType("person"); // FIXME
+      $personModel = $this->getDatasourceModel("demo")->getPersonModel(); // FIXME 
       $personModel->loadByUserId( $this->getActiveUser()->id() );		
 		}
 		catch ( Exception $e )
@@ -56,8 +56,20 @@ class logbuch_service_Message
 		if ( qcl_util_registry_Session::has("lastPing") )
 		{
 		  $seconds = (int) $time - qcl_util_registry_Session::get("lastPing");
-		  $personModel->set( "worktime", $personModel->get("worktime") + $seconds );
-		  $personModel->save();
+		  /*
+		   * only count time differences below 60 seconds, all others are due
+		   * to timeouts etc.
+		   * @todo this needs to be synchronized with the polling interval.
+		   */
+		  if( $seconds < 60 )
+		  {
+  		  $personModel->set( "worktime", $personModel->get("worktime") + $seconds );
+  		  $personModel->save();
+		  }
+		  else 
+		  {
+		    $this->warn( $personModel->getFullName() . " has been disconnected for $seconds seconds.");
+		  }
 		}
 		else
 		{

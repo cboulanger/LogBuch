@@ -152,21 +152,28 @@ class logbuch_service_Category
 		$data['acl'] = $model->data( array(
 			'include' 	=> $aclModel->getAclNames()
 		));
-
+    
+    /*
+     * whether the current user has access to this item at all
+     */
+    $aclModel->setAcl($data['acl']);
+    $activeUserPerson = $this->getActiveUserPerson("demo");
+    $access = $aclModel->checkAccess($personModel, $activeUserPerson);
+    $isAuthor = $activeUserPerson->id() == $personModel->id();
+    if( ! $access and ! $isAuthor )
+    {
+      throw new qcl_access_AccessDeniedException("Sie haben keinen Zugriff zu diesem Eintrag.");
+    }
+    
+	  /*
+	   * whether to allow to edit or delete the item
+	   */
+	  $data['deletable'] = $data['editable'] = $isAuthor;  
+	  
     /*
      * whether to notify by email
      */
-    $data['acl']['notify'] = $model->get("notify");
-    		
-	  /*
-	   * whether to allow to  or editdelete the item
-	   */
-		$authorId = $personModel->id();
-	  $personModel->loadByUserId( $this->getActiveUser()->id() );
-	  $isAuthor = $authorId == $personModel->id();
-	  
-	  $data['deletable'] = $isAuthor;  
-	  $data['editable'] = $isAuthor; 
+    $data['acl']['notify'] = $model->get("notify");	  
 	  
 		return $data;
 	}

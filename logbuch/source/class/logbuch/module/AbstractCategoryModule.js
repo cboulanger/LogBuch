@@ -553,7 +553,10 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
             
     },
     
-    
+    /**
+     * Creates the author label
+     * @return {}
+     */
     _createAuthorLabel : function()
     {
       var hbox = new qx.ui.container.Composite( new qx.ui.layout.HBox() );
@@ -567,8 +570,29 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
           this.tr("Created by %1", e.getData() )  
         ); 
       },this);
-      hbox.add( label, {flex:1} );
+      hbox.add( label );
+      var label2 =  new qx.ui.basic.Label().set({
+        textColor : "logbuch-text-grey",
+        value     : "[Direktlink]",
+        alignY    : "bottom"
+      });
+      hbox.add( new qx.ui.core.Spacer(), {flex:1});
+      label2.addListener("click",function(){
+        dialog.Dialog.prompt("Direkter Link zu diesem Eintrag:",null,null,this._createDirectLink());
+      },this);
+      hbox.add( label2 );
       return hbox;
+    },
+    
+    /**
+     * Creates a Link that can be used to call the item directly.
+     * returns HTML markup
+     */
+    _createDirectLink : function()
+    {
+      var dl = document.location;
+      return dl.protocol + "//" + dl.host + dl.pathname +
+        '#showItem~' + this.getName() + '/' + this.getItemId();
     },
     
     /**
