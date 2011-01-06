@@ -891,7 +891,7 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
         oldContainsValues : oldContainsValues,
         newContainsValues : newContainsValues,
         valuesChanged : valuesChanged
-      } 
+      };
     },
       
         
@@ -914,9 +914,14 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
         callback : this._save,
         context  : this
       });
-      if( this._controller.getModel().getParticipants )
+      var formModel = this._controller.getModel();
+      if( formModel.getParticipants && formModel.getParticipants().length )
       {
-        acl.getModel().set('moreMembers',  this._controller.getModel().getParticipants() );
+        var participants = formModel.getParticipants().toArray();
+        var members = acl.getModel().get('moreMembers').toArray();
+        acl.getModel().set('moreMembers',  new qx.data.Array( qx.lang.Array.unique( qx.lang.Array.append(
+          participants,members
+        ) ) ) );
       }
       acl.show();
     },

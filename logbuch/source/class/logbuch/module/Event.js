@@ -392,6 +392,7 @@ qx.Class.define("logbuch.module.Event",
           [null, field7.getTokenIds().toArray() ],
           function ( data ){
             field7.setEnabled(true);
+            field7.reset();
             data.forEach( function( itemModelData ) {
               field7.addToken( itemModelData );
             });    

@@ -170,22 +170,30 @@ qx.Class.define("logbuch.module.AccessControl",
         );
       },this);
       
-      // when value changes, recreate tokens
-      field7.addListener("loadTokenData", function(){
-        field7.setEnabled(false);
-        okButton.setEnabled(false);
-        this.sandbox.rpcRequest( 
-          "logbuch.record", "personList", 
-          [null, field7.getTokenIds().toArray() ],
-          function ( data ){
-            field7.setEnabled(true);
-            okButton.setEnabled(true);
-            data.forEach( function( itemModelData ) {
-              field7.addToken( itemModelData );
-            });    
-          }
-        );
-      },this);
+      // recreate tokens
+
+      var loadingFunc = function(){        
+        var tokenIds = field7.getTokenIds().toArray();
+        if ( tokenIds.length )
+        {
+          field7.setEnabled(false);
+          okButton.setEnabled(false);          
+          this.sandbox.rpcRequest( 
+            "logbuch.record", "personList", 
+            [null, tokenIds ],
+            function ( data ){
+              field7.setEnabled(true);
+              okButton.setEnabled(true);
+              field7.reset();
+              data.forEach( function( itemModelData ) {
+                field7.addToken( itemModelData );
+              });    
+            }
+          );
+        }
+      };
+      
+      field7.addListener("loadTokenData", loadingFunc, this);      
       
       // sync with model
       this.__controller.bind("model.moreMembers", field7, "tokenIds" );

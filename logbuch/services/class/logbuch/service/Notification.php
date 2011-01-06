@@ -27,6 +27,7 @@ class logbuch_service_Notification
   /**
    * Sends an email to a user based on the acl list. If the user doesn't belong
    * to the list of legitimate recipients, do not send the message and return false.
+   * Emits a warning on the source of the error.
    * 
    * @param string $subject
    *    The subject of the message
@@ -46,19 +47,26 @@ class logbuch_service_Notification
     {
       $mailer = qcl_util_system_Mail::getInstance();  
       $mailer->reset();
-      $mailer->set( array(
-        'subject'         => $subject,  
-        'body'            => $body,
-        'sender'          => "LogBuch",
-        'senderEmail'     => "nicht_antworten@logbuch-business-travel.de", // FIXME
-        'recipient'       => $recipient->getFullName(),
-        'recipientEmail'  => $recipient->get("email")
-      ) );
-      //$this->debug( $mailer->data(), __CLASS__, __LINE__ );
-      $mailer->send();
-      return true;
+      try 
+      {
+        $mailer->set( array(
+          'subject'         => $subject,  
+          'body'            => $body,
+          'sender'          => "LogBuch",
+          'senderEmail'     => "nicht_antworten@logbuch-business-travel.de", // FIXME
+          'recipient'       => $recipient->getFullName(),
+          'recipientEmail'  => $recipient->get("email")
+        ) );
+        $this->debug( $mailer->data(), __CLASS__, __LINE__ );        
+        $mailer->send();
+        return true;
+      }
+      catch( LogicException $e)
+      {
+        $this->warn( "Could not send email: " . $e->getMessage() );
+      }
     }
-    //$this->debug( "No...", __CLASS__, __LINE__ );
+    $this->debug( $recipient->getFullName() .  ": No...", __CLASS__, __LINE__ );
     return false;
   }
   

@@ -240,18 +240,29 @@ class logbuch_service_Category
 		$oldAcl = $model->data( array(
 			'include' => $aclModel->getAclNames()
 		));
-		$newAcl = array();
 		
+		$newAcl = array();
+    $aclChanged = false;
+    
 		foreach( $oldAcl as $key => $value )
 		{
 			if ( is_bool($value) )
 			{
-				$newAcl[$key] = ( $value === false && $acl->$key === true );	
+				$newAcl[$key] = ( $value === false && $acl->$key === true );
+				if ( $oldAcl[$key] != $newAcl[$key] )
+				{
+				  $aclChanged = true;
+				}	
 			}
 			elseif ( is_array( $value) )
 			{
 				$newAcl[$key] = array_diff( $acl->$key, $value );
+				if ( count($newAcl[$key]) )
+			  {
+          $aclChanged = true;
+        }
 			}
+			
 		}	
 		
     /*
@@ -279,13 +290,13 @@ class logbuch_service_Category
     /*
      * notify
      */
-    if ( $acl->notify && $model->get("new") )
+    if ( $acl->notify and ( $model->get("new") or $aclChanged ) )
     {
       unset( $acl->notify );
       $author = $authorModel->getFullName();
       $subject = "Neuer Logbuch-Eintrag";
       $body = "Sehr geehrte/r LogBuch-Teilnehmer/in,\n\n";
-      $body .= "$author hat einen neuen Eintrag erstellt: \n\n";
+      $body .= "$author hat einen neuen Eintrag erstellt oder aktualisiert: \n\n";
       foreach ( $dataArr as $data )
       {
         $body .= 
@@ -309,7 +320,7 @@ class logbuch_service_Category
      * save  
      */
     $model->save();    
-    
+
 		return "OK";
 	}
 	
