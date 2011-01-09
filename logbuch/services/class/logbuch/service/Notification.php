@@ -57,7 +57,7 @@ class logbuch_service_Notification
           'recipient'       => $recipient->getFullName(),
           'recipientEmail'  => $recipient->get("email")
         ) );
-        $this->debug( $mailer->data(), __CLASS__, __LINE__ );        
+        //$this->debug( $mailer->data(), __CLASS__, __LINE__ );        
         $mailer->send();
         return true;
       }
@@ -66,7 +66,7 @@ class logbuch_service_Notification
         $this->warn( "Could not send email: " . $e->getMessage() );
       }
     }
-    $this->debug( $recipient->getFullName() .  ": No...", __CLASS__, __LINE__ );
+    //$this->debug( $recipient->getFullName() .  ": No...", __CLASS__, __LINE__ );
     return false;
   }
   
@@ -114,10 +114,7 @@ class logbuch_service_Notification
       $body .=  implode( "\n", $fileList ) . "\n\n";         
       $body .= "\nSie können den Eintrag unter dem folgenden Link abrufen: \n\n";
       $body .= dirname( dirname( qcl_server_Server::getUrl() ) ) . 
-            "/build/#" . urlencode( 
-            "showItem~" . $data['category'] . "/" . $data['itemId'] 
-            ); 
-            
+            "/build/#showItem~" . urlencode($category . "/" . $itemId); 
       $body .= "\n\n---\n\nBitte antworten Sie nicht auf diese E-Mail.";
       $this->notifyAll("demo", $subject, $body, $aclData); // FIXME
     }    

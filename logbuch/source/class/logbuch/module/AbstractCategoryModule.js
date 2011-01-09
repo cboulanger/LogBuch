@@ -373,7 +373,7 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       
       this._controller.bind("model.id", attachmentBox, "itemId", {
         converter : function( id ) {
-          attachmentBox.getIframe().setSource("about:blank");
+          attachmentBox.getIframe().setSource("about:blank"); // FIXME
           if ( id ){
             attachmentBox.setItemId( "" + id );
             //attachmentButton.setEnabled(false);
@@ -480,14 +480,29 @@ qx.Class.define("logbuch.module.AbstractCategoryModule",
       
       
       /*
-       * show comments if requested
+       * when the item editor becomes visible ...
        */
       this.addListener("appear",function(){
+        
+        /*
+         * first show attachments to trigger the loading 
+         * of the iframe
+         */
+        stack.setSelection( [attachmentBox] );
+        commentButton.setValue(false);
+        attachmentButton.setValue(true);        
+        
+        /*
+         * if we're to show the comments, defer that a bit 
+         */
         if( this.__sandbox.getApplicationState("showComments") )
-        {
-          stack.setSelection( [commentBox] );
-          commentButton.setValue(true);
-          attachmentButton.setValue(false);
+        {        
+          qx.util.TimerManager.getInstance().start(function(){
+            stack.setSelection( [commentBox] );
+            commentButton.setValue(true);
+            attachmentButton.setValue(false);
+            this.__sandbox.removeApplicationState("showComments");
+          },null,this,null,100);
         }
       },this);          
       

@@ -8,17 +8,35 @@
   /*
    * check session id
    */
-  session_start();
+  
   $sessionId = getParam('sessionId');
   if ( $sessionId != session_id() )
   {
-    die("No access");
+    /*
+     * switch to given session
+     */
+    session_id( $sessionId );
+    session_start();
+    
+    /*
+     * Check remote ip to avoid session hijacking
+     */
+    if ( $_SESSION['qcl_remote_ip'] != $_SERVER["REMOTE_ADDR"] )
+    {
+      die("Kein Zugriff. Eventuell koennen sie das Problem durch Neu-laden der Seite beheben.");  
+    }
+  }
+  else
+  {
+    session_start();
   }
   
 	/*
 	 * header
 	 */
-	header("Content-Type: text/html; charset=utf-8");
+	
+  header("Content-Type: text/html; charset=utf-8");
+
 
 ?>
 <html>
