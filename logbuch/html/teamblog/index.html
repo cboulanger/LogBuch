@@ -1,0 +1,122 @@
+<html>
+<head>
+<title>LogBuch TeamBlog</title>
+<link rel="stylesheet" href="style.css" media="screen">
+<link rel="stylesheet"
+	href="http://ajax.googleapis.com/ajax/libs/dojo/1.6/dijit/themes/claro/claro.css"
+	media="screen">
+<script
+	_src="../../../../dojo/1.6.1/dojo/dojo.js"
+	src="http://ajax.googleapis.com/ajax/libs/dojo/1.6/dojo/dojo.xd.js"
+	data-dojo-config="isDebug: true, parseOnLoad: true">
+</script>
+<script>
+  dojo.require("dijit.layout.BorderContainer");
+  dojo.require("dijit.layout.TabContainer");
+  dojo.require("dijit.layout.ContentPane");
+  dojo.require("dijit.Editor");
+  dojo.require("dijit.form.TextBox");
+  dojo.require("dijit.form.CheckBox");
+  dojo.require("dojox.form.Uploader");  
+  dojo.require("dojox.form.uploader.FileList");
+  dojo.require("dojox.form.uploader.plugins.HTML5");  
+  dojo.require("dojox.form.uploader.plugins.Flash");
+</script>
+<script>
+  dojo.ready(function(){
+    dojo.query("#mainApp").style({ visibility:"visible" });
+  });
+</script>
+</head>
+<body class="claro" id="mainApp" style="visibility: hidden">
+	<div id="appLayout" class="demoLayout"
+		data-dojo-type="dijit.layout.BorderContainer"
+		data-dojo-props="design: 'headline'">
+		<div class="centerPanel" data-dojo-type="dijit.layout.ContentPane"
+			data-dojo-props="region: 'center'">
+			<div>
+			<h4>Nachricht 1</h4>
+			<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed
+				do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
+				enim ad minim veniam, quis nostrud exercitation ullamco laboris
+				nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
+				reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+				pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
+				culpa qui officia deserunt mollit anim id est laborum.</p>
+			</div>
+			<div>
+      <h4>Nachricht 2</h4>
+      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed
+        do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
+        enim ad minim veniam, quis nostrud exercitation ullamco laboris
+        nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
+        reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+        pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
+        culpa qui officia deserunt mollit anim id est laborum.</p>
+      </div>
+      <div>
+      <h4>Nachricht 3</h4>
+      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed
+        do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
+        enim ad minim veniam, quis nostrud exercitation ullamco laboris
+        nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
+        reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+        pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
+        culpa qui officia deserunt mollit anim id est laborum.</p>
+      </div>
+      <div>
+      <h4>Nachricht 4</h4>
+      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed
+        do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
+        enim ad minim veniam, quis nostrud exercitation ullamco laboris
+        nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
+        reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+        pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
+        culpa qui officia deserunt mollit anim id est laborum.</p>
+      </div>
+		</div>
+		<div class="edgePanel" data-dojo-type="dijit.layout.ContentPane"
+			data-dojo-props="region: 'top'">LogBuch TeamBlog</div>
+			
+			
+		<div id="leftCol" class="edgePanel"
+			data-dojo-type="dijit.layout.ContentPane"
+			data-dojo-props="region: 'left'">
+			 <h4>Suche und Filtern</h4>
+			 
+			 <div>
+			   <input type="text" name="suche" placeHolder="Suchbegriff eingeben..." 
+			     dojoType="dijit.form.TextBox"
+            trim="true" id="suche" >
+			 </div>
+			 
+			  <input id="kat1" name="kat1" dojoType="dijit.form.CheckBox" value="kat1">
+        <label for="kat1">Kategorie 1</label>
+        <input id="kat2" name="kat2" dojoType="dijit.form.CheckBox" value="kat2">
+        <label for="kat2">Kategorie 2</label>
+        <input id="kat3" name="kat3" dojoType="dijit.form.CheckBox" value="kat3">
+        <label for="kat3">Kategorie 3</label>		
+		</div>
+			
+    <div id="rightCol" class="edgePanel"
+      data-dojo-type="dijit.layout.ContentPane"
+      data-dojo-props="region: 'right'">
+        <h4>Bitte geben Sie Ihren LogBuch-Eintrag ein</h4>
+        <!-- declaratively create an Editor instance -->
+        <div 
+          data-dojo-type="dijit.Editor"></div>
+        <form method="post" action="UploadFile.php" id="myForm"
+        enctype="multipart/form-data" >
+            <fieldset>
+                <legend>Dateien hochladen</legend>
+                <input name="uploadedfile" multiple="true" type="file" id="uploader"
+                  dojoType="dojox.form.Uploader" label="Select Some Files" >
+                <input type="submit" label="Submit" dojoType="dijit.form.Button" />
+                <div id="files" dojoType="dojox.form.uploader.FileList"
+                uploaderId="uploader"></div>
+            </fieldset>
+        </form>                
+    </div>			
+	</div>
+</body>
+</html>

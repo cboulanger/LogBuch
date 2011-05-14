@@ -21,6 +21,11 @@
 //-------------------------------------------------------------
 // Error level
 //-------------------------------------------------------------
+date_default_timezone_set('Europe/Berlin');
+
+//-------------------------------------------------------------
+// Error level
+//-------------------------------------------------------------
 
 error_reporting( E_ALL ^ E_NOTICE  );
 ini_set("display_errors",1);
@@ -33,7 +38,8 @@ ini_set("display_errors",1);
  * The server document root
  * @var string
  */
-define( "DOCUMENT_ROOT", $_SERVER["DOCUMENT_ROOT"] );
+define( "DOCUMENT_ROOT", "/Users/panyasan/Sites/" );
+//define( "DOCUMENT_ROOT", $_SERVER["DOCUMENT_ROOT"] );
 
 /**
  * The top-level folder containing the eclipse workspace
