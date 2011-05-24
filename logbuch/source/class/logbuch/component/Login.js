@@ -96,7 +96,7 @@ qx.Class.define("logbuch.component.Login",
       maxHeight : 25
     });
     loginButton.addListener("execute", function(){
-      core.showNotification( this.tr("Logging in ...") );
+      core.showNotification( this.tr("Logging in ...") ); //FIXME autohide
       core.authenticate( usernameInput.getValue(), passwordInput.getValue(), function(){
         core.hideNotification();
       },this );
@@ -126,7 +126,9 @@ qx.Class.define("logbuch.component.Login",
 //	      );      
 //      },this);
 //    },this);    
-//    hbox.add( resetPwButton ); // FIXME 
+//    hbox.add( resetPwButton ); 
+    
+    
     
     /*
      * sponsorenlogos

@@ -83,7 +83,7 @@ qx.Class.define("logbuch.module.Sidebar",
 			this.set({
 			  layout      : new qx.ui.layout.VBox(lc.getCalendar().getHGridLineWidth()),
 			  width       : lc.getSidebar().getWidth(), 
-			  marginTop   : lc.getWorkspace().getMarginTop()-2,
+			  marginTop   : lc.getWorkspace().getMarginTop()-1,
 			  marginRight : lc.getCalendar().getHGridLineWidth(),
 			  marginLeft  : lc.getSidebar().getMarginLeft()
 			});
@@ -94,7 +94,7 @@ qx.Class.define("logbuch.module.Sidebar",
 	      height      : lc.getCalendar().getDateRowHeight()
 	    }); 
       yearBox.add( new qx.ui.core.Spacer(), {flex:1});
-      this.addBefore( yearBox, this.getChildren()[0] );
+      this.add( yearBox );
       
       this.__sandbox.subscribe("activate-category",function(e){
         if ( e.getData() !== null )
@@ -116,6 +116,38 @@ qx.Class.define("logbuch.module.Sidebar",
       this.__sandbox.subscribe("change-date",function(e){
         yearLabel.setValue( "" + e.getData().getFullYear() );
       },this );
+      
+      var row = 0;
+      lc.getCalendar().getRowLabels().forEach(function(label)
+      {
+        var box = new qx.ui.container.Composite().set({
+          layout      : new qx.ui.layout.VBox(1),
+          appearance  : "logbuch-label-box",
+          height      : lc.getCalendar().getBoxHeight() - lc.getCalendar().getHGridLineWidth()
+        }); 
+        box.setUserData("row",++row);
+        
+        this.__sandbox.subscribe("calendar/row",function(e){
+          if ( e.getData() == this.getUserData("row") )
+          {
+            this.setBackgroundColor("logbuch-background-calendar-selected" );
+          }
+          else
+          {
+            this.resetBackgroundColor();
+          }
+        }, box );
+        
+        box.add( new qx.ui.core.Spacer(), {flex:1} );
+        var text = new qx.ui.basic.Label( label );
+        text.set({
+          font        : "logbuch-label-box",
+          alignX      : "right"
+        });
+        box.add( text );            
+        this.add(box);
+      }, this);
+      
 	  },
     
     start : function(){},
@@ -133,8 +165,8 @@ qx.Class.define("logbuch.module.Sidebar",
      */
     addModule : function( categoryModule )
     {      
-      var categoryWidget = new logbuch.module.CategoryBox( categoryModule, this.__sandbox );
-      this.add( categoryWidget );      
+      //var categoryWidget = new logbuch.module.CategoryBox( categoryModule, this.__sandbox );
+      //this.add( categoryWidget );      
     }
     
   }

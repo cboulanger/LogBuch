@@ -222,6 +222,7 @@ class logbuch_Application
     switch( $request->getService() . "." . $request->getMethod() )
     {
       case "logbuch.actool.confirmEmail":
+      case "logbuch.message.testMessages": //FIXME  
         return true;
       default:
         return false;

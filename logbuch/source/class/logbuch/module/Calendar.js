@@ -485,7 +485,7 @@ qx.Class.define("logbuch.module.Calendar",
         var d3 = new Date( d2.getTime() - delta * 60000 );
       }
       var column = Math.floor( (d1.getTime() - (d3||d2).getTime() ) / msday );
-      //console.warn([date,d1,d2,delta,d3,column,this.getDateFromColumn(column)]);          
+      //console.warn([date,d1,d2,delta,d3,column,this.getDateFromCoordinate(column)]);          
       return column;
     },
     
@@ -524,13 +524,14 @@ qx.Class.define("logbuch.module.Calendar",
     
     /**
      * Given the column, return the corresponding date
-     * @param  column {Integer}
+     * @param column {Integer}
+     * @param row {Integer}
      * @return {Date}
      */
-    getDateFromColumn : function( column )
+    getDateFromCoordinate : function( column, row )
     {
       var d1 = this.getFirstDateLoaded(),
-          d2 = new Date( d1.getTime() +  ( 86400000 * column ) ),
+          d2 = new Date( d1.getTime() +  ( 86400000 * column ) ), // FIXME row
           d3 = null;
       var delta = Math.abs( d1.getTimezoneOffset() ) - Math.abs( d2.getTimezoneOffset() );
       if ( delta )
@@ -563,20 +564,7 @@ qx.Class.define("logbuch.module.Calendar",
       return lc.getCalendar().getCategories().indexOf(category)+1;
     },
     
-    /**
-     * Given a row, return the corresponding category
-     * @param row {Integer}
-     * @return {String}
-     */
-    getCategoryFromRow : function( row )
-    {
-      var lc = this.__sandbox.getLayoutConfig();
-      if ( row < 1 || row > lc.getCalendar().getCategories().length )
-      {
-        this.error("Invalid row:" + row );
-      }
-      return lc.getCalendar().getCategories().getItem(row-1);      
-    },
+
     
     /*
     ---------------------------------------------------------------------------
@@ -614,10 +602,10 @@ qx.Class.define("logbuch.module.Calendar",
       
       var col  = e.getColumn();
       var row  = e.getRow();
-      var date = this.getDateFromColumn( col );
-      var category = this.getCategoryFromRow( row );
-      
+      var date = this.getDateFromCoordinate( col, row );  
       this.setDate( date );
+      
+      this.__sandbox.publish("calendar/row",row);
       //this.displayMessages( date, category );
     },    
     
@@ -630,10 +618,8 @@ qx.Class.define("logbuch.module.Calendar",
       // do not accept a double click on the date row 
       if ( e.getRow() == 0 ) return;      
       
-      var category = this.getCategoryFromRow( e.getRow() );  
-      var date = this.getDateFromColumn( e.getColumn() ); // FIXME period
-      //console.log("User clicked on category " + category + ", date " + date);
-      this._handleCellAction( date, category );
+      var date = this.getDateFromCoordinate( e.getColumn(), e.getRow() ); // FIXME period
+      //this._handleCellAction( date );
     },
 
     
@@ -715,11 +701,12 @@ qx.Class.define("logbuch.module.Calendar",
       
       var lc              = this.__sandbox.getLayoutConfig(),
           calendar        = lc.getCalendar(),
-          numRows         = 6, // FIXME depends on categories
+          numRows         = calendar.getRowLabels().getLength()+1, // plus header row
           numCols         = this.getDaysLoaded(),
           boxHeight       = calendar.getBoxHeight(),
           boxWidth        = calendar.getBoxWidth(),
-          hGridLineWidth  = calendar.getHGridLineWidth();
+          hGridLineWidth  = calendar.getHGridLineWidth(),
+          vGridLineWidth  = calendar.getVGridLineWidth();
       
       /*
        *  scroller
@@ -926,7 +913,7 @@ qx.Class.define("logbuch.module.Calendar",
      */
     _getCellDate : function( column )
     {
-      return this.getDateFromColumn( column );
+      return this.getDateFromCoordinate( column );
     },
     
     /**

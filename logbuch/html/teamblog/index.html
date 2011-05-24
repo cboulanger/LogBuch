@@ -1,122 +1,405 @@
 <html>
 <head>
-<title>LogBuch TeamBlog</title>
-<link rel="stylesheet" href="style.css" media="screen">
-<link rel="stylesheet"
-	href="http://ajax.googleapis.com/ajax/libs/dojo/1.6/dijit/themes/claro/claro.css"
-	media="screen">
-<script
-	_src="../../../../dojo/1.6.1/dojo/dojo.js"
-	src="http://ajax.googleapis.com/ajax/libs/dojo/1.6/dojo/dojo.xd.js"
-	data-dojo-config="isDebug: true, parseOnLoad: true">
-</script>
-<script>
-  dojo.require("dijit.layout.BorderContainer");
-  dojo.require("dijit.layout.TabContainer");
-  dojo.require("dijit.layout.ContentPane");
-  dojo.require("dijit.Editor");
-  dojo.require("dijit.form.TextBox");
-  dojo.require("dijit.form.CheckBox");
-  dojo.require("dojox.form.Uploader");  
-  dojo.require("dojox.form.uploader.FileList");
-  dojo.require("dojox.form.uploader.plugins.HTML5");  
-  dojo.require("dojox.form.uploader.plugins.Flash");
-</script>
-<script>
-  dojo.ready(function(){
-    dojo.query("#mainApp").style({ visibility:"visible" });
-  });
-</script>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/> 
+	<title>LogBuch TeamBlog</title>
+	<style type="text/css"> 
+	  @import "dojo/dijit/themes/claro/claro.css";
+	  @import "dojo/dojox/editor/plugins/resources/css/PasteFromWord.css";
+	  @import "dojo/dojox/grid/resources/Grid.css";
+	  @import "dojo/dojox/grid/resources/claroGrid.css";
+	  @import "querybox/css/querybox.css";
+	  @import "style.css";
+	</style>	
+	<script src="dojo/dojo/dojo.js"
+		data-dojo-config="isDebug: true, parseOnLoad: true">
+	</script>
+	<script type="text/javascript" src="querybox/js/marumushi.widget.querybox.js"></script>
+	<script src="teamblog.js"></script>
 </head>
-<body class="claro" id="mainApp" style="visibility: hidden">
-	<div id="appLayout" class="demoLayout"
+
+<body class="claro">
+
+  <!-- layout container -->
+	<div id="appLayout" class="demoLayout" style="visibility: hidden"
 		data-dojo-type="dijit.layout.BorderContainer"
 		data-dojo-props="design: 'headline'">
-		<div class="centerPanel" data-dojo-type="dijit.layout.ContentPane"
+	
+		<!-- center column -->
+		<div 
+		  id="newsContainerNode"
+		  class="centerPanel" 
+		  data-dojo-type="dijit.layout.ContentPane"
 			data-dojo-props="region: 'center'">
-			<div>
-			<h4>Nachricht 1</h4>
-			<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed
-				do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-				enim ad minim veniam, quis nostrud exercitation ullamco laboris
-				nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
-				reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-				pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-				culpa qui officia deserunt mollit anim id est laborum.</p>
-			</div>
-			<div>
-      <h4>Nachricht 2</h4>
-      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed
-        do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-        enim ad minim veniam, quis nostrud exercitation ullamco laboris
-        nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
-        reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-        pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-        culpa qui officia deserunt mollit anim id est laborum.</p>
-      </div>
-      <div>
-      <h4>Nachricht 3</h4>
-      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed
-        do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-        enim ad minim veniam, quis nostrud exercitation ullamco laboris
-        nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
-        reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-        pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-        culpa qui officia deserunt mollit anim id est laborum.</p>
-      </div>
-      <div>
-      <h4>Nachricht 4</h4>
-      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed
-        do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-        enim ad minim veniam, quis nostrud exercitation ullamco laboris
-        nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
-        reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-        pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-        culpa qui officia deserunt mollit anim id est laborum.</p>
-      </div>
+			Nachrichten werden geladen...
 		</div>
+		
+		<!-- title bar -->
 		<div class="edgePanel" data-dojo-type="dijit.layout.ContentPane"
-			data-dojo-props="region: 'top'">LogBuch TeamBlog</div>
+			data-dojo-props="region: 'top'">
+			<table width="100%">
+			 <tr heigth="0px">
+			   <td width="70%"><span style="font-size:16px;font-weight:bold">LogBuch TeamBlog</span></td>
+			   <td width="20%"><span id="username">XXX</span></td>
+			   
+			   <td><button dojoType="dijit.form.Button" onClick="logout();">Abmelden</button></td>
+			 </tr>
+			</table>
+		</div>
 			
-			
+		<!-- left column -->
 		<div id="leftCol" class="edgePanel"
 			data-dojo-type="dijit.layout.ContentPane"
 			data-dojo-props="region: 'left'">
-			 <h4>Suche und Filtern</h4>
-			 
-			 <div>
-			   <input type="text" name="suche" placeHolder="Suchbegriff eingeben..." 
-			     dojoType="dijit.form.TextBox"
-            trim="true" id="suche" >
-			 </div>
-			 
-			  <input id="kat1" name="kat1" dojoType="dijit.form.CheckBox" value="kat1">
-        <label for="kat1">Kategorie 1</label>
-        <input id="kat2" name="kat2" dojoType="dijit.form.CheckBox" value="kat2">
-        <label for="kat2">Kategorie 2</label>
-        <input id="kat3" name="kat3" dojoType="dijit.form.CheckBox" value="kat3">
-        <label for="kat3">Kategorie 3</label>		
-		</div>
 			
+			<div id="qbox"></div>
+			
+			    <div dojoType="dijit.TitlePane" title="Zeitraum" open="false">
+            <table>
+              <tr>
+                <td><label for="filter-date-from">Von:</label></td>
+                <td><input dojoType=dijit.form.DateTextBox name="filter-date-from" id="filter-date-from"></td>
+              </tr>
+              <tr>
+                <td><label for="filter-date-to">Bis:</label></td>
+                <td><input dojoType=dijit.form.DateTextBox name="filter-date-to" id="filter-date-to"></td>
+              </tr>            
+            </table>
+          </div>
+           
+		<!-- Kategorien -->
+		<div dojoType="dijit.TitlePane" title="Kategorie" >
+        <table>
+        
+          <tr><td>
+            <input dojoType="dijit.form.CheckBox" 
+               id="filter-event" name="filter_category" value="event">
+          </td><td>
+            <label for="filter-event">Termin</label><br/>
+          </td></tr>
+          
+          <tr><td>
+            <input dojoType="dijit.form.CheckBox" 
+               id="filter-consult" name="filter_category" value="consult">
+          </td><td>
+            <label for="filter-consult">Beratungsprozess</label><br/>
+          </td></tr>
+          
+          <tr><td>
+            <input dojoType="dijit.form.CheckBox" 
+               id="filter-stumble" name="filter_category" value="stumble">
+          </td><td>
+             <label for="filter-stumble">Stolperstein</label><br/>
+          </td></tr>
+          
+          <tr><td>
+            <input dojoType="dijit.form.CheckBox" 
+               id="filter-idea" name="filter_category" value="idea">
+          </td><td>
+            <label for="filter-idea">Idee</label><br/>
+          </td></tr>                  
+
+          <tr><td>
+            <input dojoType="dijit.form.CheckBox" 
+               id="filter-coop" name="filter_category" value="coop">
+          </td><td>
+             <label for="filter-coop">Kooperation</label><br/>
+          </td></tr>       
+          
+          <tr><td>
+            <input dojoType="dijit.form.CheckBox" 
+               id="filter-hint" name="filter_category" value="hint">
+          </td><td>
+            <label for="filter-hint">Tipps</label><br/>
+          </td></tr>       
+
+          <tr><td>
+            <input dojoType="dijit.form.CheckBox" 
+               id="filter-misc" name="filter_category" value="misc">
+          </td><td>
+            <label for="filter-misc">Sonstiges</label><br/>
+          </td></tr>                                     
+          
+        </table>
+		  </div>
+		  
+		  <!-- Gruppe -->
+      <div dojoType="dijit.TitlePane" title="Gruppe" open="false">
+        <table>
+          
+          <tr><td>
+            <input dojoType="dijit.form.CheckBox" 
+               id="filter-group-2" name="filter_author" value="ownCompany">
+          </td><td>
+            <label for="filter-group-2">Eigenes Unternehmen</label><br/>
+          </td></tr>
+          
+          <tr><td>
+            <input dojoType="dijit.form.CheckBox" 
+               id="filter-group-3" name="filter_author" value="ownConsultant">
+          </td><td>
+             <label for="filter-group-3">Berater (Eigenes Unternehmen)</label><br/>
+          </td></tr>
+          
+          <tr><td>
+            <input dojoType="dijit.form.CheckBox" 
+               id="filter-group-4" name="filter_author" value="allConsultants">
+          </td><td>
+            <label for="filter-group-4">Alle Berater/innen</label><br/>
+          </td></tr>                          
+
+          <tr><td>
+            <input dojoType="dijit.form.CheckBox" 
+               id="filter-group-5" name="filter_author" value="analyst">
+          </td><td>
+             <label for="filter-group-5">Wissenschaftliche Begleitung</label><br/>
+          </td></tr>       
+          
+          <tr><td>
+            <input dojoType="dijit.form.CheckBox" 
+               id="filter-group-6" name="filter_author" value="allMembers">
+          </td><td>
+            <label for="filter-group-6">Alle LogBuch-Teilnehmer/innen</label><br/>
+          </td></tr>       
+
+<!--           <tr><td>
+            <input dojoType="dijit.form.CheckBox" 
+               id="filter-group-7" name="filter_author" value="moreMembers">
+          </td><td>
+            <label for="filter-group-7">Sonstiges</label><br/>
+          </td></tr>   -->                                   
+          
+        </table>
+      </div>		
+      
+      <!-- Author -->
+      <div dojoType="dijit.TitlePane" title="Verfasser/innen">
+        <div>
+					<span dojoType="dojo.data.ItemFileWriteStore"
+					   urlPreventCache="true"
+					   jsId="author_store"
+					   url="users.php">
+					</span>  
+	        <table 
+	          id="filterAuthorGrid"
+	          dojoType="dojox.grid.DataGrid" 
+	          autowidth="true" 
+	          height="200px"
+	          store="author_store"
+	          autoRender="true" >
+						<thead>
+							<tr>
+								<th field="selected" cellType="dojox.grid.cells.Bool" name=" " width="15px" editable="true"> </th>
+								<th field="author" width="100px">Verfasser/in</th>
+							</tr>
+						</thead>	          
+	        </table>
+        </div>
+      </div>
+    </div>
+			
+	  <!-- right column -->
     <div id="rightCol" class="edgePanel"
       data-dojo-type="dijit.layout.ContentPane"
       data-dojo-props="region: 'right'">
-        <h4>Bitte geben Sie Ihren LogBuch-Eintrag ein</h4>
-        <!-- declaratively create an Editor instance -->
+      <!-- Toolbar -->
+      <div>
+	      <!-- time -->
+
+				<div dojoType="dijit.form.DropDownButton">
+				  <span>Zeit</span>
+				  <div dojoType="dijit.TooltipDialog" id="entryEventTime" title="Zeitinformationen">
+				    <table>
+				      <tr>
+				        <td><label for="entry-date">Datum:</label></td>
+				        <td><input dojoType=dijit.form.DateTextBox name="entry-date" id="entry-date"></td>
+				      </tr>
+				      <tr>
+				        <td><label for="entry-time-from">Beginnt:</label></td>
+				        <td><input dojoType=dijit.form.TimeTextBox name="entry-time-from" id="entry-time-from"></td>
+				      </tr>
+	              <tr>
+	                <td><label for="entry-time-to">Endet:</label></td>
+	                <td><input dojoType=dijit.form.TimeTextBox name="entry-time-to" id="entry-time-to"></td>
+	              </tr>					      
+				    </table>
+				  </div>
+				</div>   
+				
+				<!-- Access -->
+	        <div dojoType="dijit.form.DropDownButton">
+	          <span>Zugriff</span>
+	          <div dojoType="dijit.TooltipDialog" id="entryAccess" title="Eintrag sichtbar für:"
+	            execute="alert('submitted w/args:\n' + dojo.toJson(arguments[0], true));">
+			        <table>
+			          
+			          <tr><td>
+			            <input dojoType="dijit.form.CheckBox" 
+			               id="access-2" name="access" value="ownCompany">
+			          </td><td>
+			            <label for="access-2">Eigenes Unternehmen</label><br/>
+			          </td></tr>
+			          
+			          <tr><td>
+			            <input dojoType="dijit.form.CheckBox" 
+			               id="access-3" name="access" value="ownConsultant">
+			          </td><td>
+			             <label for="access-3">Berater (Eigenes Unternehmen)</label><br/>
+			          </td></tr>
+			          
+			          <tr><td>
+			            <input dojoType="dijit.form.CheckBox" 
+			               id="access-4" name="access" value="allConsultants">
+			          </td><td>
+			            <label for="access-4">Alle Berater/innen</label><br/>
+			          </td></tr>                          
+			
+			          <tr><td>
+			            <input dojoType="dijit.form.CheckBox" 
+			               id="access-5" name="access" value="analyst">
+			          </td><td>
+			             <label for="access-1">Wissenschaftliche Begleitung</label><br/>
+			          </td></tr>       
+			          
+			          <tr><td>
+			            <input dojoType="dijit.form.CheckBox" 
+			               id="access-6" name="access" value="allMembers">
+			          </td><td>
+			            <label for="access-6">Alle LogBuch-Teilnehmer/innen</label><br/>
+			          </td></tr>       
+			
+		           <tr><td>
+			            <input dojoType="dijit.form.CheckBox" 
+			               id="access-7" name="access" value="moreMembers">
+			          </td><td>
+			            <label for="access-7">Einzelne Teilnehmer</label><br/>
+			          </td></tr>                                  
+			          
+			        </table>
+	          </div>
+	        </div> 	
+	        
+	        <!-- categories -->	
+	        <div dojoType="dijit.form.DropDownButton">
+	          <span>Kategorien</span>
+	          <div dojoType="dijit.TooltipDialog" id="entryCategories" 
+	            title="Kategorien:" >
+			        <table>
+			        
+			          <tr><td>
+			            <input dojoType="dijit.form.CheckBox" 
+			               id="c-event" name="categories" value="event">
+			          </td><td>
+			            <label for="c-event">Termin</label><br/>
+			          </td></tr>
+			          
+			          <tr><td>
+			            <input dojoType="dijit.form.CheckBox" 
+			               id="c-consult" name="categories" value="consult">
+			          </td><td>
+			            <label for="c-consult">Beratungsprozess</label><br/>
+			          </td></tr>
+			          
+			          <tr><td>
+			            <input dojoType="dijit.form.CheckBox" 
+			               id="c-stumble" name="categories" value="stumble">
+			          </td><td>
+			             <label for="c-stumble">Stolperstein</label><br/>
+			          </td></tr>
+			          
+			          <tr><td>
+			            <input dojoType="dijit.form.CheckBox" 
+			               id="c-idea" name="categories" value="idea">
+			          </td><td>
+			            <label for="c-idea">Idee</label><br/>
+			          </td></tr>                          
+			
+			          <tr><td>
+			            <input dojoType="dijit.form.CheckBox" 
+			               id="c-coop" name="categories" value="coop">
+			          </td><td>
+			             <label for="c-coop">Kooperation</label><br/>
+			          </td></tr>       
+			          
+			          <tr><td>
+			            <input dojoType="dijit.form.CheckBox" 
+			               id="c-hint" name="categories" value="hint">
+			          </td><td>
+			            <label for="c-hint">Tipps</label><br/>
+			          </td></tr>       
+			
+			          <tr><td>
+			            <input dojoType="dijit.form.CheckBox" 
+			               id="c-misc" name="categories" value="misc">
+			          </td><td>
+			            <label for="c-misc">Sonstiges</label><br/>
+			          </td></tr>                                     
+			          
+			        </table>
+		        </div>
+	        </div>
+ 
+	          
+	        <!-- uploader -->
+	        <div
+	           id="entryAttachmentUploader" 
+	           dojoType="dijit.form.DropDownButton">
+	            <span><img src="attachment.png"/></span>
+	            <div 
+	              dojoType="dijit.TooltipDialog" id="tooltipDlg4" title="Kategorien:"
+	              style="width:300px">
+				        <form method="post" action="UploadFile.php" id="myForm"
+				          enctype="multipart/form-data" >
+				            <fieldset >
+				                <legend>Dateien hochladen</legend>
+				                <input name="uploadedfile" multiple="true" type="file" id="uploader"
+				                style="width:250px"
+				                  dojoType="dojox.form.Uploader" label="Dateien auswählen" >
+				                <input type="submit" label="Submit" dojoType="dijit.form.Button" />
+				                <div id="files" dojoType="dojox.form.uploader.FileList"
+				                uploaderId="uploader"></div>
+				            </fieldset>
+				        </form> 
+				    </div>        
+					</div>  
+				</div>    
+
+        
+        <!-- Message Editor -->
         <div 
-          data-dojo-type="dijit.Editor"></div>
-        <form method="post" action="UploadFile.php" id="myForm"
-        enctype="multipart/form-data" >
-            <fieldset>
-                <legend>Dateien hochladen</legend>
-                <input name="uploadedfile" multiple="true" type="file" id="uploader"
-                  dojoType="dojox.form.Uploader" label="Select Some Files" >
-                <input type="submit" label="Submit" dojoType="dijit.form.Button" />
-                <div id="files" dojoType="dojox.form.uploader.FileList"
-                uploaderId="uploader"></div>
-            </fieldset>
-        </form>                
+          id="entryEditor"
+          data-dojo-type="dijit.Editor"
+          data-dojo-props="plugins:['insertUnorderedList','createLink','pastefromword','fullscreen']">
+          <h3>Überschrift</h3>
+          <p>Text</p>
+          
+        </div>
+        
+        <!-- send button -->
+        <div id="submitEntryContainer">
+          <button id="submitEntryButton" dojoType="dijit.form.Button" onClick="submitEntry();" >Senden</button>
+        </div>
+        
+                
+              
     </div>			
 	</div>
+	
+	<div dojoType="dijit.Dialog" id="loginDialog" title="LogBuch TeamBlog: Bitte anmelden"
+	    execute="authenticate(arguments[0].name +','+arguments[0].password);">
+	  <table>
+	    <tr>
+	      <td><label for="name">Name: </label></td>
+	      <td><input dojoType="dijit.form.TextBox" type="text" name="name" id="name"></td>
+	    </tr>
+	    <tr>
+	      <td><label for="loc">Passwort: </label></td>
+	      <td><input dojoType="dijit.form.TextBox" type="password" name="password" id="password"></td>
+	    </tr>
+	    <tr>
+	      <td colspan="2" align="center">
+	        <button dojoType="dijit.form.Button" type="submit">Anmelden</button></td>
+	    </tr>
+	  </table>
+	</div>	
 </body>
 </html>

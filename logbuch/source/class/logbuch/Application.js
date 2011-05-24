@@ -115,10 +115,6 @@ qx.Class.define("logbuch.Application",
         };
       }
       
-      /*
-       * window name
-       */
-      window.name = "logbuch"
       
       /*
        * application core providing application functionality
@@ -422,10 +418,13 @@ qx.Class.define("logbuch.Application",
 	      calendar:
 	      {
 	        categories      : [ "event", "goal", "documentation", "diary", "inspiration" ],
-	        dateRowHeight   : 30,
-	        boxHeight       : 78,
+	        rowLabels       : ["<","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00",">"],
+          dateRowHeight   : 30,
+	        boxHeight       : 30,
 	        boxWidth        : 122,
-	        hGridLineWidth  : 5
+          vGridLineWidth  : 2,
+	        hGridLineWidth  : 2
+          
 	      },
 	      sidebar : {
 	        marginTop  : 44,
