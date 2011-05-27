@@ -1,29 +1,20 @@
-{ items: [
-	{ "author": "John Doe", "selected" : false },
-	{ "author": "Bob Miller", "selected" : false },
-	{ "author": "Pepe Gonzales", "selected" : false },
-	{ "author": "Toto Ginza", "selected" : true },
-	{ "author": "Hiromi Nakamura", "selected" : false },
-	{ "author": "Sergej Sorokin", "selected" : false },
-	{ "author": "John Doe", "selected" : false },
-	{ "author": "Bob Miller", "selected" : false },
-	{ "author": "Pepe Gonzales", "selected" : false },
-	{ "author": "Toto Ginza", "selected" : true },
-	{ "author": "Hiromi Nakamura", "selected" : false },
-	{ "author": "Sergej Sorokin", "selected" : false },
-	{ "author": "John Doe", "selected" : false },
-	{ "author": "Bob Miller", "selected" : false },
-	{ "author": "Pepe Gonzales", "selected" : false },
-	{ "author": "Toto Ginza", "selected" : true },
-	{ "author": "Hiromi Nakamura", "selected" : false },
-	{ "author": "Sergej Sorokin", "selected" : false },
-	{ "author": "John Doe", "selected" : false },
-	{ "author": "Bob Miller", "selected" : false },
-	{ "author": "Pepe Gonzales", "selected" : false },
-	{ "author": "Toto Ginza", "selected" : true },
-	{ "author": "Hiromi Nakamura", "selected" : false },
-	{ "author": "Sergej Sorokin", "selected" : false }
-]}
+<?php 
+$response =  array();
+
+for ( $c=1, $i=1; $i<20; $i++)
+{
+  $response[] = array(  
+    'author' => "Nutzer $i",
+    'selected'	=> false,
+    'company'		=> "Firma $c",
+    'online'		=> rand(0,1)
+  );
+  if( $i % 5 == 0 ) $c++;
+}
+
+echo json_encode( array( 'items' => $response ) );
+?>
+
 
 
 

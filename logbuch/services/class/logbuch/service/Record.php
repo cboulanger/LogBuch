@@ -34,7 +34,7 @@ class logbuch_service_Record
        * this ruleset
        */
       'datasource'  => "demo",
-      'modelType'   => array("person","organization","attachment"),
+      'modelType'   => array("person","organization","attachment", "entry"),
 
       /*
        * only registered users have access
@@ -476,6 +476,37 @@ class logbuch_service_Record
 			array( 'value' => "consultant", 'label' => "Berater/in" ), // 'label' => $this->tr("Consultant") ),
 			array( 'value' => "scientist", 	'label' => "Wissenschaftliche Begleitung" ) // 'label' => $this->tr("Scientific expert") )
 		);
+	}
+	
+	/**
+	 * Returns a list of users with their organization and online status
+	 * Enter description here ...
+	 */
+	public function method_getUserItemList()
+	{ 
+    $listModel = array();
+		$personModel = $this->getModel("demo", "person" );
+		$orgModel    = $this->getModel("demo", "organization");  
+		
+//		$this->getLogger()->setFilterEnabled(QCL_LOG_DB, true);
+		$personModel->findAllOrderBy( "familyName" );
+//		$this->getLogger()->setFilterEnabled(QCL_LOG_DB, false);
+		
+		if( $personModel->foundNothing() )
+		{
+			return $listModel;
+		}
+		while( $personModel->loadNext() )
+		{
+			$listModel[] = array(
+			  'selected'			=> false,
+				'id'		        => $personModel->id(),
+				'name'		      => $personModel->get("familyName") . ", " . $personModel->get("givenName"),
+				'organization'	=> $orgModel->load( $personModel->get("organizationId") )->get("name"),
+			  'online'				=> $this->getAccessController()->checkOnlineStatus( $personModel->getUserId() )
+			);
+		}
+		return array('items' => $listModel);
 	}
 }
 ?>

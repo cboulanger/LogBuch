@@ -203,6 +203,14 @@ class logbuch_model_Person
   */
   
   /**
+   * Returns the user id of this person
+   */
+  public function getUserId()
+  {
+    return $this->_get("userId");
+  }
+  
+  /**
    * Returns the text for a 'label' that is used in a visual widget
    * to represent the model record.
    * @return string

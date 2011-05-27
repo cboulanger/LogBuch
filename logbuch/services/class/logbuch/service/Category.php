@@ -407,5 +407,8 @@ class logbuch_service_Category
 			"&sessionId="	. $this->getSessionId();
 		return $reportLink;
 	}
+	
+	
+	
 }
 ?>
