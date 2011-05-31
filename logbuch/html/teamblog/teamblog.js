@@ -172,7 +172,8 @@ function init( userData )
         var content = "";
         dojo.forEach(jsonData.result.data.newsItems,function(newsItem) {
             content+= "<h4>" + newsItem.subject + "</h4>";
-            content+= "<h5>Verfasser: XXX am x.y.2011</h5>";
+            content+= "<div>Verfasser: XXX am x.y.2011</div>";
+            content+= "<div style='width:100%;text-align:right'>Idee, Stolperstein</div>";
             content+= "<p>" + newsItem.body + "</p>";
             content+= "<p style='text-align:right; font-weight:bold'>";
             content+= "<a href='javascript:alert(\"Nicht implementiert\");'>Ändern</a>&nbsp;";

@@ -56,7 +56,7 @@
 		<div id="qbox"></div>
 			
     <!-- column header -->    
-    <div class="column-header">Nachrichten filtern</div>		
+    <div class="column-header">Einträge filtern</div>		
 			
 		<!-- Time period -->
 		  <div dojoType="dijit.TitlePane" title="Zeitraum" open="false">
@@ -80,43 +80,65 @@
             <input dojoType="dijit.form.CheckBox" 
                id="filter-event" name="filter_category" value="event">
           </td><td>
-            <label for="filter-event">Termin</label><br/>
+            <label for="filter-event">Termine</label><br/>
           </td></tr>
+
+          <tr><td>
+            <input dojoType="dijit.form.CheckBox" 
+               id="filter-document" name="filter_category" value="document">
+          </td><td>
+            <label for="filter-document">Dokumente / Protokolle</label><br/>
+          </td></tr>
+
           
           <tr><td>
             <input dojoType="dijit.form.CheckBox" 
                id="filter-consult" name="filter_category" value="consult">
           </td><td>
-            <label for="filter-consult">Beratungsprozess</label><br/>
+            <label for="filter-consult">Beratungsprozesse</label><br/>
+          </td></tr>
+
+          <tr><td>
+            <input dojoType="dijit.form.CheckBox" 
+               id="filter-result" name="filter_category" value="result">
+          </td><td>
+             <label for="filter-result">Ergebnisse</label><br/>
           </td></tr>
           
           <tr><td>
             <input dojoType="dijit.form.CheckBox" 
                id="filter-stumble" name="filter_category" value="stumble">
           </td><td>
-             <label for="filter-stumble">Stolperstein</label><br/>
+             <label for="filter-stumble">Stolpersteine</label><br/>
           </td></tr>
+          
+          <tr><td>
+            <input dojoType="dijit.form.CheckBox" 
+               id="filter-hint" name="filter_category" value="hint">
+          </td><td>
+            <label for="filter-hint">Tipps/Links</label><br/>
+          </td></tr>            
           
           <tr><td>
             <input dojoType="dijit.form.CheckBox" 
                id="filter-idea" name="filter_category" value="idea">
           </td><td>
-            <label for="filter-idea">Idee</label><br/>
+            <label for="filter-idea">Ideen</label><br/>
           </td></tr>                  
 
           <tr><td>
             <input dojoType="dijit.form.CheckBox" 
                id="filter-coop" name="filter_category" value="coop">
           </td><td>
-             <label for="filter-coop">Kooperation</label><br/>
-          </td></tr>       
-          
+             <label for="filter-coop">Kooperationen</label><br/>
+          </td></tr>            
+
           <tr><td>
             <input dojoType="dijit.form.CheckBox" 
-               id="filter-hint" name="filter_category" value="hint">
+               id="filter-photo" name="filter_category" value="photo">
           </td><td>
-            <label for="filter-hint">Tipps</label><br/>
-          </td></tr>       
+            <label for="filter-photo">Photos</label><br/>
+          </td></tr>   
 
           <tr><td>
             <input dojoType="dijit.form.CheckBox" 
@@ -196,6 +218,10 @@
     <div id="rightCol" class="edgePanel"
       data-dojo-type="dijit.layout.ContentPane"
       data-dojo-props="region: 'right'">
+      
+      <!-- column header -->    
+      <div class="column-header">Neuen Eintrag erstellen</div>    
+    
       <!-- Toolbar -->
       <div>
 				
@@ -216,11 +242,28 @@
               </td></tr>
               
               <tr><td>
+                <input 
+                  dojoType="dijit.form.CheckBox" 
+                  id="c-document" name="categories" value="document"
+                  onChange="updateMessageData();dojo.style( dojo.byId('timeChooserContainer'), 'display', this.get('value')?'inline':'none' )">
+              </td><td>
+                <label for="c-document">Dokument/Protokoll</label><br/>
+              </td></tr>              
+              
+              <tr><td>
                 <input dojoType="dijit.form.CheckBox" 
                    id="c-consult" name="categories" value="consult"
                    onChange="updateMessageData">
               </td><td>
                 <label for="c-consult">Beratungsprozess</label><br/>
+              </td></tr>
+
+              <tr><td>
+                <input dojoType="dijit.form.CheckBox" 
+                   id="c-result" name="categories" value="result"
+                   onChange="updateMessageData">
+              </td><td>
+                 <label for="c-result">Ergebnis</label><br/>
               </td></tr>
               
               <tr><td>
@@ -230,6 +273,14 @@
               </td><td>
                  <label for="c-stumble">Stolperstein</label><br/>
               </td></tr>
+              
+              <tr><td>
+                <input dojoType="dijit.form.CheckBox" 
+                   id="c-hint" name="categories" value="hint"
+                   onChange="updateMessageData">
+              </td><td>
+                <label for="c-hint">Tipps/Links</label><br/>
+              </td></tr>                
               
               <tr><td>
                 <input dojoType="dijit.form.CheckBox" 
@@ -249,10 +300,10 @@
               
               <tr><td>
                 <input dojoType="dijit.form.CheckBox" 
-                   id="c-hint" name="categories" value="hint"
+                   id="c-photo" name="categories" value="photo"
                    onChange="updateMessageData">
               </td><td>
-                <label for="c-hint">Tipps</label><br/>
+                 <label for="c-photo">Foto</label><br/>
               </td></tr>       
     
               <tr><td>
@@ -393,13 +444,15 @@
           
         </div>
         
+
+        
+        <!-- Informational message -->
+        <p id="entryInformationMessage"></p>
+        
         <!-- send button -->
         <div id="submitEntryContainer">
           <button id="submitEntryButton" dojoType="dijit.form.Button" onClick="submitEntry();" >Senden</button>
         </div>
-        
-        <!-- Informational message -->
-        <p id="entryInformationMessage"></p>
         
                 
               
