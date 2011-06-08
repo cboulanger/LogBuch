@@ -177,7 +177,7 @@ class logbuch_Application
     	"logbuch.access"     		=> "logbuch_service_Access",
     	"logbuch.data"     			=> "logbuch_service_Data",
     	"logbuch.message"  			=> "logbuch_service_Message",
-    	"logbuch.category"   		=> "logbuch_service_Category",
+    	"logbuch.entry"   		  => "logbuch_service_Entry",
     	"logbuch.record"	   		=> "logbuch_service_Record",
     	"logbuch.report"	   		=> "logbuch_service_Report",
       "logbuch.file"          => "logbuch_service_File",

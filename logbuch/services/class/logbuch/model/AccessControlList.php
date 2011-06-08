@@ -41,7 +41,7 @@ extends qcl_core_Object
 	}
 	
 	/**
-	 * Setter for acl data
+	 * Setter for acl data, checks that all acl properties are defined
 	 * @param array|object $acl
 	 */
 	public function setAcl( $acl )

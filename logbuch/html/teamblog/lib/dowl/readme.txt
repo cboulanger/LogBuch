@@ -1,0 +1,1 @@
+Code is taken from http://blog.uxdriven.com/2009/09/08/making-your-own-growl-widget-with-dojo/

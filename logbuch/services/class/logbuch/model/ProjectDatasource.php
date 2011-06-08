@@ -84,6 +84,29 @@ class logbuch_model_ProjectDatasource
             'class'   => "logbuch_model_Organization"
           )
         ),        
+        'attachment'  => array(
+          'model'    => array(
+            'class'    => "logbuch_model_Attachment"
+          )
+        ),
+        'comment'  => array(
+          'model'    => array(
+            'class'    => "logbuch_model_Comment"
+          )
+        ),
+        'entry'  => array(
+          'model'    => array(
+            'class'    => "logbuch_model_Entry"
+          )
+        ),
+        'category'  => array(
+          'model'    => array(
+            'class'    => "logbuch_model_Category"
+          )
+        ),
+        
+        /** will be removed **/
+        
         'event'   => array(
           'model' => array(
             'class'   => "logbuch_model_Event"
@@ -107,21 +130,6 @@ class logbuch_model_ProjectDatasource
         'inspiration'  => array(
           'model'    => array(
             'class'    => "logbuch_model_Inspiration"
-          )
-        ),
-        'attachment'  => array(
-          'model'    => array(
-            'class'    => "logbuch_model_Attachment"
-          )
-        ),
-        'comment'  => array(
-          'model'    => array(
-            'class'    => "logbuch_model_Comment"
-          )
-        ),
-        'entry'  => array(
-          'model'    => array(
-            'class'    => "logbuch_model_Entry"
           )
         )
       ) );

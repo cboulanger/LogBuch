@@ -59,7 +59,7 @@ define("CONTRIB_PATH", WORKSPACE_PATH . "/qooxdoo-contrib" );
  * Path to the RpcPhp package in qooxdoo-contrib
  * @var string
  */
-define("RPCPHP_SERVER_PATH", CONTRIB_PATH . "/RpcPhp/1.2.0/");
+define("RPCPHP_SERVER_PATH", CONTRIB_PATH . "/RpcPhp/trunk/");
 
 
 /**
@@ -106,7 +106,7 @@ define( "defaultAccessibility", "public" );
  * You need this only for debugging
  */
 define( "JsonRpcDebug", false );
-define( "JsonRpcDebugFile", "log/server.log" );
+define( "JsonRpcDebugFile", "log/logbuch.log" );
 
 
 //-------------------------------------------------------------

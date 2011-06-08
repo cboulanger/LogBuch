@@ -8,12 +8,14 @@
 	  @import "dojo/dojox/grid/resources/Grid.css";
 	  @import "dojo/dojox/grid/resources/claroGrid.css";
 	  @import "querybox/css/querybox.css";
+	  @import "lib/dowl/Notification.css";
 	  @import "style.css";
 	</style>	
 	<script src="dojo/dojo/dojo.js"
 		data-dojo-config="isDebug: true, parseOnLoad: true">
 	</script>
 	<script type="text/javascript" src="querybox/js/marumushi.widget.querybox.js"></script>
+	<script src="rangy/rangy-core.js"></script>
 	<script src="teamblog.js"></script>
 </head>
 
@@ -87,9 +89,15 @@
             <input dojoType="dijit.form.CheckBox" 
                id="filter-document" name="filter_category" value="document">
           </td><td>
-            <label for="filter-document">Dokumente / Protokolle</label><br/>
+            <label for="filter-document">Dokumente</label><br/>
           </td></tr>
 
+          <tr><td>
+            <input dojoType="dijit.form.CheckBox" 
+               id="filter-minutes" name="filter_category" value="minutes">
+          </td><td>
+            <label for="filter-minutes">Protokolle</label><br/>
+          </td></tr>
           
           <tr><td>
             <input dojoType="dijit.form.CheckBox" 
@@ -245,10 +253,19 @@
                 <input 
                   dojoType="dijit.form.CheckBox" 
                   id="c-document" name="categories" value="document"
-                  onChange="updateMessageData();dojo.style( dojo.byId('timeChooserContainer'), 'display', this.get('value')?'inline':'none' )">
+                  onChange="updateMessageData()">
               </td><td>
-                <label for="c-document">Dokument/Protokoll</label><br/>
-              </td></tr>              
+                <label for="c-document">Dokument</label><br/>
+              </td></tr>     
+              
+              <tr><td>
+                <input 
+                  dojoType="dijit.form.CheckBox" 
+                  id="c-minutes" name="categories" value="minutes"
+                  onChange="updateMessageData()">
+              </td><td>
+                <label for="c-minutes">Protokoll</label><br/>
+              </td></tr>                          
               
               <tr><td>
                 <input dojoType="dijit.form.CheckBox" 
@@ -444,17 +461,21 @@
           
         </div>
         
-
-        
-        <!-- Informational message -->
-        <p id="entryInformationMessage"></p>
-        
         <!-- send button -->
         <div id="submitEntryContainer">
-          <button id="submitEntryButton" dojoType="dijit.form.Button" onClick="submitEntry();" >Senden</button>
+          <button id="submitEntryButton" 
+            dojoType="dijit.form.Button" 
+            onClick="submitEntry();"
+            disabled="true">Senden</button>
         </div>
         
-                
+        <!-- Informational message -->
+        <p id="entryInformationMessage" class="infoText">
+          Bitte geben Sie oben einen LogBuch-Eintrag ein. 
+          Wählen Sie dann eine oder mehrere Kategorien für den Eintrag. Wenn Sie den 
+          Eintrag veröffentlichen wollen, müssen Sie ihn freigeben (Menu 'Freigabe'). Sie können 
+          für jeden Beitrag auch Anhänge hochladen.  
+        </p>
               
     </div>			
 	</div>

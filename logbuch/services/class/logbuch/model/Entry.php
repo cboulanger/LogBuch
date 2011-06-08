@@ -61,6 +61,16 @@ extends logbuch_model_Model
       'nullable' => true,
     )
   );
+  
+  /**
+   * Relations
+   */
+  private $relations = array(
+    'Entry_Category' => array(
+      'type'        => QCL_RELATIONS_HAS_AND_BELONGS_TO_MANY,
+      'target'      => array( 'class' => "logbuch_model_Category" )
+    )
+  );    
 
 
   /*
@@ -73,6 +83,7 @@ extends logbuch_model_Model
   {
     parent::__construct( $datasourceModel );
     $this->addProperties( $this->properties );
+    $this->addRelations( $this->relations, __CLASS__ );
   }
   
   /**

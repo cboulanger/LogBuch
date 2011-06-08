@@ -37,6 +37,30 @@ dojo.require("dojox.form.uploader.plugins.Flash");
 dojo.require("dojox.timing");
 dojo.require("dojo.fx");
 
+// Plugins
+dojo.registerModulePath("dowl", "../../lib/dowl");
+dojo.require("dowl.Notification");
+
+var locale = {
+  "__index__"       : {},
+  "event"           : "Termin",
+  "consult"         : "Beratungsprozess",
+  "stumble"         : "Stolperstein",
+  "document"        : "Dokument",
+  "minutes"         : "Protokoll",
+  "result"          : "Ergebnis",
+  "idea"            : "Idee",
+  "coop"            : "Kooperation",
+  "hint"            : "Tipps",
+  "photo"           : "Photo",
+  "misc"            : "Sonstiges",
+  "ownCompany"      : "Eigenes Unternehmen",
+  "ownConsultant"   : "Berater (Eigenes Unternehmen)",
+  "allConsultants"  : "Alle Berater/innen",
+  "analyst"         : "Wissenschaftliche Begleitung",
+  "allMembers"      : "Alle",
+  "moreMembers"     : "Einzelne Teilnehmer/innen"
+};
 
 dojo.ready(function()
 {
@@ -91,6 +115,15 @@ function authenticate(token)
   
 function init( userData )
 {
+  // create reverse lookup index
+  for ( var entry in locale )
+  {
+    if ( entry != "__index__" )
+    {
+      locale.__index__[locale[entry].toLowerCase()] = entry;
+    }
+  }
+  
   // handle userdata
   dojo.cookie("sessionId",userData.sessionId);
   dojo.byId("username").innerHTML = userData.fullname;
@@ -155,6 +188,32 @@ function init( userData )
   dijit.byId("chooseUsersGrid").setStore(store2);
   dijit.byId("chooseUsersGrid").startup();
   
+  // handle editor input
+  var ed = dijit.byId("entryEditor");
+  dojo.connect(ed, "onKeyUp", function(e){ 
+     switch( e.keyCode ){
+        case 13: analyseEntryText(); break;
+     }
+  });
+  // handle editor click
+    dojo.connect(ed, "onClick", function(e){ 
+    var target = e.target || e.srcElement || e.originalTarget;
+    //var selected = dojo.withGlobal(ed.window, "getSelectedText", dijit._editor.selection, [null]);
+    if( dojo.hasClass(target,"dummyText") )
+    {
+      var range = rangy.createRange();
+      range.selectNodeContents(target);
+      var sel = rangy.getIframeSelection(dojo.byId("entryEditor_iframe"));
+      sel.setSingleRange(range);
+      if ( dojo.hasClass(target,"entry-body"))
+      {
+        dojo.removeClass(target,"dummyText");
+      }
+    }
+  });
+  
+  resetEditor();
+  
   
   // show main app
   dojo.query("#appLayout").style({ visibility:"visible" });
@@ -187,6 +246,23 @@ function init( userData )
     }
   });
   
+  
+  
+}
+
+function resetEditor()
+{
+  var ed = dijit.byId("entryEditor");
+  ed.setValue("<h3 class='dummyText entry-subject'>Zum Eingeben der Überschrift hier klicken</h3><p class='dummyText entry-body'>Zum Eingeben des Haupttextes hier klicken.</p>");
+  dojo.query('input[id^="c-"]').forEach(function(node){
+    var widget = dijit.getEnclosingWidget(node);
+    if( widget.get("value")) widget.set("value",false);
+  });
+}
+
+function poll()
+{
+// Timer to load new messages
   var timer = new dojox.timing.Timer( 5000 );
   timer.onTick = function(){
   dojo.xhrGet({
@@ -212,7 +288,7 @@ function init( userData )
       }
     });
   };
-  //timer.start();
+  //timer.start();  
 }
 
 function logout()
@@ -242,21 +318,7 @@ function loadEditor()
 
 }
 
-var locale = {
-  "event"           : "Termin",
-  "consult"         : "Beratungsprozess",
-  "stumble"         : "Stolperstein",
-  "idea"            : "Idee",
-  "coop"            : "Kooperation",
-  "hint"            : "Tipps",
-  "misc"            : "Sonstiges",
-  "ownCompany"      : "Eigenes Unternehmen",
-  "ownConsultant"   : "Berater (Eigenes Unternehmen)",
-  "allConsultants"  : "Alle Berater/innen",
-  "analyst"         : "Wissenschaftliche Begleitung",
-  "allMembers"      : "Alle",
-  "moreMembers"     : "Einzelne Teilnehmer/innen"
-}
+
 
 /**
  * 
@@ -269,11 +331,10 @@ function updateMessageData()
   var data = {
     'categories'  : dijit.byId("entryCategories").get("value").categories,
     'eventTime'   : dijit.byId("entryEventTime").get("value"),
-    'access'      : dijit.byId("entryAccess").get("value").access,
-    'text'        : dijit.byId("entryEditor").get("value")
+    'text'        : dijit.byId("entryEditor").get("value"),
+    'acl'         : {}
   };
-  
-  console.log(data);
+  var access = dijit.byId("entryAccess").get("value").access;
   
   // clean data
   if ( data.categories.indexOf("event") == -1 )
@@ -281,40 +342,73 @@ function updateMessageData()
     data.eventTime = null;
   }
   
+  var allowSend = true;
+  
   // Create informational message from data
-  var info = "", categories = [], access=[];
+  var info = "", categories = [];
   data.categories.forEach(function(c){
     var t = locale[c];
     if (c == "event" )
     {
-      if ( data.eventTime && data.eventTime.date  )
+      if ( data.eventTime && data.eventTime.date && data.eventTime.from && data.eventTime.to )
       {
-        t += " (" + dojo.date.locale.format(data.eventTime.date) + ")";
+        if( dojo.date.compare(data.eventTime.to,data.eventTime.from ) <1 )
+        {
+          allowSend = false;
+          t += " (<span style='color:red'>Die Endzeit muss später als die Startzeit sein!</span>)";
+        }
+        else
+        {
+          t += " (" + 
+                dojo.date.locale.format(data.eventTime.date,{selector:"date"}) +
+                ", " + dojo.date.locale.format(data.eventTime.from,{selector:"time"}) +
+                " - " + dojo.date.locale.format(data.eventTime.to,{selector:"time"}) +
+             ")";
+          var startTime = new Date(data.eventTime.date);
+          startTime.setHours( data.eventTime.from.getHours() );
+          startTime.setMinutes( data.eventTime.from.getMinutes() );
+          var endTime = new Date(data.eventTime.date);
+          endTime.setHours( data.eventTime.to.getHours() );
+          endTime.setMinutes( data.eventTime.to.getMinutes() );
+          data.eventTime = [dojo.date.stamp.toISOString(startTime),dojo.date.stamp.toISOString(endTime)];   
+        }
       }
       else
       {
+        allowSend = false;
         t += " (<span style='color:red'>Sie müssen noch Datum und Zeit des Termins festlegen</span>)";
       }
     }
     categories.push( t );
   });
-  data.access.forEach(function(a){
-    var t = locale[a], users = dijit.byId("chooseUsersGrid").store.selectedUsers;
-    if ( a == "moreMembers" ){
+  
+  var groups =[];
+  access.forEach(function(a){
+    var t = locale[a];
+    if ( a == "moreMembers" )
+    {
       try{
+        var users = dijit.byId("chooseUsersGrid").store.selectedUsers;
         if( users.length )
         {
           t += " (" + users.join(", ") + ")";
+          data.acl.moreMembers = users;
+          groups.push(locale[a] + " (" + users.join("; ") + ")");
         }
         else
         {
+          allowSend = false;
           t += " (<span style='color:red'>Sie müssen noch die Teilnehmer auswählen</span>)";
         }
       }catch(e){
         t += " (<span style='color:red'>Sie müssen noch die Teilnehmer auswählen</span>)";
       }
     }
-    access.push( t );
+    else
+    {
+      data.acl[a] = true;
+      groups.push(locale[a]);
+    }
   });
   
   if ( categories.length )
@@ -323,19 +417,21 @@ function updateMessageData()
   }
   else
   {
-    info += "Der Eintrag ist noch keiner Kategorie zugeordnet ";
+    info += "<span style='color:red'>Der Eintrag ist noch keiner Kategorie zugeordnet</span> ";
+    allowSend = false;
   }
   
-  if ( access.length )
+  if ( groups.length )
   {
-     info += "und ist für folgende Personengruppen sichtbar: <b>" + access.join(", ") + "</b>.";   
+     info += "und ist für folgende Personengruppen sichtbar: <b>" + groups.join(", ") + "</b>.";   
   }
   else
   {
-    info += "und ist zur Zeit <b>nur für Sie sichtbar</b>."
+    info += "und ist zur Zeit <b>nur für Sie sichtbar</b>.";
   }
  
   dojo.byId("entryInformationMessage").innerHTML = info;
+  dijit.byId("submitEntryButton").set("disabled",!allowSend);
   
   return data;
 }
@@ -349,32 +445,29 @@ function submitEntry()
     dojo.xhrPost({
       url: "../../services/server.php",
       content:{
-        service: "logbuch.message",
-        method : "testMessages",
-        params : "[]"
+        service: "logbuch.entry",
+        method : "create",
+        params : dojo.toJson( [ updateMessageData() ] ),
+        qcl_output_format : "raw" 
       },
       handleAs: "json",
       load: function(jsonData) {
-          
-          var newsItem = jsonData.result.data.newsItems[0];
-          var content = "";
-          var id = "news-" + newsItem.id;
-          content+= "<div id='" + id + "' style='height:0px;'><h4>" + newsItem.subject + "</h4>";
-          content+= "<p>" + newsItem.body + "</p></div>";
-          dojo.byId("newsContainerNode").innerHTML = content + dojo.byId("newsContainerNode").innerHTML;
-          dojo.fx.wipeIn({ node: dojo.byId(id) }).play();
-          
-          
+        new dowl.Notification({
+            message: "Nachricht gesendet!"
+        });
+        resetEditor();
+        updateMessageData();
+        dojo.byId("entryInformationMessage").innerHTML="";
+        dijit.byId("entryEditor").set("disabled",false);
       },
       // The error handler
       error: function(message) {
-          dojo.byId("newsContainerNode").innerHTML = "Error:" + message;
+         alert(message);
       }
     });    
   }
-  
-  
-  
+  sendEntryToServer();
+  dijit.byId("entryEditor").set("disabled",true);
 }
 
 function getOnlineStatusHtml(value)
@@ -396,4 +489,22 @@ function toggleSelectUserTableOnRowClick(e)
     var store = e.grid.store, item = e.grid.getItem(e.rowIndex);
     store.setValue( item, "selected", ! store.getValue(item, "selected" ) );
   }
+}
+
+function analyseEntryText()
+{
+  var editor = dijit.byId("entryEditor");
+  var text = editor.get("value");
+  
+  // check for tags
+  var pattern = /\#(\w+)/g;
+  while((result = pattern.exec(text)) != null)
+  {
+    var tag = result[1].toLowerCase();
+    var c = locale.__index__[tag];
+    if ( c && dijit.byId("c-" + c ) )
+    {
+      dijit.byId( "c-" + c ).set("value",true);
+    }
+  } 
 }
