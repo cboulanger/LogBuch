@@ -112,6 +112,8 @@ function authenticate(token)
     }
   });
 }
+
+ var editorDirty = false;
   
 function init( userData )
 {
@@ -190,9 +192,18 @@ function init( userData )
   
   // handle editor input
   var ed = dijit.byId("entryEditor");
-  dojo.connect(ed, "onKeyUp", function(e){ 
+  dojo.connect(ed, "onKeyUp", function(e){
+    if ( editorDirty == false )
+    {
+      updateMessageData();
+      editorDirty = true;
+    }
      switch( e.keyCode ){
-        case 13: analyseEntryText(); break;
+        case 13: 
+          analyseEntryText(); break;
+        default: 
+          
+          break;
      }
   });
   // handle editor click
@@ -213,27 +224,39 @@ function init( userData )
   });
   
   resetEditor();
-  
-  
+
   // show main app
   dojo.query("#appLayout").style({ visibility:"visible" });
   
-  // load messages
+  loadMessages();
+  
+}
+
+function loadMessages()
+{
+// load messages
   dojo.xhrGet({
     url: "../../services/server.php",
     content:{
-      service: "logbuch.message",
-      method : "testMessages",
+      service: "logbuch.entry",
+      method : "list",
       params : "[]"
     },
     handleAs: "json",
     load: function(jsonData) {
         var content = "";
-        dojo.forEach(jsonData.result.data.newsItems,function(newsItem) {
-            content+= "<h4>" + newsItem.subject + "</h4>";
-            content+= "<div>Verfasser: XXX am x.y.2011</div>";
-            content+= "<div style='width:100%;text-align:right'>Idee, Stolperstein</div>";
-            content+= "<p>" + newsItem.body + "</p>";
+        dojo.forEach(jsonData.result.data,function(entry) {
+            content+= "<h4>" + entry.subject + "</h4>";
+            content+= "<div>Verfasser: " + entry.author + " (" + entry.date + ")</div>";
+            content+= "<div style='width:100%;text-align:right'>";
+            
+            var categories=[];
+            entry.categories.forEach(function(c){
+              categories.push(locale[c]);
+            });
+            content+= categories.join(", ");
+            
+            content+= "</div><p>" + entry.text + "</p>";
             content+= "<p style='text-align:right; font-weight:bold'>";
             content+= "<a href='javascript:alert(\"Nicht implementiert\");'>Ändern</a>&nbsp;";
             content+= "<a href='javascript:alert(\"Nicht implementiert\");'>Kommentar</a>&nbsp;";
@@ -245,9 +268,6 @@ function init( userData )
         dojo.byId("newsContainerNode").innerHTML = "Error:" + message;
     }
   });
-  
-  
-  
 }
 
 function resetEditor()
@@ -258,6 +278,14 @@ function resetEditor()
     var widget = dijit.getEnclosingWidget(node);
     if( widget.get("value")) widget.set("value",false);
   });
+  window.setTimeout(function(){
+    dojo.byId("entryInformationMessage").innerHTML= 
+      "Bitte geben Sie oben einen LogBuch-Eintrag ein. "+
+      "Wählen Sie dann eine oder mehrere Kategorien für den Eintrag. " +
+      "Wenn Sie den Eintrag veröffentlichen wollen, müssen Sie ihn freigeben (Menu 'Freigabe'). " +
+      "Sie können für jeden Beitrag auch Anhänge hochladen.";  
+  },500);
+  editorDirty = false;
 }
 
 function poll()
@@ -429,10 +457,9 @@ function updateMessageData()
   {
     info += "und ist zur Zeit <b>nur für Sie sichtbar</b>.";
   }
- 
+  
   dojo.byId("entryInformationMessage").innerHTML = info;
   dijit.byId("submitEntryButton").set("disabled",!allowSend);
-  
   return data;
 }
 
@@ -457,7 +484,6 @@ function submitEntry()
         });
         resetEditor();
         updateMessageData();
-        dojo.byId("entryInformationMessage").innerHTML="";
         dijit.byId("entryEditor").set("disabled",false);
       },
       // The error handler
@@ -506,5 +532,5 @@ function analyseEntryText()
     {
       dijit.byId( "c-" + c ).set("value",true);
     }
-  } 
+  }
 }

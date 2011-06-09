@@ -107,6 +107,21 @@ extends logbuch_model_Model
      $this->notImplemented(__CLASS__); 
   }
   
+  function categories()
+  {
+    $categoryModel = $this->datasourceModel()->getInstanceOfType("category");
+    $categories = array();
+    try 
+    {
+      $categoryModel->findLinked($this);
+      while($categoryModel->loadNext())
+      {
+        $categories[] = $categoryModel->namedId();
+      }
+    } catch( Exception $e ){}
+    return $categories;
+  }
+  
   /**
    * Creates one or message object(s) with the category record data.
    * @param string $messageName The name of the message

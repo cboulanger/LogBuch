@@ -29,11 +29,16 @@
 	 
 		<!---------------------- center column ----------------------->
 		<div 
-		  id="newsContainerNode"
+		  id="centerCol"
 		  class="centerPanel" 
 		  data-dojo-type="dijit.layout.ContentPane"
 			data-dojo-props="region: 'center'">
-			Nachrichten werden geladen...
+			<div id="newsContainerNode">
+			 Nachrichten werden geladen...
+			</div>
+			<button
+        dojoType="dijit.form.Button" 
+        onClick="loadMessages();">Neu laden</button>
 		</div>
 		
 		<!----------------------- title bar ----------------------->
@@ -467,15 +472,13 @@
             dojoType="dijit.form.Button" 
             onClick="submitEntry();"
             disabled="true">Senden</button>
+          <button id="cancelEntryButton" 
+            dojoType="dijit.form.Button" 
+            onClick="resetEditor();">Abbrechen</button>  
         </div>
         
         <!-- Informational message -->
-        <p id="entryInformationMessage" class="infoText">
-          Bitte geben Sie oben einen LogBuch-Eintrag ein. 
-          Wählen Sie dann eine oder mehrere Kategorien für den Eintrag. Wenn Sie den 
-          Eintrag veröffentlichen wollen, müssen Sie ihn freigeben (Menu 'Freigabe'). Sie können 
-          für jeden Beitrag auch Anhänge hochladen.  
-        </p>
+        <p id="entryInformationMessage" class="infoText"></p>
               
     </div>			
 	</div>
