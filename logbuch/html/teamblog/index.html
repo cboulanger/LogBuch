@@ -36,9 +36,6 @@
 			<div id="newsContainerNode">
 			 Nachrichten werden geladen...
 			</div>
-			<button
-        dojoType="dijit.form.Button" 
-        onClick="loadMessages();">Neu laden</button>
 		</div>
 		
 		<!----------------------- title bar ----------------------->
@@ -66,96 +63,145 @@
     <div class="column-header">Einträge filtern</div>		
 			
 		<!-- Time period -->
-		  <div dojoType="dijit.TitlePane" title="Zeitraum" open="false">
+		  <div 
+		    dojoType="dijit.TitlePane" title="Zeitraum" open="false">
 		   <table>
 		     <tr>
 		       <td><label for="filter-date-from">Von:</label></td>
-		       <td><input dojoType=dijit.form.DateTextBox name="filter-date-from" id="filter-date-from"></td>
+		       <td>
+		        <input id="filter-date-from"
+		          dojoType="dijit.form.DateTextBox" 
+		          name="filter-date-from" 
+		          onChange="updateFilter(this);">
+		       </td>
 		     </tr>
 		     <tr>
 		       <td><label for="filter-date-to">Bis:</label></td>
-		       <td><input dojoType=dijit.form.DateTextBox name="filter-date-to" id="filter-date-to"></td>
+		       <td>
+		        <input id="filter-date-to"
+		          dojoType="dijit.form.DateTextBox"
+		          name="filter-date-to"
+		          onChange="updateFilter(this);">
+		        </td>
 		     </tr>            
 		   </table>
+		   <button dojoType="dijit.form.Button" onClick="resetTimeFilter()">Zurücksetzen</button>
 		 </div>
            
 		<!-- Categories -->
-		<div dojoType="dijit.TitlePane" title="Kategorie" >
+		<div dojoType="dijit.TitlePane" title="Kategorie" open="false">
         <table>
         
+           <tr><td>
+            <input id="filter-categories-all"
+              dojoType="dijit.form.CheckBox" 
+              onChange="toggleFilter(this,'filter_category')" 
+              checked="true">
+          </td><td>
+            <label for="filter-group-1">Alle</label><br/>
+          </td></tr>
+                  
           <tr><td>
-            <input dojoType="dijit.form.CheckBox" 
-               id="filter-event" name="filter_category" value="event">
+            <input  id="filter-event" 
+              dojoType="dijit.form.CheckBox" 
+              name="filter_category" 
+              value="event"
+              onChange="updateFilter(this);">
           </td><td>
             <label for="filter-event">Termine</label><br/>
           </td></tr>
 
           <tr><td>
-            <input dojoType="dijit.form.CheckBox" 
-               id="filter-document" name="filter_category" value="document">
+            <input 
+              dojoType="dijit.form.CheckBox" 
+              id="filter-document" name="filter_category" 
+              value="document"
+              onChange="updateFilter(this);">
           </td><td>
             <label for="filter-document">Dokumente</label><br/>
           </td></tr>
 
           <tr><td>
-            <input dojoType="dijit.form.CheckBox" 
-               id="filter-minutes" name="filter_category" value="minutes">
+            <input 
+              dojoType="dijit.form.CheckBox" 
+              id="filter-minutes" 
+              name="filter_category" 
+              value="minutes"
+              onChange="updateFilter(this);">
           </td><td>
             <label for="filter-minutes">Protokolle</label><br/>
           </td></tr>
           
           <tr><td>
-            <input dojoType="dijit.form.CheckBox" 
-               id="filter-consult" name="filter_category" value="consult">
+            <input 
+              dojoType="dijit.form.CheckBox" 
+              id="filter-consult" 
+              name="filter_category" 
+              value="consult"
+              onChange="updateFilter(this);">
           </td><td>
             <label for="filter-consult">Beratungsprozesse</label><br/>
           </td></tr>
 
           <tr><td>
-            <input dojoType="dijit.form.CheckBox" 
-               id="filter-result" name="filter_category" value="result">
+            <input 
+              dojoType="dijit.form.CheckBox" 
+              id="filter-result" 
+              name="filter_category" 
+              value="result"
+              onChange="updateFilter(this);">
           </td><td>
              <label for="filter-result">Ergebnisse</label><br/>
           </td></tr>
           
           <tr><td>
-            <input dojoType="dijit.form.CheckBox" 
-               id="filter-stumble" name="filter_category" value="stumble">
+            <input 
+              dojoType="dijit.form.CheckBox" 
+              id="filter-stumble" name="filter_category" value="stumble" 
+              onChange="updateFilter(this);">
           </td><td>
              <label for="filter-stumble">Stolpersteine</label><br/>
           </td></tr>
           
           <tr><td>
-            <input dojoType="dijit.form.CheckBox" 
-               id="filter-hint" name="filter_category" value="hint">
+            <input 
+              dojoType="dijit.form.CheckBox" 
+              id="filter-hint" name="filter_category" value="hint"
+              onChange="updateFilter(this);">
           </td><td>
             <label for="filter-hint">Tipps/Links</label><br/>
           </td></tr>            
           
           <tr><td>
-            <input dojoType="dijit.form.CheckBox" 
-               id="filter-idea" name="filter_category" value="idea">
+            <input 
+              dojoType="dijit.form.CheckBox" 
+              id="filter-idea" name="filter_category" value="idea"
+              onChange="updateFilter(this);">
           </td><td>
             <label for="filter-idea">Ideen</label><br/>
           </td></tr>                  
 
           <tr><td>
-            <input dojoType="dijit.form.CheckBox" 
-               id="filter-coop" name="filter_category" value="coop">
+            <input 
+              dojoType="dijit.form.CheckBox" 
+              id="filter-coop" name="filter_category" value="coop"
+              onChange="updateFilter(this);">
           </td><td>
              <label for="filter-coop">Kooperationen</label><br/>
           </td></tr>            
 
           <tr><td>
             <input dojoType="dijit.form.CheckBox" 
-               id="filter-photo" name="filter_category" value="photo">
+               id="filter-photo" name="filter_category" value="photo"
+               onChange="updateFilter(this);">
           </td><td>
             <label for="filter-photo">Photos</label><br/>
           </td></tr>   
 
           <tr><td>
             <input dojoType="dijit.form.CheckBox" 
-               id="filter-misc" name="filter_category" value="misc">
+               id="filter-misc" name="filter_category" value="misc"
+               onChange="updateFilter(this);">
           </td><td>
             <label for="filter-misc">Sonstiges</label><br/>
           </td></tr>                                     
@@ -167,37 +213,51 @@
       <div dojoType="dijit.TitlePane" title="Gruppe" open="false">
         <table>
           
+           <tr><td>
+            <input 
+              id="filter-group-all"
+              dojoType="dijit.form.CheckBox" 
+              onChange="toggleFilter(this,'filter_group');" 
+              checked="true">
+          </td><td>
+            <label for="filter-group-all">Alle</label><br/>
+          </td></tr>
+          
           <tr><td>
             <input dojoType="dijit.form.CheckBox" 
-               id="filter-group-2" name="filter_author" value="ownCompany">
+               id="filter-group-2" name="filter_group" value="ownCompany"
+               onChange="updateFilter(this);">
           </td><td>
             <label for="filter-group-2">Eigenes Unternehmen</label><br/>
           </td></tr>
           
           <tr><td>
             <input dojoType="dijit.form.CheckBox" 
-               id="filter-group-3" name="filter_author" value="ownConsultant">
+               id="filter-group-3" name="filter_group" value="ownConsultant"
+               onChange="updateFilter(this);">
           </td><td>
              <label for="filter-group-3">Berater (Eigenes Unternehmen)</label><br/>
           </td></tr>
           
           <tr><td>
             <input dojoType="dijit.form.CheckBox" 
-               id="filter-group-4" name="filter_author" value="allConsultants">
+               id="filter-group-4" name="filter_group" value="allConsultants"
+               onChange="updateFilter(this);">
           </td><td>
             <label for="filter-group-4">Alle Berater/innen</label><br/>
           </td></tr>                          
 
           <tr><td>
             <input dojoType="dijit.form.CheckBox" 
-               id="filter-group-5" name="filter_author" value="analyst">
+               id="filter-group-5" name="filter_group" value="analyst"
+               onChange="updateFilter(this);">
           </td><td>
              <label for="filter-group-5">Wissenschaftliche Begleitung</label><br/>
           </td></tr>          
 
 <!--           <tr><td>
             <input dojoType="dijit.form.CheckBox" 
-               id="filter-group-7" name="filter_author" value="moreMembers">
+               id="filter-group-7" name="filter_group" value="moreMembers">
           </td><td>
             <label for="filter-group-7">Sonstiges</label><br/>
           </td></tr>   -->                                   
@@ -206,7 +266,7 @@
       </div>		
       
       <!-- Author -->
-      <div dojoType="dijit.TitlePane" title="Verfasser/innen">
+      <div dojoType="dijit.TitlePane" title="Verfasser/innen" open="false">
         <div> 
 	        <table 
 	          id="filterAuthorGrid"
@@ -232,9 +292,6 @@
       data-dojo-type="dijit.layout.ContentPane"
       data-dojo-props="region: 'right'">
       
-      <!-- column header -->    
-      <div class="column-header">Neuen Eintrag erstellen</div>    
-    
       <!-- Toolbar -->
       <div>
 				
@@ -249,7 +306,7 @@
                 <input 
                   dojoType="dijit.form.CheckBox" 
                   id="c-event" name="categories" value="event"
-                  onChange="updateMessageData();dojo.style( dojo.byId('timeChooserContainer'), 'display', this.get('value')?'inline':'none' )">
+                  onChange="updateMessageData(this);dojo.style( dojo.byId('timeChooserContainer'), 'display', this.get('value')?'inline':'none' )">
               </td><td>
                 <label for="c-event">Termin</label><br/>
               </td></tr>
@@ -258,7 +315,7 @@
                 <input 
                   dojoType="dijit.form.CheckBox" 
                   id="c-document" name="categories" value="document"
-                  onChange="updateMessageData()">
+                  onChange="updateMessageData(this);">
               </td><td>
                 <label for="c-document">Dokument</label><br/>
               </td></tr>     
@@ -267,7 +324,7 @@
                 <input 
                   dojoType="dijit.form.CheckBox" 
                   id="c-minutes" name="categories" value="minutes"
-                  onChange="updateMessageData()">
+                  onChange="updateMessageData(this);">
               </td><td>
                 <label for="c-minutes">Protokoll</label><br/>
               </td></tr>                          
@@ -275,7 +332,7 @@
               <tr><td>
                 <input dojoType="dijit.form.CheckBox" 
                    id="c-consult" name="categories" value="consult"
-                   onChange="updateMessageData">
+                   onChange="updateMessageData(this);">
               </td><td>
                 <label for="c-consult">Beratungsprozess</label><br/>
               </td></tr>
@@ -283,7 +340,7 @@
               <tr><td>
                 <input dojoType="dijit.form.CheckBox" 
                    id="c-result" name="categories" value="result"
-                   onChange="updateMessageData">
+                   onChange="updateMessageData(this);">
               </td><td>
                  <label for="c-result">Ergebnis</label><br/>
               </td></tr>
@@ -291,7 +348,7 @@
               <tr><td>
                 <input dojoType="dijit.form.CheckBox" 
                    id="c-stumble" name="categories" value="stumble"
-                   onChange="updateMessageData">
+                   onChange="updateMessageData(this);">
               </td><td>
                  <label for="c-stumble">Stolperstein</label><br/>
               </td></tr>
@@ -299,7 +356,7 @@
               <tr><td>
                 <input dojoType="dijit.form.CheckBox" 
                    id="c-hint" name="categories" value="hint"
-                   onChange="updateMessageData">
+                   onChange="updateMessageData(this);">
               </td><td>
                 <label for="c-hint">Tipps/Links</label><br/>
               </td></tr>                
@@ -307,7 +364,7 @@
               <tr><td>
                 <input dojoType="dijit.form.CheckBox" 
                    id="c-idea" name="categories" value="idea"
-                   onChange="updateMessageData">
+                   onChange="updateMessageData(this);">
               </td><td>
                 <label for="c-idea">Idee</label><br/>
               </td></tr>                          
@@ -315,7 +372,7 @@
               <tr><td>
                 <input dojoType="dijit.form.CheckBox" 
                    id="c-coop" name="categories" value="coop"
-                   onChange="updateMessageData">
+                   onChange="updateMessageData(this);">
               </td><td>
                  <label for="c-coop">Kooperation</label><br/>
               </td></tr>       
@@ -323,7 +380,7 @@
               <tr><td>
                 <input dojoType="dijit.form.CheckBox" 
                    id="c-photo" name="categories" value="photo"
-                   onChange="updateMessageData">
+                   onChange="updateMessageData(this);">
               </td><td>
                  <label for="c-photo">Foto</label><br/>
               </td></tr>       
@@ -331,7 +388,7 @@
               <tr><td>
                 <input dojoType="dijit.form.CheckBox" 
                    id="c-misc" name="categories" value="misc"
-                   onChange="updateMessageData">
+                   onChange="updateMessageData(this);">
               </td><td>
                 <label for="c-misc">Sonstiges</label><br/>
               </td></tr>                                     
@@ -352,19 +409,19 @@
                 <td><label for="entry-date">Datum:</label></td>
                 <td><input 
                   dojoType=dijit.form.DateTextBox name="date" id="entry-date"
-                  onChange="updateMessageData"></td>
+                  onChange="updateMessageData(this);"></td>
               </tr>
               <tr>
                 <td><label for="entry-time-from">Beginnt:</label></td>
                 <td><input 
                   dojoType=dijit.form.TimeTextBox name="from" id="entry-time-from"
-                  onChange="updateMessageData"></td>
+                  onChange="updateMessageData(this);"></td>
               </tr>
                 <tr>
                   <td><label for="entry-time-to">Endet:</label></td>
                   <td><input 
                     dojoType=dijit.form.TimeTextBox name="to" id="entry-time-to"
-                    onChange="updateMessageData"></td>
+                    onChange="updateMessageData(this);"></td>
                 </tr>               
             </table>
           </span>
@@ -382,7 +439,7 @@
 			          <tr><td>
 			            <input dojoType="dijit.form.CheckBox" 
 			               id="access-2" name="access" value="ownCompany"
-			               onChange="updateMessageData">
+			               onChange="updateMessageData(this);">
 			          </td><td>
 			            <label for="access-2">Eigenes Unternehmen</label><br/>
 			          </td></tr>
@@ -390,7 +447,7 @@
 			          <tr><td>
 			            <input dojoType="dijit.form.CheckBox" 
 			               id="access-3" name="access" value="ownConsultant"
-			               onChange="updateMessageData">
+			               onChange="updateMessageData(this);">
 			          </td><td>
 			             <label for="access-3">Berater (Eigenes Unternehmen)</label><br/>
 			          </td></tr>
@@ -398,7 +455,7 @@
 			          <tr><td>
 			            <input dojoType="dijit.form.CheckBox" 
 			               id="access-4" name="access" value="allConsultants"
-			               onChange="updateMessageData">
+			               onChange="updateMessageData(this);">
 			          </td><td>
 			            <label for="access-4">Alle Berater/innen</label><br/>
 			          </td></tr>                          
@@ -406,7 +463,7 @@
 			          <tr><td>
 			            <input dojoType="dijit.form.CheckBox" 
 			               id="access-5" name="access" value="analyst"
-			               onChange="updateMessageData">
+			               onChange="updateMessageData(this);">
 			          </td><td>
 			             <label for="access-5">Wissenschaftliche Begleitung</label><br/>
 			          </td></tr>       
@@ -414,7 +471,7 @@
 			          <tr><td>
 			            <input dojoType="dijit.form.CheckBox" 
 			               id="access-6" name="access" value="allMembers"
-			               onChange="updateMessageData">
+			               onChange="updateMessageData(this);">
 			          </td><td>
 			            <label for="access-6">Alle</label><br/>
 			          </td></tr>       
@@ -422,7 +479,7 @@
 		           <tr><td>
 			            <input dojoType="dijit.form.CheckBox" 
 			               id="access-7" name="access" value="moreMembers" 
-			               onChange="updateMessageData();if(this.get('value'))dijit.byId('chooseUsersDialog').show()" />
+			               onChange="updateMessageData(this);if(this.get('value'))dijit.byId('chooseUsersDialog').show()" />
 			          </td><td>
 			            <label for="access-7">Einzelne Teilnehmer</label><br/>
 			          </td></tr>                                  
@@ -461,9 +518,6 @@
           id="entryEditor"
           data-dojo-type="dijit.Editor"
           data-dojo-props="plugins:['insertUnorderedList','createLink','pastefromword','fullscreen']">
-          <h3>Überschrift</h3>
-          <p>Text</p>
-          
         </div>
         
         <!-- send button -->
@@ -480,10 +534,27 @@
         <!-- Informational message -->
         <p id="entryInformationMessage" class="infoText"></p>
               
-    </div>			
+    </div>		
+   <!----------------------- footer ----------------------->
+    
+    <div id="footer" class="edgePanel"
+      data-dojo-type="dijit.layout.ContentPane"
+      data-dojo-props="region: 'bottom'">
+      <button
+        id="reloadEntriesButton"
+        dojoType="dijit.form.Button" 
+        onClick="loadEntries();">Einträge neu laden</button>
+      <button id="adminButton" 
+        dojoType="dijit.form.Button" 
+        onClick="alert('noch nicht implementiert');"
+        disabled="true">Admin</button>
+      <button id="calenderButton" 
+        dojoType="dijit.form.Button" 
+        onClick="alert('noch nicht implementiert');">Kalender</button>  
+    </div> 	
 	</div>
 	
-	<!-- login dialog -->
+	<!----------------------- login dialog ----------------------->
 	<div dojoType="dijit.Dialog" id="loginDialog" title="LogBuch TeamBlog: Bitte anmelden"
 	    execute="authenticate(arguments[0].name +','+arguments[0].password);">
 	  <table>
@@ -502,11 +573,11 @@
 	  </table>
 	</div>	
 	
-	<!-- choose user(s) -->
+	<!----------------------- choose user(s) dialog ----------------------->
   <div dojoType="dijit.Dialog" 
     id="chooseUsersDialog" 
     title="Bitte Benutzer/innen auswählen"
-    execute="updateMessageData();">
+    execute="updateMessageData(this);">
     <table 
       id="chooseUsersGrid"
       dojoType="dojox.grid.DataGrid" 

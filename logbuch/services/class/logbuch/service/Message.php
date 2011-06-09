@@ -29,7 +29,7 @@ class logbuch_service_Message
 	 * Broadcasts the messages from one client to all others
 	 * @param $msgQueue
 	 */
-	function method_broadcast( $msgQueue )
+	function method_broadcast( $msgQueue=array() )
 	{
 		// FIXME is this the right place to do this?
 		$this->getApplication()->getAccessController()->getUserModel()->cleanup();
@@ -134,9 +134,9 @@ class logbuch_service_Message
               $body .=  strip_tags( str_replace("<br/>", "\n\n", $data['label'] ) ) . "\n\n";         
               $body .= "\nSie können den Eintrag unter dem folgenden Link abrufen: \n\n";
               $body .= dirname( dirname( qcl_server_Server::getUrl() ) ) . 
-                    "/build/#" . urlencode( 
-                    "showItem~" . $data['category'] . "/" . $data['itemId'] .
-                    "^showComments~1" ); // FIXME
+                    "/html/teamblog?" . urlencode( 
+                    "showItem=" . $data['itemId'] .
+                    "&showComments=1" ); // FIXME
                     
               $body .= "\n\n---\n\nBitte antworten Sie nicht auf diese E-Mail.";
                                   

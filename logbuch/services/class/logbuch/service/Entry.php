@@ -71,7 +71,25 @@ class logbuch_service_Entry
 		/*
 		 * subject and text
 		 */
-		$itemData['text'] = $data->text;
+		$text = str_replace(array("<br>","<br />","<br/>"), "", $data->text);
+		qcl_import("qcl_data_xml_SimpleXMLElement");
+		$xml = '<?xml version="1.0" encoding="utf-8"?><html>' . $text  . '</html>';
+		$xmlDoc = qcl_data_xml_SimpleXMLElement::createFromString($xml);
+		$headNode = $xmlDoc->div;
+		
+		if ( ! $headNode )
+		{
+        throw new InvalidJsonRpcArgumentException( 
+				  "Titel des Eintrages fehlt."
+			);
+		}
+		
+		$subject = (string) $headNode;
+		unset($xmlDoc->div);
+		$text = trim(str_replace(array('<?xml version="1.0" encoding="utf-8"?>','<html>','</html>'), "", $xmlDoc->asXML()));
+		$this->debug( "$subject\n$text", __CLASS__, __LINE__ );
+		$itemData['subject'] = $subject;
+		$itemData['text'] = $text;
 		
 		/*
 		 * acl
@@ -103,23 +121,150 @@ class logbuch_service_Entry
 	}	
 	
 	
-	function method_list()
+	function method_list($filter)
 	{
 	  $datasourceModel = $this->getDatasourceModel( "demo" ); // FIXME 
-		$entryModel      = $datasourceModel->getModelOfType( "entry" );
-		$categoryModel   = $datasourceModel->getModelOfType("category");
+		$entryModel      = $datasourceModel->getInstanceOfType( "entry" );
+		$categoryModel   = $datasourceModel->getInstanceOfType("category");
+		$personModel     = $datasourceModel->getInstanceOfType("person");
+		$activePerson    = $this->getActiveUserPerson("demo");
+		$filterCategories = array_keys( get_object_vars( $filter->category ) );
+		qcl_import("logbuch_model_AccessControlList");
+    $aclModel        = new logbuch_model_AccessControlList();
 		
-		$entryModel->findAll();
-		$result = array();
-		while( $entryModel->loadNext() )
+		// prepare filter
+		$where = array();
+		if( $filter->from || $filter->to )
 		{
+		  $from = strtotime( $filter->from );
+		  $to   = strtotime( $filter->to );
+
+  		if ( $filter->from && $filter->to )
+  		{
+  		  if( $from > $to )
+  		  {
+  		    throw new InvalidArgumentException("Das Enddatum muss nach dem Startdatum liegen!");
+  		  }  		  
+  		  $where['created'] = array( 
+  		  	"BETWEEN", 
+  		    date("Y-m-d 00:00:00", $from ), 
+  		    date("Y-m-d 23:59:59", $to  ) 
+  		  );
+  		}
+  		elseif ($filter->from)
+  		{
+  		  $where['created'] = array( ">=", date("Y-m-d 00:00:00", $from ) );
+  		}
+  		elseif ($filter->to)
+  		{
+  		  $where['created'] = array( "<=", date("Y-m-d 23:59:59", $to ) );
+  		}
+		}
+				
+		if ( count( $filter->personId ) )
+		{
+		  $where['personId'] = array("IN",$filter->personId);
+		}
+		
+		qcl_import("qcl_data_db_Query");
+		$query = new qcl_data_db_Query(array(
+		  'where'			=> $where,
+			'orderBy'		=> "created DESC"
+		));
+		
+		$entryModel->find($query);
+		$result = array();
+		
+		while( $entryModel->loadNext($query) )
+		{
+		  
+		  
+		  /*
+		   * categories
+		   */
+		  $categories = $entryModel->categories();
+
+		  if( count($filterCategories) )
+		  {    
+		    if( count( array_intersect( $categories, $filterCategories ) ) < count( $filterCategories ) )
+		    {
+		      continue;
+		    }
+		  }
+		  
+		  /*
+		   * group
+		   */
+		  $display = true;
+		  $personModel->load($entryModel->get("personId"));
+
+		  // own company
+  		if ( $filter->group->ownCompany )
+  		{
+  			if ( $personModel->get("organizationId") != $activePerson->get("organizationId") )
+  			{
+  				$display = false;
+  			}
+  		}
+  		
+  		// own consultant
+  		if ( $filter->group->ownConsultant )
+  		{
+  			if ( $personModel->get("organizationId") != $activePerson->get("organizationId") 
+  			     or $personModel->get("position") != "consultant" )
+				{
+					$display = false;
+				}
+  		}
+  		
+  		// all consultants
+  		if ( $this->group->allConsultants )
+  		{
+  			if ( $personModel->get("position") != "consultant"  ) 
+  			{
+  				$display = false;
+  			}
+  		}
+  		
+  		// analyst
+  		if ( $this->group->analyst )
+  		{
+  			if ( $personModel->get("position") == "analyst" )
+  			{
+  				$display = false;
+  			}
+  		}
+  		
+  		/*
+  		 * ACL
+  		 */
+  		$access = true;
+  		// administrators can see everything
+  		if ( ! $this->getActiveUser()->hasRole( QCL_ROLE_ADMIN ) )
+  		{
+    		$aclModel->setAcl( $entryModel->aclData() ); 		
+    		// check access only if the entry doesn't belong to the current user
+    		if ( $activePerson->id()	!= $personModel->id() )
+    		{
+    			$access = $aclModel->checkAccess( $personModel, $activePerson );
+    		}  		
+      }
+  		
+  		/*
+  		 * continue if no access
+  		 */
+  		if ( ! $access or !$display ) continue;
+  		
+		  /*
+		   * create data
+		   */
 	    $result[] = array(
 	      'id'			  => "entry" . $entryModel->id(),
 	      'date'			=> date ("d.m.Y", strtotime( $entryModel->get("created") ) ),
 	      'subject'   => $entryModel->get("subject"),
 	      'author'	  => $entryModel->authorName(),
 	      'text'		  => $entryModel->get("text"),
-	      'categories'=> $entryModel->categories()
+	      'categories'=> $categories
 	    );		  
 		}
 		return $result;
@@ -436,22 +581,5 @@ class logbuch_service_Entry
 	  $data['dateEnd'] 		= date("Y/m/d",  $dateEnd );		
 		return $data;
 	}
-	
-	/**
-	 * @todo move into report service
-	 */
-	public function method_createReport( $data )
-	{
-		$_SESSION['reportData'] = $data;
-		$reportLink = qcl_server_Server::getUrl() .
-      "?service=logbuch.report"   .
-      "&method=display" .
-			"&params=" .
-			"&sessionId="	. $this->getSessionId();
-		return $reportLink;
-	}
-	
-	
-	
 }
 ?>

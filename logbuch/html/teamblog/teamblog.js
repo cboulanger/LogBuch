@@ -1,3 +1,5 @@
+//parser
+dojo.require("dojo.parser");
 
 // Layout
 dojo.require("dijit.layout.BorderContainer");
@@ -131,7 +133,7 @@ function init( userData )
   dojo.byId("username").innerHTML = userData.fullname;
   dijit.byId("entryEditor").onLoadDeferred.then(entryEditorReady);
 
-  // grids
+  /************ grids ******************/
   
   //dijit.byId("filterAuthorGrid").viewsHeaderNode.style.display="none";
   var userListServiceUrl = "../../services/server.php?service=logbuch.record&method=getUserItemList&params=[]&qcl_output_format=raw";
@@ -159,8 +161,11 @@ function init( userData )
     store1.selectedUsers = selectedUsers;
     store1.selectedIds = selectedIds;
   });
+  store1.name = "filter_author";
+  dojo.connect(store1,"onSet",function(){updateFilter(store1);});
   dijit.byId("filterAuthorGrid").setStore(store1);
   dijit.byId("filterAuthorGrid").startup();
+  
   
   //dijit.byId("chooseUsersGrid").viewsHeaderNode.style.display="none";
   var store2 = new dojo.data.ItemFileWriteStore({
@@ -190,8 +195,14 @@ function init( userData )
   dijit.byId("chooseUsersGrid").setStore(store2);
   dijit.byId("chooseUsersGrid").startup();
   
-  // handle editor input
+  
+  /********** EDITOR *********/
+  
   var ed = dijit.byId("entryEditor");
+  ed.addStyleSheet("style.css");
+  
+  // handle editor input
+  
   dojo.connect(ed, "onKeyUp", function(e){
     if ( editorDirty == false )
     {
@@ -201,11 +212,15 @@ function init( userData )
      switch( e.keyCode ){
         case 13: 
           analyseEntryText(); break;
-        default: 
+        case 8:
+        case 46:
           
+          break;
+        default: 
           break;
      }
   });
+  
   // handle editor click
     dojo.connect(ed, "onClick", function(e){ 
     var target = e.target || e.srcElement || e.originalTarget;
@@ -216,10 +231,7 @@ function init( userData )
       range.selectNodeContents(target);
       var sel = rangy.getIframeSelection(dojo.byId("entryEditor_iframe"));
       sel.setSingleRange(range);
-      if ( dojo.hasClass(target,"entry-body"))
-      {
-        dojo.removeClass(target,"dummyText");
-      }
+      dojo.removeClass(target,"dummyText");
     }
   });
   
@@ -228,41 +240,40 @@ function init( userData )
   // show main app
   dojo.query("#appLayout").style({ visibility:"visible" });
   
-  loadMessages();
+  loadEntries();
   
 }
 
-function loadMessages()
+var entryFilter = { 
+  "category"   : {},
+  "from"       : null,
+  "to"         : null,
+  "group"      : {},
+  "personId"   : []
+};
+
+function loadEntries()
 {
-// load messages
+  dojo.byId("newsContainerNode").innerHTML = "Lade Einträge...";
+  // load messages
   dojo.xhrGet({
     url: "../../services/server.php",
     content:{
       service: "logbuch.entry",
       method : "list",
-      params : "[]"
+      params : dojo.toJson([entryFilter])
     },
     handleAs: "json",
-    load: function(jsonData) {
-        var content = "";
-        dojo.forEach(jsonData.result.data,function(entry) {
-            content+= "<h4>" + entry.subject + "</h4>";
-            content+= "<div>Verfasser: " + entry.author + " (" + entry.date + ")</div>";
-            content+= "<div style='width:100%;text-align:right'>";
-            
-            var categories=[];
-            entry.categories.forEach(function(c){
-              categories.push(locale[c]);
-            });
-            content+= categories.join(", ");
-            
-            content+= "</div><p>" + entry.text + "</p>";
-            content+= "<p style='text-align:right; font-weight:bold'>";
-            content+= "<a href='javascript:alert(\"Nicht implementiert\");'>Ändern</a>&nbsp;";
-            content+= "<a href='javascript:alert(\"Nicht implementiert\");'>Kommentar</a>&nbsp;";
-            content+= "</p>";
-        });
-        dojo.byId("newsContainerNode").innerHTML = content;
+    load: function(response) 
+    {
+      handleMessages(response);
+      if( response && response.result ) {
+        dojo.byId("newsContainerNode").innerHTML = createContent( response.result.data );
+      }
+      else
+      {
+        alert( response && response.error ? response.error.message : "Unknown Error" );
+      }
     },
     error: function(message) {
         dojo.byId("newsContainerNode").innerHTML = "Error:" + message;
@@ -270,10 +281,143 @@ function loadMessages()
   });
 }
 
+var updateRequests = 0;
+function updateEntries()
+{
+  updateRequests++;
+  var tmp = updateRequests;
+  window.setTimeout(function(){
+    if( tmp == updateRequests )
+    {
+      loadEntries();
+    }
+  },500);
+}
+
+function toggleFilter(wgt,name)
+{
+  dojo.query('input[name="'+ name +'"]').forEach(function(node){
+    var widget = dijit.getEnclosingWidget(node);
+    if( wgt.checked) widget.set("value",false);
+  });
+  updateEntries();
+}
+
+function resetTimeFilter()
+{
+  try{
+    dijit.byId("filter-date-from").reset();
+  }catch(e){}
+  try{
+    dijit.byId("filter-date-to").reset();
+  }catch(e){}
+  entryFilter.from = null;
+  entryFilter.to = null;
+  updateEntries();
+}
+
+function updateFilter(wgt)
+{
+  switch( wgt.name )
+  {
+    case "filter_category":
+      if ( wgt.checked )
+      {
+        entryFilter.category[wgt.value] = true;
+        dijit.byId("filter-categories-all").set("checked",false);
+      }
+      else
+      {
+        delete entryFilter.category[wgt.value];
+      }
+      break;
+    case "filter-date-from":
+      entryFilter.from = dojo.date.stamp.toISOString( wgt.value );
+      break;
+    case "filter-date-to":
+      entryFilter.to = dojo.date.stamp.toISOString( wgt.value );
+      break;
+    case "filter_group":
+      if ( wgt.checked )
+      {
+        entryFilter.group[wgt.value] = true;
+        dijit.byId("filter-group-all").set("checked",false);
+      }
+      else
+      {
+        delete entryFilter.group[wgt.value];
+      }
+      break;
+    case "filter_author":
+      entryFilter.personId = wgt.selectedIds;
+      break;
+  } 
+  updateEntries();
+}
+
+
+
+function handleMessages(response)
+{
+  
+}
+
+function createContent( data )
+{
+  if ( data.length == 0 )
+  {
+    return "Es konnten keine Einträge gefungen werden, die der Abfrage entsprechen";
+  }
+  var content = "";
+  dojo.forEach( data,function(entry) {
+    content+= "<div class='entry-headline'>" + entry.subject + "</div>";
+    content+= "<div class='entry-author'>Verfasser: " + entry.author + " (" + entry.date + ")</div>";
+    content+= "<div class='entry-categories'>Kategorien: ";
+    
+    var categories=[];
+    entry.categories.forEach(function(c){
+      categories.push(locale[c]);
+    });
+    content+= categories.join(", ");
+    
+    content+= "</div><div class='entry-text'>" + entry.text + "</div>";
+    content+= "<p style='text-align:right; font-weight:bold'>";
+    content+= "<a href='javascript:alert(\"Nicht implementiert\");'>Ändern</a>&nbsp;";
+    content+= "<a href='javascript:alert(\"Nicht implementiert\");'>Kommentar</a>&nbsp;";
+    content+= "</p>";
+  });
+  return content;
+}
+
+function startPolling()
+{
+// Timer to load new messages
+  var timer = new dojox.timing.Timer( 5000 );
+  timer.onTick = function(){
+  dojo.xhrGet({
+      url: "../../services/server.php",
+      content:{
+        service: "logbuch.mess",
+        method : "testMessages",
+        params : "[]"
+      },
+      handleAs: "json",
+      load: function(response) {
+          dojo.byId("newsContainerNode").innerHTML = content + dojo.byId("newsContainerNode").innerHTML;
+          dojo.fx.wipeIn({ node: dojo.byId(id) }).play();
+      },
+      error: function(message) {
+          dojo.byId("newsContainerNode").innerHTML = "Error:" + message;
+      }
+    });
+  };
+  timer.start();  
+}
+
 function resetEditor()
 {
   var ed = dijit.byId("entryEditor");
-  ed.setValue("<h3 class='dummyText entry-subject'>Zum Eingeben der Überschrift hier klicken</h3><p class='dummyText entry-body'>Zum Eingeben des Haupttextes hier klicken.</p>");
+  ed.setValue("<div class='dummyText entry-headline'>Zum Eingeben der Überschrift hier klicken</div><p class='dummyText entry-body'>Zum Eingeben des Haupttextes hier klicken.</p>");
   dojo.query('input[id^="c-"]').forEach(function(node){
     var widget = dijit.getEnclosingWidget(node);
     if( widget.get("value")) widget.set("value",false);
@@ -288,36 +432,7 @@ function resetEditor()
   editorDirty = false;
 }
 
-function poll()
-{
-// Timer to load new messages
-  var timer = new dojox.timing.Timer( 5000 );
-  timer.onTick = function(){
-  dojo.xhrGet({
-      url: "../../services/server.php",
-      content:{
-        service: "logbuch.message",
-        method : "testMessages",
-        params : "[]"
-      },
-      handleAs: "json",
-      load: function(jsonData) {
-          
-          var newsItem = jsonData.result.data.newsItems[0];
-          var content = "";
-          var id = "news-" + newsItem.id;
-          content+= "<div id='" + id + "' style='height:0px;'><h4>" + newsItem.subject + "</h4>";
-          content+= "<p>" + newsItem.body + "</p></div>";
-          dojo.byId("newsContainerNode").innerHTML = content + dojo.byId("newsContainerNode").innerHTML;
-          dojo.fx.wipeIn({ node: dojo.byId(id) }).play();
-      },
-      error: function(message) {
-          dojo.byId("newsContainerNode").innerHTML = "Error:" + message;
-      }
-    });
-  };
-  //timer.start();  
-}
+
 
 function logout()
 {
@@ -339,11 +454,6 @@ function entryEditorReady()
   var editor = dijit.byId("entryEditor");
   console.log("Entry editor ready");
   
-}
-
-function loadEditor()
-{
-
 }
 
 
@@ -474,21 +584,28 @@ function submitEntry()
       content:{
         service: "logbuch.entry",
         method : "create",
-        params : dojo.toJson( [ updateMessageData() ] ),
-        qcl_output_format : "raw" 
+        params : dojo.toJson( [ updateMessageData() ] )
       },
       handleAs: "json",
-      load: function(jsonData) {
-        new dowl.Notification({
-            message: "Nachricht gesendet!"
-        });
-        resetEditor();
-        updateMessageData();
+      load: function(response) {
+        if( response && response.result )
+        {
+          new dowl.Notification({
+              message: "Nachricht gesendet!"
+          });
+          resetEditor();
+          updateMessageData();
+        }
+        else
+        {
+          alert( response && response.error ? response.error.message : "Unknown Error" );
+        }
         dijit.byId("entryEditor").set("disabled",false);
       },
       // The error handler
       error: function(message) {
-         alert(message);
+        alert(message);
+        dijit.byId("entryEditor").set("disabled",false);
       }
     });    
   }
