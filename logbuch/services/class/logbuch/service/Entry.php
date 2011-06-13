@@ -17,6 +17,7 @@ qcl_import("logbuch_service_Controller");
 qcl_import("qcl_ui_dialog_Alert");
 qcl_import("logbuch_model_AccessControlList");
 qcl_import("logbuch_service_Notification");
+qcl_import("logbuch_model_Attachment");
 
 /**
  *
@@ -27,110 +28,19 @@ class logbuch_service_Entry
 
 	/**
 	 * Creates an entry
-	 * @param $category
 	 * @param $data
-	 * @param $acl
 	 */
 	function method_create( $data )
 	{
-		//$this->debug($data);
-		
-		
-		$datasourceModel = $this->getDatasourceModel("demo"); // FIXME 
-		$entryModel = $datasourceModel->getModelOfType( "entry" );
-		$categoryModel = $datasourceModel->getModelOfType("category");
-		 
-		$itemData = array();
-
-		/*
-		 * set date
-		 */
-		if ( is_array($data->eventTime) )
-		{
-  		$itemData['dateStart'] = date ("Y-m-d H:i:s", strtotime( $data->eventTime[0] ) );
-  		$itemData['dateEnd'] 	 = date ("Y-m-d H:i:s", strtotime( $data->eventTime[1] ) );
-		}
-		
-		/*
-		 * set author
-		 */
-		$activeUser 	= $this->getActiveUser();
-		$personModel 	= $datasourceModel->getModelOfType("person");
-		try 
-		{
-			$personModel->loadByUserId( $activeUser->id() );
-		}
-		catch ( qcl_data_model_RecordNotFoundException $e )
-		{
-			throw new InvalidJsonRpcArgumentException( 
-				$this->tr("Only registered users can enter data into the LogBuch.")
-			);
-		}
-		$itemData["personId"] = $personModel->id();
-		
-		/*
-		 * subject and text
-		 */
-		$text = str_replace(array("<br>","<br />","<br/>"), "", $data->text);
-		qcl_import("qcl_data_xml_SimpleXMLElement");
-		$xml = '<?xml version="1.0" encoding="utf-8"?><html>' . $text  . '</html>';
-		$xmlDoc = qcl_data_xml_SimpleXMLElement::createFromString($xml);
-		$headNode = $xmlDoc->div;
-		
-		if ( ! $headNode )
-		{
-        throw new InvalidJsonRpcArgumentException( 
-				  "Titel des Eintrages fehlt."
-			);
-		}
-		
-		$subject = (string) $headNode;
-		unset($xmlDoc->div);
-		$text = trim(str_replace(array('<?xml version="1.0" encoding="utf-8"?>','<html>','</html>'), "", $xmlDoc->asXML()));
-		$this->debug( "$subject\n$text", __CLASS__, __LINE__ );
-		$itemData['subject'] = $subject;
-		$itemData['text'] = $text;
-		
-		/*
-		 * acl
-		 */
-		$aclModel = new logbuch_model_AccessControlList();		
-		$aclData  = $aclModel->set($data->acl);
-		
-		/*
-		 * merge item and acl data to create record
-		 */
-		$itemData = array_merge( $itemData, $aclData->data() );
-    $entryModel->create( $itemData );
-		
-		/*
-		 * link categories
-		 */
-		foreach( $data->categories as $category )
-		{
-		  $categoryModel->namedIdExists($category) ?
-		    $categoryModel->load( $category ) :
-		    $categoryModel->create( $category );    
-		  $categoryModel->linkModel( $entryModel );
-		}
-		
-		/*
-		 * done
-		 */
-		return "OK";
+		return $this->method_update(null, $data);
 	}	
-	
 	
 	function method_list($filter)
 	{
 	  $datasourceModel = $this->getDatasourceModel( "demo" ); // FIXME 
 		$entryModel      = $datasourceModel->getInstanceOfType( "entry" );
-		$categoryModel   = $datasourceModel->getInstanceOfType("category");
-		$personModel     = $datasourceModel->getInstanceOfType("person");
-		$activePerson    = $this->getActiveUserPerson("demo");
+		
 		$filterCategories = array_keys( get_object_vars( $filter->category ) );
-		qcl_import("logbuch_model_AccessControlList");
-    $aclModel        = new logbuch_model_AccessControlList();
 		
 		// prepare filter
 		$where = array();
@@ -165,8 +75,6 @@ class logbuch_service_Entry
 		{
 		  $where['personId'] = array("IN",$filter->personId);
 		}
-		
-		qcl_import("qcl_data_db_Query");
 		$query = new qcl_data_db_Query(array(
 		  'where'			=> $where,
 			'orderBy'		=> "created DESC"
@@ -177,97 +85,158 @@ class logbuch_service_Entry
 		
 		while( $entryModel->loadNext($query) )
 		{
-		  
-		  
-		  /*
-		   * categories
-		   */
-		  $categories = $entryModel->categories();
-
-		  if( count($filterCategories) )
-		  {    
-		    if( count( array_intersect( $categories, $filterCategories ) ) < count( $filterCategories ) )
-		    {
-		      continue;
-		    }
+		  $data = $this->_getEntryData($entryModel);
+		  if ( is_array($data) )
+		  {
+		    $result[] = $data;
 		  }
-		  
-		  /*
-		   * group
-		   */
-		  $display = true;
-		  $personModel->load($entryModel->get("personId"));
-
-		  // own company
-  		if ( $filter->group->ownCompany )
-  		{
-  			if ( $personModel->get("organizationId") != $activePerson->get("organizationId") )
-  			{
-  				$display = false;
-  			}
-  		}
-  		
-  		// own consultant
-  		if ( $filter->group->ownConsultant )
-  		{
-  			if ( $personModel->get("organizationId") != $activePerson->get("organizationId") 
-  			     or $personModel->get("position") != "consultant" )
-				{
-					$display = false;
-				}
-  		}
-  		
-  		// all consultants
-  		if ( $this->group->allConsultants )
-  		{
-  			if ( $personModel->get("position") != "consultant"  ) 
-  			{
-  				$display = false;
-  			}
-  		}
-  		
-  		// analyst
-  		if ( $this->group->analyst )
-  		{
-  			if ( $personModel->get("position") == "analyst" )
-  			{
-  				$display = false;
-  			}
-  		}
-  		
-  		/*
-  		 * ACL
-  		 */
-  		$access = true;
-  		// administrators can see everything
-  		if ( ! $this->getActiveUser()->hasRole( QCL_ROLE_ADMIN ) )
-  		{
-    		$aclModel->setAcl( $entryModel->aclData() ); 		
-    		// check access only if the entry doesn't belong to the current user
-    		if ( $activePerson->id()	!= $personModel->id() )
-    		{
-    			$access = $aclModel->checkAccess( $personModel, $activePerson );
-    		}  		
-      }
-  		
-  		/*
-  		 * continue if no access
-  		 */
-  		if ( ! $access or !$display ) continue;
-  		
-		  /*
-		   * create data
-		   */
-	    $result[] = array(
-	      'id'			  => "entry" . $entryModel->id(),
-	      'date'			=> date ("d.m.Y", strtotime( $entryModel->get("created") ) ),
-	      'subject'   => $entryModel->get("subject"),
-	      'author'	  => $entryModel->authorName(),
-	      'text'		  => $entryModel->get("text"),
-	      'categories'=> $categories
-	    );		  
 		}
 		return $result;
+	}
+	
+	function _getEntryData( $entryModel )
+	{
+	  /*
+	   * create some static vars that are cached during request time
+	   */
+	  static $admin = null;
+	  static $datasourceModel = null;
+	  static $entryModel = null;
+	  static $categoryModel = null;
+	  static $personModel = null;
+	  static $activePerson = null;
+	  static $aclModel = null;
+	  if( $admin === null )
+	  {
+  	  $admin           = $this->getActiveUser()->hasRole( QCL_ROLE_ADMIN );
+  	  $datasourceModel = $this->getDatasourceModel( "demo" ); // FIXME 
+  		$entryModel      = $datasourceModel->getInstanceOfType( "entry" );
+  		$categoryModel   = $datasourceModel->getInstanceOfType("category");
+  		$personModel     = $datasourceModel->getInstanceOfType("person");
+  		$activePerson    = $this->getActiveUserPerson("demo");
+  		$aclModel        = new logbuch_model_AccessControlList();	  
+	  }
+	  
+		/*
+	   * categories
+	   */
+	  $categories = $entryModel->categories();
+
+	  if( count($filterCategories) )
+	  {    
+	    if( count( array_intersect( $categories, $filterCategories ) ) < count( $filterCategories ) )
+	    {
+	      return null;
+	    }
+	  }
+	  
+	  /*
+	   * group
+	   */
+	  $display = true;
+	  $personModel->load($entryModel->get("personId"));
+
+	  // own company
+		if ( $filter->group->ownCompany )
+		{
+			if ( $personModel->get("organizationId") != $activePerson->get("organizationId") )
+			{
+				$display = false;
+			}
+		}
+		
+		// own consultant
+		if ( $filter->group->ownConsultant )
+		{
+			if ( $personModel->get("organizationId") != $activePerson->get("organizationId") 
+			     or $personModel->get("position") != "consultant" )
+			{
+				$display = false;
+			}
+		}
+		
+		// all consultants
+		if ( $this->group->allConsultants )
+		{
+			if ( $personModel->get("position") != "consultant"  ) 
+			{
+				$display = false;
+			}
+		}
+		
+		// analyst
+		if ( $this->group->analyst )
+		{
+			if ( $personModel->get("position") == "analyst" )
+			{
+				$display = false;
+			}
+		}
+		
+		/*
+		 * ACL
+		 */
+		$access = true; $owner = false;
+		// administrators can see everything
+		if ( ! $admin )
+		{
+  		$aclModel->setAcl( $entryModel->aclData() ); 		
+  		// check access only if the entry doesn't belong to the current user
+  		if ( $activePerson->id()	!= $personModel->id() )
+  		{
+  			$access = $aclModel->checkAccess( $personModel, $activePerson );
+  		}  		
+  		else 
+  		{
+  		  $owner = true;
+  		}
+    }
+		
+		/*
+		 * continue if no access
+		 */
+		if ( ! $access or !$display ) return null;
+		
+		/*
+		 * retrieve number of comments of this entry
+		 */
+		$comments = $entryModel->countLinksWithModel($entryModel);
+		
+		/*
+		 * number of attachments
+		 */
+		$attModel = $datasourceModel->getInstanceOfType("attachment");
+		$attachments = $entryModel->countLinksWithModel($attModel);
+		
+		/*
+		 * is it editable?
+		 */
+		$editable = ( $admin || $owner );
+		    		
+	  /*
+	   * create data
+	   */
+    $data = array(
+      'id'			    => $entryModel->id(),
+      'date'			  => date ("d.m.Y", strtotime( $entryModel->get("created") ) ),
+      'subject'     => $entryModel->get("subject"),
+      'author'	 	  => $entryModel->authorName(),
+      'text'		    => $entryModel->get("text"),
+      'acl'					=> $entryModel->aclData(),
+      'editable'	  => $editable,
+      'categories'  => $categories,
+      'comments'	  => 3, //$comments,
+      'attachments' => 10 //$attachments
+    );	
+    
+    if( in_array("event", $categories) )
+    {
+      $data['dateStart'] 	= date("Y-m-d", strtotime( $entryModel->get('dateStart') ) ); 
+  	  $data['dateEnd'] 		= date("Y-m-d", strtotime( $entryModel->get('dateEnd') ) );		
+  		$data['timeStart'] 	= date("H:i", 	strtotime( $entryModel->get('dateStart') ) ); 
+  	  $data['timeEnd'] 		= date("H:i", 	strtotime( $entryModel->get('dateEnd') ) );
+    }
+    return $data;
 	}
 	
 	
@@ -276,14 +245,9 @@ class logbuch_service_Entry
 	 * @param string $category The category type
 	 * @param string|int $id Numeric id or id in the form of "<string type>/<numeric id>" FIXME 
 	 */
-	function method_read( $category, $id )
+	function method_read($id )
 	{
-		if( is_string( $id ) and  strstr( $id,"/") )
-		{
-			$i = explode("/",$id);
-			$id = (int) $i[1];
-		}
-		elseif ( ! is_numeric( $id ) )
+		if ( ! is_numeric( $id ) )
 		{
 			throw new InvalidJsonRpcArgumentException("Invalid id");
 		}
@@ -293,77 +257,17 @@ class logbuch_service_Entry
 		/*
 		 * load record
 		 */
-		$model = $this->getDatasourceModel( "demo" )->getModelOfType( $category );
+		$entryModel = $this->getDatasourceModel( "demo" )->getModelOfType( "entry" );
 		try 
 		{
-			$model->load( $id );
+			$entryModel->load( $id );
 		}
 		catch( qcl_data_model_RecordNotFoundException $e )
 		{
-			qcl_import("qcl_ui_dialog_Alert");
-			return new qcl_ui_dialog_Alert( $this->tr("This record has been deleted.") );
+			throw new InvalidJsonRpcArgumentException("Der Datensatz existiert nicht (mehr).");
 		}		
 		
-		/*
-		 * item data
-		 */
-		$data['item'] = $model->data(array(
-			'include'	=> $model->ownProperties() 
-		));
-		
-		/*
-		 * add id
-		 */
-		$data['item']['id'] = $model->id();
-		
-		/*
-		 * marshal date data
-		 */
-		$data['item']['dateStart'] 	= date("Y/m/d", strtotime( $model->get('dateStart') ) ); 
-	  $data['item']['dateEnd'] 		= date("Y/m/d", strtotime( $model->get('dateEnd') ) );		
-		$data['item']['timeStart'] 	= date("H:i", 	strtotime( $model->get('dateStart') ) ); 
-	  $data['item']['timeEnd'] 		= date("H:i", 	strtotime( $model->get('dateEnd') ) );
-	  
-		/*
-		 * author label
-		 */
-		$personModel = $this->getDatasourceModel( "demo" )->getModelOfType( "person" ); // FIXME
-		$personModel->load( $model->get("personId") );		
-		$data['authorLabel'] = 
-			$personModel->get("givenName") . " " . $personModel->get("familyName") .
-			" (" . $model->getCreated()->format("d.m.Y H:i") . ")";
-		
-		/*
-		 * acl
-		 */
-		$aclModel = new logbuch_model_AccessControlList();
-		$data['acl'] = $model->data( array(
-			'include' 	=> $aclModel->getAclNames()
-		));
-    
-    /*
-     * whether the current user has access to this item at all
-     */
-    $aclModel->setAcl($data['acl']);
-    $activeUserPerson = $this->getActiveUserPerson("demo");
-    $access = $aclModel->checkAccess($personModel, $activeUserPerson);
-    $isAuthor = $activeUserPerson->id() == $personModel->id();
-    if( ! $access and ! $isAuthor )
-    {
-      throw new qcl_access_AccessDeniedException("Sie haben keinen Zugriff zu diesem Eintrag.");
-    }
-    
-	  /*
-	   * whether to allow to edit or delete the item
-	   */
-	  $data['deletable'] = $data['editable'] = $isAuthor;  
-	  
-    /*
-     * whether to notify by email
-     */
-    $data['acl']['notify'] = $model->get("notify");	  
-	  
-		return $data;
+		return $this->_getEntryData($entryModel);
 	}
 	
 	/**
@@ -373,143 +277,127 @@ class logbuch_service_Entry
 	 * @param $data
 	 * @param $acl
 	 */
-	function method_update( $category, $id, $data, $acl )
+	function method_update( $id, $data )
 	{
-		/*
-		 * load record
-		 */
-		$model = $this->getDatasourceModel( "demo" )->getModelOfType( $category ); // FIXME
-		$model->load( $id );
-    		
-		/*
-		 * only owner can update record
-		 */
-		$authorModel = $this->getDatasourceModel( "demo" )->getPersonModel(); //FIXME
-		try 
-		{
-		  $authorModel->loadByUserId( $this->getActiveUser()->id() );
-		}
-		catch ( qcl_data_model_RecordNotFoundException $e)
-		{
-		  return new qcl_ui_dialog_Alert("Nur registrierte Nutzer dŸrfen DatensŠtze bearbeiten."); // FIXME tr
-		}
+		//$this->debug($data);
 		
-		if ( $authorModel->id() != $model->get("personId") )
+		$activeUser 	   = $this->getActiveUser();
+		$datasourceModel = $this->getDatasourceModel("demo"); // FIXME 
+		$entryModel      = $datasourceModel->getModelOfType( "entry" );
+		$categoryModel   = $datasourceModel->getModelOfType("category");
+		$personModel 	   = $datasourceModel->getModelOfType("person");
+		$itemData = array();
+
+		/*
+		 * set date
+		 */
+		if ( is_array($data->eventTime) )
 		{
-		  $authorModel->load( $model->get("personId") );
-		  $name = $authorModel->getFullName();
-		  throw new JsonRpcException("Die VerŠnderungen wurden nicht gespeichert. Nur der/die Verfasser/in des Datensatzes ($name) darf ihn bearbeiten."); // FIXME tr
+  		$itemData['dateStart'] = date ("Y-m-d H:i:s", strtotime( $data->eventTime[0] ) );
+  		$itemData['dateEnd'] 	 = date ("Y-m-d H:i:s", strtotime( $data->eventTime[1] ) );
 		}
 		
 		/*
-		 * unmarshal date data
+		 * set author
 		 */
-		$dateStart = strtotime( $data->dateStart );
-		$timeStart = explode( ":", $data->timeStart );
-		$timeStart = 3600 * $timeStart[0] + 60 * $timeStart[1];
-		
-		$dateEnd   = strtotime( $data->dateEnd );
-		$timeEnd   = explode( ":", $data->timeEnd );
-		$timeEnd 	 = 3600 * $timeEnd[0] + 60 * $timeEnd[1];
-		
-		$data->dateStart = date ("Y-m-d H:i:s", $dateStart + $timeStart );
-		$data->dateEnd 	 = date ("Y-m-d H:i:s", $dateEnd + $timeEnd );		
-		
-		/*
-		 * set data
-		 */
-		$model->set( $data );
-		
-		/*
-		 * if acl and data has changed, send messages to the added 
-		 * acl group
-		 */
-		$aclModel = new logbuch_model_AccessControlList();
-		$oldAcl = $model->data( array(
-			'include' => $aclModel->getAclNames()
-		));
-		
-		$newAcl = array();
-    $aclChanged = false;
-    
-		foreach( $oldAcl as $key => $value )
+		if( ! $id )
 		{
-			if ( is_bool($value) )
-			{
-				$newAcl[$key] = ( $value === false && $acl->$key === true );
-				if ( $oldAcl[$key] != $newAcl[$key] )
-				{
-				  $aclChanged = true;
-				}	
-			}
-			elseif ( is_array( $value) )
-			{
-				$newAcl[$key] = array_diff( $acl->$key, $value );
-				if ( count($newAcl[$key]) )
-			  {
-          $aclChanged = true;
-        }
-			}
-			
-		}	
-		
-    /*
-     * set new acl 
-     */
-    $model->set( $acl );
-    
-    /*
-     * publish messages
-     */
-		$bus = qcl_event_message_Bus::getInstance();
-		$dataArr = array();
-		foreach( $model->createMessages( "logbuch/display-category-item" ) as $message )
-		{
-			$message->setAcl( $newAcl );
-			$message->setBroadcast( true );
-			$message->setExcludeOwnSession( false );
-			$data = $message->getData();
-			$dataArr[] = $data;
-			$data['isPrivate'] = $model->isPrivate();
-			$message->setData( $data );			
-			$bus->publish($message);
+  		try 
+  		{
+  			$personModel->loadByUserId( $activeUser->id() );
+  		}
+  		catch ( qcl_data_model_RecordNotFoundException $e )
+  		{
+  			throw new InvalidJsonRpcArgumentException( 
+  				$this->tr("Kein Zugriff.")
+  			);
+  		}
+  		$itemData["personId"] = $personModel->id();
 		}
 		
-    /*
-     * notify
-     */
-    if ( $acl->notify and ( $model->get("new") or $aclChanged ) )
+		/*
+		 * subject and text
+		 */
+		$text = str_replace(array("<br>","<br />","<br/>"), "", $data->text);
+		qcl_import("qcl_data_xml_SimpleXMLElement");
+		$xml = '<?xml version="1.0" encoding="utf-8"?><html>' . $text  . '</html>';
+		$xmlDoc = qcl_data_xml_SimpleXMLElement::createFromString($xml);
+		$headNode = $xmlDoc->div;
+		
+		if ( ! $headNode )
+		{
+        throw new InvalidJsonRpcArgumentException( 
+				  "Titel des Eintrages fehlt."
+			);
+		}
+		
+		$subject = (string) $headNode;
+		unset($xmlDoc->div);
+		$text = trim(str_replace(array('<?xml version="1.0" encoding="utf-8"?>','<html>','</html>'), "", $xmlDoc->asXML()));
+		$itemData['subject'] = $subject;
+		$itemData['text'] = $text;
+		
+		/*
+		 * acl
+		 */
+		$aclModel = new logbuch_model_AccessControlList();		
+		$aclData  = $aclModel->set($data->acl);
+		
+		/*
+		 * merge item and acl data 
+		 */
+		$itemData = array_merge( $itemData, $aclData->data() );
+				
+		/*
+		 * create or update record
+		 */
+		if( $id === null )
+		{
+		  $newId = $entryModel->create( $itemData );  
+		}
+		elseif ( $id and is_numeric( $id ) )
+		{
+		  try {
+		    $entryModel->load( $id );
+		    $entryModel->set($itemData);
+		    $entryModel->save();
+		  }
+		  catch( qcl_data_model_RecordNotFoundException $e)
+		  {
+		    throw new InvalidArgumentException("Datensatz existiert nicht (mehr)");
+		  }
+		}
+    else
     {
-      unset( $acl->notify );
-      $author = $authorModel->getFullName();
-      $subject = "Neuer Logbuch-Eintrag";
-      $body = "Sehr geehrte/r LogBuch-Teilnehmer/in,\n\n";
-      $body .= "$author hat einen neuen Eintrag erstellt oder aktualisiert: \n\n";
-      foreach ( $dataArr as $data )
-      {
-        $body .= 
-          date("d.m.Y", strtotime( $data['itemDateStart']) ) . "\n" .
-          $data['label'] . ": " . 
-          $data['subject'] . "\n\n";
-      }
-
-      $body .= "\nSie kšnnen den Eintrag unter dem folgenden Link abrufen: \n\n";
-      $body .= dirname( dirname( qcl_server_Server::getUrl() ) ) . 
-            "/build/#showItem~" . urlencode($data['itemId']); // FIXME
-      
-      $body .= "\n\n---\n\nBitte antworten Sie nicht auf diese E-Mail.";
-      
-      $notification = new logbuch_service_Notification();
-      $notification->notifyAll("demo", $subject, $body, $acl); // FIXME
-      $model->set("new", false);
+      throw new InvalidArgumentException("Invalid id");
     }
-    
-    /*
-     * save  
-     */
-    $model->save();    
-
-		return "OK";
+		
+		/*
+		 * link categories
+		 */
+		foreach( $data->categories as $category )
+		{
+		  $categoryModel->namedIdExists($category) ?
+		    $categoryModel->load( $category ) :
+		    $categoryModel->create( $category ); 
+		  try {  
+		    $categoryModel->linkModel( $entryModel );
+		  } catch( qcl_data_model_RecordExistsException $e) {}
+		}
+		
+		if( $id )
+		{
+		  //$this->broadcastClientMessage("entry.updated",$itemData);
+		}
+		else 
+		{
+		  //$this->broadcastClientMessage("entry.created",$itemData);
+		}
+		
+		/*
+		 * done
+		 */
+		return $this->_getEntryData($entryModel);
 	}
 	
 	/**

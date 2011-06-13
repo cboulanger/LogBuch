@@ -73,7 +73,11 @@ class logbuch_model_Attachment
     'Attachment_Organization' => array(
       'type'        => QCL_RELATIONS_HAS_ONE,
       'target'      => array( 'class'    => "logbuch_model_Organization" )
-    )    
+    ),
+    'Attachment_Entry' => array(
+      'type'        => QCL_RELATIONS_HAS_ONE,
+      'target'      => array( 'class'    => "logbuch_model_Entry" )
+    )  
   );
 
   /*

@@ -38,6 +38,7 @@ dojo.require("dojox.form.uploader.plugins.Flash");
 // Misc
 dojo.require("dojox.timing");
 dojo.require("dojo.fx");
+dojo.require("dijit.Tooltip");
 
 // Plugins
 dojo.registerModulePath("dowl", "../../lib/dowl");
@@ -370,23 +371,160 @@ function createContent( data )
   }
   var content = "";
   dojo.forEach( data,function(entry) {
-    content+= "<div class='entry-headline'>" + entry.subject + "</div>";
-    content+= "<div class='entry-author'>Verfasser: " + entry.author + " (" + entry.date + ")</div>";
-    content+= "<div class='entry-categories'>Kategorien: ";
-    
-    var categories=[];
-    entry.categories.forEach(function(c){
-      categories.push(locale[c]);
-    });
-    content+= categories.join(", ");
-    
-    content+= "</div><div class='entry-text'>" + entry.text + "</div>";
-    content+= "<p style='text-align:right; font-weight:bold'>";
-    content+= "<a href='javascript:alert(\"Nicht implementiert\");'>Ändern</a>&nbsp;";
-    content+= "<a href='javascript:alert(\"Nicht implementiert\");'>Kommentar</a>&nbsp;";
-    content+= "</p>";
+    content+= '<div id="entry' + entry.id + '">';
+    content+= createEntryBody( entry );
+    content+= "</div>"; // End of message  
+    content+= "<div class='entry-toolbar'>";
+    if( entry.editable ) content+= '<img onmouseover="explain(this)" '+ 
+      'onclick="editEntry('+ entry.id + ')" ' +
+      'alt="Eintrag bearbeiten" src="img/page_edit.png"/>'; 
+    if( entry.comments ) content+= "&nbsp;| " + entry.comments + 
+      '&nbsp;<img onmouseover="explain(this)" ' + 
+      'onclick="showEntry('+ entry.id + ')" ' +
+      'alt="' + entry.comments + ' Antworten" src="img/email.png"/>'; 
+    if( entry.attachments) content+= "&nbsp;| " + entry.attachments + 
+      '&nbsp;<img onmouseover="explain(this)" ' + 
+      'onclick="showEntry('+ entry.id + ')" ' +
+      'alt="' + entry.attachments + ' Anhänge" " src="img/email_attach.png"/>'; 
+    content+= "</div>";      
   });
   return content;
+}
+
+function createEntryBody( entry )
+{
+  var content = "<div class='entry-headline'>" + entry.subject + "</div>";
+  content+= "<div class='entry-author'>Verfasser: " + entry.author + " (" + entry.date + ")</div>";
+  content+= "<div class='entry-categories'>Kategorien: ";
+  var categories=[];
+  entry.categories.forEach(function(c){
+    categories.push(locale[c]);
+  });
+  content+= categories.join(", ");
+  content+= "</div><div class='entry-text'>" + entry.text + "</div>";
+  return content;
+}
+
+
+function fadeOut( node )
+{
+  dojo.animateProperty({
+    node:node,
+    properties: {
+      opacity: { end: 0.2 }
+    }
+  }).play();  
+}
+
+function fadeIn( node )
+{
+  dojo.animateProperty({
+    node:node,
+    properties: {
+      opacity: { end: 1 }
+    }
+  }).play();  
+}
+
+function editEntry(id)
+{
+  var ed = dijit.byId("entryEditor");
+  ed.set("disabled",true);
+  fadeOut(dojo.byId("entry"+id));
+  
+  // load messages
+  dojo.xhrGet({
+    url: "../../services/server.php",
+    content:{
+      service: "logbuch.entry",
+      method : "read",
+      params : dojo.toJson([id])
+    },
+    handleAs: "json",
+    load: function(response) 
+    {
+      ed.set("disabled",false);
+      handleMessages(response);
+      if( response && response.result ) {
+        window.__populatingForms = true;
+        window.setTimeout(function(){
+            window.__populatingForms = false;
+        },500);        
+        var entry = response.result.data;
+        ed.setValue("<div class='entry-headline'>" + entry.subject + "</div>" + entry.text);
+        ed.entryId = entry.id;
+        dojo.query('input[name="categories"]').forEach(function(node){
+          var widget = dijit.getEnclosingWidget(node);
+          widget.set("value", entry.categories.indexOf(node.value) != -1 );
+        });
+        dojo.query('input[name="access"]').forEach(function(node){
+          var widget = dijit.getEnclosingWidget(node);
+          if( node.value == "moreMembers" )
+          {
+            widget.set("value", entry.acl[node.value].length > 0 );
+            var store = dijit.byId("chooseUsersGrid").store;
+            var memberIds = entry.acl.moreMembers;
+            store.fetch({
+              onItem: function(item){
+                store.setValue( item, "selected", memberIds.indexOf( store.getValue( item, "id") ) != -1 );    
+              }
+            });
+           }
+           else
+           {
+             widget.set("value", entry.acl[node.value] );
+           }
+        });        
+        editorDirty = true;
+        dijit.byId("submitEntryButton").set("label","Aktualisieren");
+        dijit.byId("rightCol").domNode.style.backgroundColor = "#DBEDFF";
+      }
+      else
+      {
+        alert( response && response.error ? response.error.message : "Unknown Error" );
+      }
+    },
+    error: function(message) {
+        alert( "Error:" + message);
+    }
+  });
+}
+
+function showEntry(id)
+{
+  console.log("Show +" + id);
+}
+
+function explain(node)
+{
+  var bgColor = node.style.backgroundColor;
+  dojo.animateProperty({
+    node: node,
+    duration: 300,
+    properties: {
+        backgroundColor: {
+            start: bgColor,
+            end: "black"
+        }
+    },
+    onEnd: function() {
+      dojo.animateProperty({
+        node: node,
+        duration: 300,
+        properties: {
+            backgroundColor: {
+                start: "black",
+                end: bgColor
+            }
+        }
+      }).play();       
+    }
+  }).play();
+  new dijit.Tooltip({
+     connectId: [node],
+     label: node.alt
+  });
+  
 }
 
 function startPolling()
@@ -403,8 +541,7 @@ function startPolling()
       },
       handleAs: "json",
       load: function(response) {
-          dojo.byId("newsContainerNode").innerHTML = content + dojo.byId("newsContainerNode").innerHTML;
-          dojo.fx.wipeIn({ node: dojo.byId(id) }).play();
+
       },
       error: function(message) {
           dojo.byId("newsContainerNode").innerHTML = "Error:" + message;
@@ -430,6 +567,12 @@ function resetEditor()
       "Sie können für jeden Beitrag auch Anhänge hochladen.";  
   },500);
   editorDirty = false;
+  if( ed.entryId ){
+    fadeIn( "entry" + ed.entryId );
+  }
+  ed.entryId = null;
+  dijit.byId("submitEntryButton").set('label',"Senden");
+  dijit.byId("rightCol").domNode.style.backgroundColor = "transparent";
 }
 
 
@@ -452,8 +595,6 @@ function logout()
 function entryEditorReady()
 {
   var editor = dijit.byId("entryEditor");
-  console.log("Entry editor ready");
-  
 }
 
 
@@ -461,11 +602,10 @@ function entryEditorReady()
 /**
  * 
  */
-function updateMessageData()
+function updateMessageData( widget )
 {
 
   var attUploader    = dijit.byId("entryAttachmentUploader");
-  
   var data = {
     'categories'  : dijit.byId("entryCategories").get("value").categories,
     'eventTime'   : dijit.byId("entryEventTime").get("value"),
@@ -530,7 +670,7 @@ function updateMessageData()
         if( users.length )
         {
           t += " (" + users.join(", ") + ")";
-          data.acl.moreMembers = users;
+          data.acl.moreMembers = dijit.byId("chooseUsersGrid").store.selectedIds;
           groups.push(locale[a] + " (" + users.join("; ") + ")");
         }
         else
@@ -573,44 +713,107 @@ function updateMessageData()
   return data;
 }
 
+function createEntryOnServer()
+{
+  var ed = dijit.byId("entryEditor");
+  ed.set("disabled",true);
+  dojo.xhrPost({
+    url: "../../services/server.php",
+    content:{
+      service: "logbuch.entry",
+      method : "create",
+      params : dojo.toJson( [ updateMessageData() ] )
+    },
+    handleAs: "json",
+    load: function(response) {
+      if( response && response.result )
+      {
+        new dowl.Notification({
+            message: "Eintrag wurde gesendet!"
+        });
+        resetEditor();
+        updateMessageData();
+        insertNewEntry( response.result.data );
+      }
+      else
+      {
+        alert( response && response.error ? response.error.message : "Unknown Error" );
+      }
+      ed.set("disabled",false);
+    },
+    // The error handler
+    error: function(message) {
+      alert(message);
+      ed.set("disabled",false);
+    }
+  });    
+}
 
+function insertNewEntry( data )
+{
+  var content = createContent( [data] );
+  dojo.byId("newsContainerNode").innerHTML = content + dojo.byId("newsContainerNode").innerHTML;
+  dojo.fx.wipeIn({ node: dojo.byId("entry"+data.id) }).play();  
+}
+
+function updateEntryOnServer()
+{
+  var ed = dijit.byId("entryEditor");
+  ed.set("disabled",true);
+  dojo.xhrPost({
+    url: "../../services/server.php",
+    content:{
+      service: "logbuch.entry",
+      method : "update",
+      params : dojo.toJson( [ ed.entryId, updateMessageData() ] )
+    },
+    handleAs: "json",
+    load: function(response) {
+      if( response && response.result )
+      {
+        new dowl.Notification({
+            message: "Eintrag wurde aktualisiert!"
+        });
+        resetEditor();
+        updateMessageData();
+        replaceEntry( response.result.data );
+      }
+      else
+      {
+        alert( response && response.error ? response.error.message : "Unknown Error" );
+      }
+      ed.set("disabled",false);
+    },
+    // The error handler
+    error: function(message) {
+      alert(message);
+      ed.set("disabled",false);
+    }
+  });    
+}
+
+function replaceEntry( data )
+{
+  var content = createContent([data]);
+  var node = dojo.byId("entry"+data.id);
+  if(node){
+    node.innerHTML = createEntryBody(data);
+    fadeIn(node);
+  }
+  
+}
 
 function submitEntry()
 {
-  function sendEntryToServer()
+  var ed = dijit.byId("entryEditor");
+  if ( ed.entryId )
   {
-    dojo.xhrPost({
-      url: "../../services/server.php",
-      content:{
-        service: "logbuch.entry",
-        method : "create",
-        params : dojo.toJson( [ updateMessageData() ] )
-      },
-      handleAs: "json",
-      load: function(response) {
-        if( response && response.result )
-        {
-          new dowl.Notification({
-              message: "Nachricht gesendet!"
-          });
-          resetEditor();
-          updateMessageData();
-        }
-        else
-        {
-          alert( response && response.error ? response.error.message : "Unknown Error" );
-        }
-        dijit.byId("entryEditor").set("disabled",false);
-      },
-      // The error handler
-      error: function(message) {
-        alert(message);
-        dijit.byId("entryEditor").set("disabled",false);
-      }
-    });    
+    updateEntryOnServer();  
   }
-  sendEntryToServer();
-  dijit.byId("entryEditor").set("disabled",true);
+  else
+  {
+    createEntryOnServer();  
+  }
 }
 
 function getOnlineStatusHtml(value)

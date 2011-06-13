@@ -42,7 +42,8 @@ extends logbuch_model_Model
    * The model properties
    */
   private $properties = array(
-    
+
+     
     /**
      * The subject of the entry
      */
@@ -66,10 +67,31 @@ extends logbuch_model_Model
    * Relations
    */
   private $relations = array(
+  
+    /*
+     * Each entry has zero or more categories
+     */
     'Entry_Category' => array(
       'type'        => QCL_RELATIONS_HAS_AND_BELONGS_TO_MANY,
       'target'      => array( 'class' => "logbuch_model_Category" )
-    )
+    ),
+    
+    /*
+     * Each entry can have a parent entry 
+     */
+		'Entry_ParentEntry' => array(
+      'type'        => QCL_RELATIONS_HAS_ONE,
+      'target'      => array( 'class' => "logbuch_model_Entry" ),
+      'foreignKey'	=> "parentEntryId"
+    ),
+    
+    /*
+     * Each entry has zero or more attachments
+     */
+    'Attachment_Entry' => array(
+      'type'        => QCL_RELATIONS_HAS_MANY,
+      'target'      => array( 'class'    => "logbuch_model_Attachment" )
+    ) 
   );    
 
 
@@ -101,12 +123,17 @@ extends logbuch_model_Model
   *****************************************************************************
   */
   
-  
   function uiElementModel()
   {
      $this->notImplemented(__CLASS__); 
   }
   
+  
+  /**
+   * Returns the named ids of the categories that are linked to the current
+   * model record
+   * @return array
+   */
   function categories()
   {
     $categoryModel = $this->datasourceModel()->getInstanceOfType("category");
@@ -118,7 +145,7 @@ extends logbuch_model_Model
       {
         $categories[] = $categoryModel->namedId();
       }
-    } catch( Exception $e ){}
+    } catch( qcl_data_model_RecordNotFoundException $e ){}
     return $categories;
   }
   

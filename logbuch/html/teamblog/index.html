@@ -11,11 +11,12 @@
 	  @import "lib/dowl/Notification.css";
 	  @import "style.css";
 	</style>	
-	<script src="dojo/dojo/dojo.js"
-		data-dojo-config="isDebug: true, parseOnLoad: true">
-	</script>
-	<script type="text/javascript" src="querybox/js/marumushi.widget.querybox.js"></script>
-	<script src="rangy/rangy-core.js"></script>
+	<!-- dojo -->
+	<script src="dojo/dojo/dojo.js" data-dojo-config="isDebug: true, parseOnLoad: true"></script>
+	<!-- libraries -->
+	<script type="text/javascript" src="lib/querybox/js/marumushi.widget.querybox.js"></script>
+	<script src="lib/rangy/rangy-core.js"></script>
+	<!-- main code -->
 	<script src="teamblog.js"></script>
 </head>
 
@@ -479,9 +480,9 @@
 		           <tr><td>
 			            <input dojoType="dijit.form.CheckBox" 
 			               id="access-7" name="access" value="moreMembers" 
-			               onChange="updateMessageData(this);if(this.get('value'))dijit.byId('chooseUsersDialog').show()" />
+			               onChange="updateMessageData(this);if(this.get('value') && !window.__populatingForms)dijit.byId('chooseUsersDialog').show()" />
 			          </td><td>
-			            <label for="access-7">Einzelne Teilnehmer</label><br/>
+			            <label for="access-7" onClick="dijit.byId('chooseUsersDialog').show()">Einzelne Teilnehmer</label><br/>
 			          </td></tr>                                  
 			          
 			        </table>
@@ -492,7 +493,7 @@
 	        <div
 	           id="entryAttachmentUploader" 
 	           dojoType="dijit.form.DropDownButton">
-	            <span><img src="attachment.png"/></span>
+	            <span><img src="img/attach.png"/></span>
 	            <div 
 	              dojoType="dijit.TooltipDialog" id="tooltipDlg4" title="Kategorien:"
 	              style="width:300px">
