@@ -98,3 +98,11 @@ body.claro {
 .entry-toolbar {
   text-align : right;	
 }
+
+#focusBox {
+	position : absolute;
+	display : none;
+  border: 1px solid #177415;
+  background-color: #d6f6d5;
+}
+	

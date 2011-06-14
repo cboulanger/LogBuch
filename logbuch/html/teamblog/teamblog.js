@@ -129,10 +129,11 @@ function init( userData )
     }
   }
   
+  /************ user data ******************/
   // handle userdata
   dojo.cookie("sessionId",userData.sessionId);
   dojo.byId("username").innerHTML = userData.fullname;
-  dijit.byId("entryEditor").onLoadDeferred.then(entryEditorReady);
+ 
 
   /************ grids ******************/
   
@@ -199,6 +200,7 @@ function init( userData )
   
   /********** EDITOR *********/
   
+  dijit.byId("entryEditor").onLoadDeferred.then(entryEditorReady);
   var ed = dijit.byId("entryEditor");
   ed.addStyleSheet("style.css");
   
@@ -241,6 +243,7 @@ function init( userData )
   // show main app
   dojo.query("#appLayout").style({ visibility:"visible" });
   
+  // go!
   loadEntries();
   
 }
@@ -426,11 +429,30 @@ function fadeIn( node )
   }).play();  
 }
 
+function animateFocusBox( node1, node2 )
+{
+  var start = dojo.contentBox( node1 );
+  var end   = dojo.contentBox( node2 );
+  dojo.animateProperty({
+    node: "focusBox",
+    properties: {
+      hight: { start: start.h, end: end.h },
+      width: { start: start.w, end: end.w },
+      top:   { start: start.t, end: end.t },
+      left: { start: start.l, end: end.l }
+    }
+  }).play(); 
+}
+
+
+
 function editEntry(id)
 {
   var ed = dijit.byId("entryEditor");
   ed.set("disabled",true);
-  fadeOut(dojo.byId("entry"+id));
+  var entry = dojo.byId("entry"+id);
+  fadeOut( entry );
+  animateFocusBox( entry, ed );
   
   // load messages
   dojo.xhrGet({
