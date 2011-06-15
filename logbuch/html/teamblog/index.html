@@ -57,11 +57,38 @@
 			data-dojo-type="dijit.layout.ContentPane"
 			data-dojo-props="region: 'left'">
 			
+    <!-- column header -->    
+    <div class="column-header">Einträge filtern</div>   			
+			
+		<!-- Toolbar -->
+    <div>
+      <button
+        id="clearFilterButton"
+        dojoType="dijit.form.Button" 
+        onClick="resetEntryFilter()">Zurück</button>
+        
+        <!-- categories --> 
+        <div dojoType="dijit.form.DropDownButton">
+          <span>Optionen</span>
+					<div dojoType="dijit.Menu" >
+					    <div dojoType="dijit.MenuItem" iconClass="dijitEditorIcon dijitEditorIconCut"
+					    onClick="alert('not actually cutting anything, just a test!')">
+					        Cut
+					    </div>
+					    <div dojoType="dijit.MenuItem" iconClass="dijitEditorIcon dijitEditorIconCopy"
+					    onClick="alert('not actually copying anything, just a test!')">
+					        Copy
+					    </div>
+					    <div dojoType="dijit.MenuItem" iconClass="dijitEditorIcon dijitEditorIconPaste"
+					    onClick="alert('not actually pasting anything, just a test!')">
+					        Paste
+					    </div>
+					</div>        
+        </div>
+     </div>
+        
 		<!-- Search Box -->
 		<div id="qbox"></div>
-			
-    <!-- column header -->    
-    <div class="column-header">Einträge filtern</div>		
 			
 		<!-- Time period -->
 		  <div 
@@ -292,6 +319,9 @@
     <div id="rightCol" class="edgePanel"
       data-dojo-type="dijit.layout.ContentPane"
       data-dojo-props="region: 'right'">
+      
+      <!-- header -->
+      <div class="column-header" id="rightColHeader">Neuen Eintrag schreiben</div>
       
       <!-- Toolbar -->
       <div>
@@ -545,13 +575,13 @@
         id="reloadEntriesButton"
         dojoType="dijit.form.Button" 
         onClick="loadEntries();">Einträge neu laden</button>
-      <button id="adminButton" 
+      <!-- <button id="adminButton" 
         dojoType="dijit.form.Button" 
         onClick="alert('noch nicht implementiert');"
         disabled="true">Admin</button>
       <button id="calenderButton" 
         dojoType="dijit.form.Button" 
-        onClick="alert('noch nicht implementiert');">Kalender</button>  
+        onClick="alert('noch nicht implementiert');">Kalender</button>  --> 
     </div> 	
 	</div>
 	

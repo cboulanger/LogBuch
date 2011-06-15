@@ -56,9 +56,16 @@ body.claro {
 }
 
 .column-header {
-	font-weight: bold;
-	margin-top: 5px;
-	margin-bottom: 5px;
+  width : 100%;
+  text-align : center;
+  font-weight : bold;
+  font-size : 14px;
+  background-color : #EEEEEE;
+  padding: 5px 0;
+}
+
+#rightColHeader {
+
 }
 
 .user-online {
@@ -99,10 +106,15 @@ body.claro {
   text-align : right;	
 }
 
+.entry-reply {
+  background-color : #E5B39A;	
+}
+
+
 #focusBox {
 	position : absolute;
 	display : none;
-  border: 1px solid #177415;
-  background-color: #d6f6d5;
+  border: 1px solid black;
+  z-index: 2147483647;
 }
 	

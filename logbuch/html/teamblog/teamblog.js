@@ -67,10 +67,6 @@ var locale = {
 
 dojo.ready(function()
 {
-  var queryBox  = new marumushi.widget.QueryBox("querybox/tests/csv_search.php?q=","qbox");
-  //queryBox.cssClass = 'QueryBoxBlue';
-  //queryBox.searchIconImageURL = "querybox/images/querybox/query-box_icon-24px.png";
-  
   if ( ! dojo.cookie("sessionId")  )
   {
     dijit.byId("loginDialog").show();
@@ -120,6 +116,8 @@ function authenticate(token)
   
 function init( userData )
 {
+  resetEntryFilter();
+  
   // create reverse lookup index
   for ( var entry in locale )
   {
@@ -128,6 +126,13 @@ function init( userData )
       locale.__index__[locale[entry].toLowerCase()] = entry;
     }
   }
+  
+  /*
+   * querybox
+   */
+  var url = "../../services/server.php?&qcl_output_format=raw&service=logbuch.entry&method=querybox&params=";
+  var queryBox  = new marumushi.widget.QueryBox(url,"qbox");
+
   
   /************ user data ******************/
   // handle userdata
@@ -243,18 +248,44 @@ function init( userData )
   // show main app
   dojo.query("#appLayout").style({ visibility:"visible" });
   
+  // start the message transport
+  subscribeToServerChannels(startPolling);
+   
   // go!
   loadEntries();
   
 }
 
-var entryFilter = { 
-  "category"   : {},
-  "from"       : null,
-  "to"         : null,
-  "group"      : {},
-  "personId"   : []
-};
+var entryFilter = {};
+
+function resetEntryFilter()
+{
+  entryFilter = {
+    "id"         : null,
+    "category"   : {},
+    "from"       : null,
+    "to"         : null,
+    "group"      : {},
+    "personId"   : [],
+    "search"     : null
+  };
+  
+  //FIXME uncheck widgets
+  
+  updateEntries();
+}
+
+function loadSingleEntry( id )
+{
+  entryFilter.id = id;
+  updateEntries();
+}
+
+function findEntries( fragment )
+{
+  entryFilter.search = fragment;
+  loadEntries();
+}
 
 function loadEntries()
 {
@@ -359,11 +390,23 @@ function updateFilter(wgt)
   updateEntries();
 }
 
-
-
 function handleMessages(response)
 {
-  
+  if( response && response.result && dojo.isArray(response.result.messages) )
+  {
+    response.result.messages.forEach(function(message){
+      switch( message.name )
+      {
+        case "entry.updated": 
+          replaceEntry( message.data );
+          break;
+          
+        case "entry.created":
+          insertNewEntry( message.data );
+          break;
+      }
+    });
+  }
 }
 
 function createContent( data )
@@ -378,16 +421,19 @@ function createContent( data )
     content+= createEntryBody( entry );
     content+= "</div>"; // End of message  
     content+= "<div class='entry-toolbar'>";
-    if( entry.editable ) content+= '<img onmouseover="explain(this)" '+ 
+    content+= '<img onmouseover="explain(this)" '+ 
+      'onclick="replyToEntry('+ entry.id + ')" ' +
+      'alt="Beantworten" src="img/email_go.png"/>'; 
+    if( entry.editable ) content+= '&nbsp;| <img onmouseover="explain(this)" '+ 
       'onclick="editEntry('+ entry.id + ')" ' +
       'alt="Eintrag bearbeiten" src="img/page_edit.png"/>'; 
     if( entry.comments ) content+= "&nbsp;| " + entry.comments + 
       '&nbsp;<img onmouseover="explain(this)" ' + 
-      'onclick="showEntry('+ entry.id + ')" ' +
+      'onclick="loadSingleEntry('+ entry.id + ')" ' +
       'alt="' + entry.comments + ' Antworten" src="img/email.png"/>'; 
     if( entry.attachments) content+= "&nbsp;| " + entry.attachments + 
       '&nbsp;<img onmouseover="explain(this)" ' + 
-      'onclick="showEntry('+ entry.id + ')" ' +
+      'onclick="loadSingleEntry('+ entry.id + ')" ' +
       'alt="' + entry.attachments + ' Anhänge" " src="img/email_attach.png"/>'; 
     content+= "</div>";      
   });
@@ -396,7 +442,9 @@ function createContent( data )
 
 function createEntryBody( entry )
 {
-  var content = "<div class='entry-headline'>" + entry.subject + "</div>";
+  var content="";
+  content+= "<div class='entry-headline'>";
+  content+= entry.subject + "</div>";
   content+= "<div class='entry-author'>Verfasser: " + entry.author + " (" + entry.date + ")</div>";
   content+= "<div class='entry-categories'>Kategorien: ";
   var categories=[];
@@ -404,7 +452,13 @@ function createEntryBody( entry )
     categories.push(locale[c]);
   });
   content+= categories.join(", ");
-  content+= "</div><div class='entry-text'>" + entry.text + "</div>";
+  content+= "</div>";
+  if(entry.replyToId)
+  {
+    content+="<div>Antwort auf: <a href='void(0)' onclick='loadSingleEntry("+ entry.replyToId + "); return false;'>" + 
+      entry.replyToSubject + "</a></div>";
+  }
+  content+="<div class='entry-text'>" + entry.text + "</div>";
   return content;
 }
 
@@ -431,15 +485,22 @@ function fadeIn( node )
 
 function animateFocusBox( node1, node2 )
 {
-  var start = dojo.contentBox( node1 );
-  var end   = dojo.contentBox( node2 );
+  var start = dojo.position( node1 );
+  var end   = dojo.position( node2 );
   dojo.animateProperty({
     node: "focusBox",
     properties: {
-      hight: { start: start.h, end: end.h },
-      width: { start: start.w, end: end.w },
-      top:   { start: start.t, end: end.t },
-      left: { start: start.l, end: end.l }
+      height: { start: start.h, end: end.h },
+      width:  { start: start.w, end: end.w },
+      top:    { start: start.y, end: end.y },
+      left:   { start: start.x, end: end.x }
+    },
+    duration: 1000,
+    onBegin : function(){
+      dojo.byId("focusBox").style.display="block";
+    },
+    onEnd : function(){
+      dojo.byId("focusBox").style.display="none";
     }
   }).play(); 
 }
@@ -449,10 +510,13 @@ function animateFocusBox( node1, node2 )
 function editEntry(id)
 {
   var ed = dijit.byId("entryEditor");
+  if (ed.entryId) resetEditor();
+  
+  dojo.byId("rightColHeader").innerHTML = "Eintrag bearbeiten";
   ed.set("disabled",true);
   var entry = dojo.byId("entry"+id);
   fadeOut( entry );
-  animateFocusBox( entry, ed );
+  animateFocusBox( entry, ed.domNode );
   
   // load messages
   dojo.xhrGet({
@@ -512,10 +576,82 @@ function editEntry(id)
   });
 }
 
-function showEntry(id)
+function replyToEntry(id)
 {
-  console.log("Show +" + id);
+  var ed = dijit.byId("entryEditor");
+  var entry = dojo.byId("entry"+id);
+  if (ed.entryId) resetEditor();
+  ed.replyToId = id;  
+  ed.set("disabled",true);
+  var entry = dojo.byId("entry"+id);
+  animateFocusBox( entry, ed.domNode );
+  dojo.byId("rightColHeader").innerHTML = "Eintrag beantworten";
+  
+  // load messages
+  dojo.xhrGet({
+    url: "../../services/server.php",
+    content:{
+      service: "logbuch.entry",
+      method : "read",
+      params : dojo.toJson([id])
+    },
+    handleAs: "json",
+    load: function(response) 
+    {
+      ed.set("disabled",false);
+      handleMessages(response);
+      if( response && response.result ) {
+        window.__populatingForms = true;
+        window.setTimeout(function(){
+            window.__populatingForms = false;
+        },500);        
+
+        
+        var entry = response.result.data;
+        ed.setValue( "<div class='entry-headline dummyText'>Antwort auf: " + entry.subject + "</div>" + 
+          "<p class='dummyText entry-body'>Zum Eingeben des Antworttextes hier klicken.</p>");
+          
+        // @todo quote original
+        
+        dojo.query('input[name="categories"]').forEach(function(node){
+          var widget = dijit.getEnclosingWidget(node);
+          widget.set("value", entry.categories.indexOf(node.value) != -1 );
+        });
+        dojo.query('input[name="access"]').forEach(function(node){
+          var widget = dijit.getEnclosingWidget(node);
+          if( node.value == "moreMembers" )
+          {
+            widget.set("value", entry.acl[node.value].length > 0 );
+            var store = dijit.byId("chooseUsersGrid").store;
+            var memberIds = entry.acl.moreMembers;
+            store.fetch({
+              onItem: function(item){
+                store.setValue( item, "selected", memberIds.indexOf( store.getValue( item, "id") ) != -1 );    
+              }
+            });
+           }
+           else
+           {
+             widget.set("value", entry.acl[node.value] );
+           }
+        });        
+        editorDirty = true;
+        
+        dijit.byId("submitEntryButton").set("label","Antworten");
+        dijit.byId("rightCol").domNode.style.backgroundColor = "#E5B39A";   // todo use class       
+
+      }
+      else
+      {
+        alert( response && response.error ? response.error.message : "Unknown Error" );
+      }
+    },
+    error: function(message) {
+        alert( "Error:" + message);
+    }
+  });  
 }
+
 
 function explain(node)
 {
@@ -549,28 +685,73 @@ function explain(node)
   
 }
 
+function subscribeToServerChannels(callback)
+{
+  dojo.xhrGet({
+    url: "../../services/server.php",
+    content:{
+      service: "logbuch.message",
+      method : "subscribe",
+      params : '[["entry.updated","entry.created"]]'
+    },
+    handleAs: "json",
+    load: function(response) {
+      console.log("Subscribed to server channels");
+      if( typeof callback == "function") callback();
+    },
+    error: function(message) {
+        alert( "Error:" + message);
+    }
+  });  
+}
+
+function unsubscribeFromServerChannels(callback)
+{
+  dojo.xhrGet({
+    url: "../../services/server.php",
+    content:{
+      service: "logbuch.message",
+      method : "unsubscribeAll",
+      params : '[]'
+    },
+    handleAs: "json",
+    load: function(response) {
+      handleMessages(response);
+      console.log("Unsubscribed from server channels");
+      if( typeof callback == "function") callback();
+    },
+    error: function(message) {
+        alert( "Error:" + message);
+    }
+  });  
+}
+
 function startPolling()
 {
-// Timer to load new messages
-  var timer = new dojox.timing.Timer( 5000 );
-  timer.onTick = function(){
-  dojo.xhrGet({
+  window.__timer = new dojox.timing.Timer( 5000 );
+  window.__timer.onTick = function(){
+    dojo.xhrGet({
       url: "../../services/server.php",
       content:{
-        service: "logbuch.mess",
-        method : "testMessages",
+        service: "logbuch.message",
+        method : "broadcast",
         params : "[]"
       },
       handleAs: "json",
       load: function(response) {
-
+        handleMessages(response);
       },
       error: function(message) {
-          dojo.byId("newsContainerNode").innerHTML = "Error:" + message;
+        alert( "Error:" + message);
       }
     });
   };
-  timer.start();  
+  window.__timer.start();  
+}
+
+function stopPolling()
+{
+  window.__timer.stop();
 }
 
 function resetEditor()
@@ -593,25 +774,30 @@ function resetEditor()
     fadeIn( "entry" + ed.entryId );
   }
   ed.entryId = null;
+  ed.replyToId = null;
+  dojo.byId("rightColHeader").innerHTML = "Neuen Eintrag schreiben";
   dijit.byId("submitEntryButton").set('label',"Senden");
+  
   dijit.byId("rightCol").domNode.style.backgroundColor = "transparent";
 }
-
-
 
 function logout()
 {
   dojo.cookie("sessionId","",{expire:-1});
   dojo.query("#appLayout").style({ visibility:"hidden" });
   dijit.byId("loginDialog").show();
-  dojo.xhrGet({
-      url: "../../services/server.php",
-      content:{
-        service: "logbuch.access",
-        method : "logout",
-        params : "[]"
-      }
+  unsubscribeFromServerChannels(function(){
+    stopPolling();
+    dojo.xhrGet({
+        url: "../../services/server.php",
+        content:{
+          service: "logbuch.access",
+          method : "logout",
+          params : "[]"
+        }
+    });  
   });
+  
 }
 
 function entryEditorReady()
@@ -632,7 +818,8 @@ function updateMessageData( widget )
     'categories'  : dijit.byId("entryCategories").get("value").categories,
     'eventTime'   : dijit.byId("entryEventTime").get("value"),
     'text'        : dijit.byId("entryEditor").get("value"),
-    'acl'         : {}
+    'acl'         : {},
+    'replyToId'   : dijit.byId("entryEditor").replyToId
   };
   var access = dijit.byId("entryAccess").get("value").access;
   
@@ -748,14 +935,14 @@ function createEntryOnServer()
     },
     handleAs: "json",
     load: function(response) {
+      handleMessages(response);
       if( response && response.result )
       {
-        new dowl.Notification({
-            message: "Eintrag wurde gesendet!"
-        });
+        var data = response.result.data;
+        ed.entryId = data.id;
+        insertNewEntry( data );
         resetEditor();
         updateMessageData();
-        insertNewEntry( response.result.data );
       }
       else
       {
@@ -775,7 +962,13 @@ function insertNewEntry( data )
 {
   var content = createContent( [data] );
   dojo.byId("newsContainerNode").innerHTML = content + dojo.byId("newsContainerNode").innerHTML;
-  dojo.fx.wipeIn({ node: dojo.byId("entry"+data.id) }).play();  
+  var entryNode = dojo.byId("entry"+data.id);
+  var ed = dijit.byId("entryEditor");  
+  dojo.fx.wipeIn({ node:entryNode }).play();
+  if ( ed.entryId == data.id )
+  {
+    animateFocusBox( ed.domNode, entryNode );  
+  }
 }
 
 function updateEntryOnServer()
@@ -791,11 +984,9 @@ function updateEntryOnServer()
     },
     handleAs: "json",
     load: function(response) {
+      handleMessages(response);
       if( response && response.result )
       {
-        new dowl.Notification({
-            message: "Eintrag wurde aktualisiert!"
-        });
         resetEditor();
         updateMessageData();
         replaceEntry( response.result.data );
@@ -820,9 +1011,13 @@ function replaceEntry( data )
   var node = dojo.byId("entry"+data.id);
   if(node){
     node.innerHTML = createEntryBody(data);
-    fadeIn(node);
+    var ed = dijit.byId("entryEditor");
+    if ( ed.entryId == data.id )
+    {
+      fadeIn(node);
+      animateFocusBox( ed.domNode, node  );
+    }
   }
-  
 }
 
 function submitEntry()

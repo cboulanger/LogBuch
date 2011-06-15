@@ -8,12 +8,11 @@
 */
 .QueryBox {
 	margin: 2px;
-	font: 11px/16px Georgia, serif;
 }
 
 .QueryBox form input {
 	padding: 5px;
-	background-color: #FEFEFE;
+	//background-color: #FEFEFE;
 	border: 1px solid #666;
 	color: #333;
 }
@@ -60,19 +59,19 @@
 	padding: 0px;
 	margin: 0px;
 	overflow: hidden;
-	text-transform: lowercase;
 	font-weight: normal;
 }
 
 .QueryBox .ResultBox h1 {
 	border-bottom: 1px solid #BBBBBB;
-	font-size: 16px;
+	font-size: 12px;
 	font-style: italic;
 	margin: 8px 10px 5px 10px;
+	z-index : 2147483647;
 }
 
 .QueryBox .ResultBox h2 {
-	font-size: 14px;
+	font-size: 11px;
 	color: #444;
 	margin-bottom: 2px;
 }

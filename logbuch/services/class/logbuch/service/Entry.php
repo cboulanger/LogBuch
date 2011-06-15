@@ -25,7 +25,27 @@ qcl_import("logbuch_model_Attachment");
 class logbuch_service_Entry
   extends logbuch_service_Controller
 {
-
+ 
+  private $locale = array(
+    "event"           => "Termin",
+    "consult"         => "Beratungsprozess",
+    "stumble"         => "Stolperstein",
+    "document"        => "Dokument",
+    "minutes"         => "Protokoll",
+    "result"          => "Ergebnis",
+    "idea"            => "Idee",
+    "coop"            => "Kooperation",
+    "hint"            => "Tipps",
+    "photo"           => "Photo",
+    "misc"            => "Sonstiges",
+    "ownCompany"      => "Eigenes Unternehmen",
+    "ownConsultant"   => "Berater (Eigenes Unternehmen)",
+    "allConsultants"  => "Alle Berater/innen",
+    "analyst"         => "Wissenschaftliche Begleitung",
+    "allMembers"      => "Alle",
+    "moreMembers"     => "Einzelne Teilnehmer/innen"  
+  );
+  
 	/**
 	 * Creates an entry
 	 * @param $data
@@ -39,53 +59,80 @@ class logbuch_service_Entry
 	{
 	  $datasourceModel = $this->getDatasourceModel( "demo" ); // FIXME 
 		$entryModel      = $datasourceModel->getInstanceOfType( "entry" );
-		
-		$filterCategories = array_keys( get_object_vars( $filter->category ) );
-		
-		// prepare filter
 		$where = array();
-		if( $filter->from || $filter->to )
-		{
-		  $from = strtotime( $filter->from );
-		  $to   = strtotime( $filter->to );
-
-  		if ( $filter->from && $filter->to )
-  		{
-  		  if( $from > $to )
-  		  {
-  		    throw new InvalidArgumentException("Das Enddatum muss nach dem Startdatum liegen!");
-  		  }  		  
-  		  $where['created'] = array( 
-  		  	"BETWEEN", 
-  		    date("Y-m-d 00:00:00", $from ), 
-  		    date("Y-m-d 23:59:59", $to  ) 
-  		  );
-  		}
-  		elseif ($filter->from)
-  		{
-  		  $where['created'] = array( ">=", date("Y-m-d 00:00:00", $from ) );
-  		}
-  		elseif ($filter->to)
-  		{
-  		  $where['created'] = array( "<=", date("Y-m-d 23:59:59", $to ) );
-  		}
-		}
-				
-		if ( count( $filter->personId ) )
-		{
-		  $where['personId'] = array("IN",$filter->personId);
-		}
-		$query = new qcl_data_db_Query(array(
-		  'where'			=> $where,
-			'orderBy'		=> "created DESC"
-		));
 		
+		/*
+		 * a specific entry and its comment?
+		 */
+		if( $filter->id )
+		{
+  		$query = new qcl_data_db_Query(array(
+  		  'where'			  => "id = :id OR parentEntryId = :id",
+  		  'parameters'	=> array(
+  		    ':id'	=> $filter->id
+  		  ),
+  			'orderBy'		  => "created"
+  		) );				  
+		}
+		
+		else 
+		{
+		
+  		
+  		/*
+  		 * date
+  		 */
+  		if( $filter->from || $filter->to )
+  		{
+  		  $from = strtotime( $filter->from );
+  		  $to   = strtotime( $filter->to );
+  
+    		if ( $filter->from && $filter->to )
+    		{
+    		  if( $from > $to )
+    		  {
+    		    throw new InvalidArgumentException("Das Enddatum muss nach dem Startdatum liegen!");
+    		  }  		  
+    		  $where['created'] = array( 
+    		  	"BETWEEN", 
+    		    date("Y-m-d 00:00:00", $from ), 
+    		    date("Y-m-d 23:59:59", $to  ) 
+    		  );
+    		}
+    		elseif ($filter->from)
+    		{
+    		  $where['created'] = array( ">=", date("Y-m-d 00:00:00", $from ) );
+    		}
+    		elseif ($filter->to)
+    		{
+    		  $where['created'] = array( "<=", date("Y-m-d 23:59:59", $to ) );
+    		}
+  		}
+  				
+  		/*
+  		 * author
+  		 */
+  		if ( count( $filter->personId ) )
+  		{
+  		  $where['personId'] = array("IN",$filter->personId);
+  		}
+  
+  		
+  		$query = new qcl_data_db_Query(array(
+  		  'where'			=> $where,
+  			'orderBy'		=> "created DESC"
+  		));		
+		}
+		
+		/*
+		 * execute query
+		 */
 		$entryModel->find($query);
 		$result = array();
 		
 		while( $entryModel->loadNext($query) )
 		{
-		  $data = $this->_getEntryData($entryModel);
+		  $data = $this->_getEntryData($entryModel, $filter);
 		  if ( is_array($data) )
 		  {
 		    $result[] = $data;
@@ -94,7 +141,7 @@ class logbuch_service_Entry
 		return $result;
 	}
 	
-	function _getEntryData( $entryModel )
+	function _getEntryData( $entryModel, $filter=null )
 	{
 	  /*
 	   * create some static vars that are cached during request time
@@ -106,72 +153,85 @@ class logbuch_service_Entry
 	  static $personModel = null;
 	  static $activePerson = null;
 	  static $aclModel = null;
+	  static $parentEntryModel = null;
 	  if( $admin === null )
 	  {
   	  $admin           = $this->getActiveUser()->hasRole( QCL_ROLE_ADMIN );
   	  $datasourceModel = $this->getDatasourceModel( "demo" ); // FIXME 
   		$entryModel      = $datasourceModel->getInstanceOfType( "entry" );
+  		$parentEntryModel= $datasourceModel->createInstanceOfType("entry");
   		$categoryModel   = $datasourceModel->getInstanceOfType("category");
   		$personModel     = $datasourceModel->getInstanceOfType("person");
   		$activePerson    = $this->getActiveUserPerson("demo");
-  		$aclModel        = new logbuch_model_AccessControlList();	  
+  		$aclModel        = new logbuch_model_AccessControlList();	 
+  		 
 	  }
 	  
-		/*
-	   * categories
-	   */
-	  $categories = $entryModel->categories();
-
-	  if( count($filterCategories) )
-	  {    
-	    if( count( array_intersect( $categories, $filterCategories ) ) < count( $filterCategories ) )
-	    {
-	      return null;
-	    }
-	  }
+    $personModel->load($entryModel->get("personId"));
+    	  
+    $categories = $entryModel->categories();
+    $display = true;
+    
+    /*
+     * filter
+     */
+	  if ( $filter )
+	  {
+	    
+  		/*
+  	   * by categories
+  	   */	    
+  	  $filterCategories = array_keys( get_object_vars( $filter->category ) );
+  
+  	  if( count($filterCategories) )
+  	  {    
+  	    if( ! count( array_intersect( $categories, $filterCategories ) ) )
+  	    {
+  	      return null;
+  	    }
+  	  }
 	  
-	  /*
-	   * group
-	   */
-	  $display = true;
-	  $personModel->load($entryModel->get("personId"));
-
-	  // own company
-		if ( $filter->group->ownCompany )
-		{
-			if ( $personModel->get("organizationId") != $activePerson->get("organizationId") )
-			{
-				$display = false;
-			}
-		}
-		
-		// own consultant
-		if ( $filter->group->ownConsultant )
-		{
-			if ( $personModel->get("organizationId") != $activePerson->get("organizationId") 
-			     or $personModel->get("position") != "consultant" )
-			{
-				$display = false;
-			}
-		}
-		
-		// all consultants
-		if ( $this->group->allConsultants )
-		{
-			if ( $personModel->get("position") != "consultant"  ) 
-			{
-				$display = false;
-			}
-		}
-		
-		// analyst
-		if ( $this->group->analyst )
-		{
-			if ( $personModel->get("position") == "analyst" )
-			{
-				$display = false;
-			}
-		}
+  	  /*
+  	   * by group
+  	   */
+  
+  	  // own company
+  		if ( $filter->group->ownCompany )
+  		{
+  			if ( $personModel->get("organizationId") != $activePerson->get("organizationId") )
+  			{
+  				$display = false;
+  			}
+  		}
+  		
+  		// own consultant
+  		if ( $filter->group->ownConsultant )
+  		{
+  			if ( $personModel->get("organizationId") != $activePerson->get("organizationId") 
+  			     or $personModel->get("position") != "consultant" )
+  			{
+  				$display = false;
+  			}
+  		}
+  		
+  		// all consultants
+  		if ( $filter->group->allConsultants )
+  		{
+  			if ( $personModel->get("position") != "consultant"  ) 
+  			{
+  				$display = false;
+  			}
+  		}
+  		
+  		// analyst
+  		if ( $filter->group->analyst )
+  		{
+  			if ( $personModel->get("position") == "analyst" )
+  			{
+  				$display = false;
+  			}
+  		}
+	  }
 		
 		/*
 		 * ACL
@@ -200,7 +260,9 @@ class logbuch_service_Entry
 		/*
 		 * retrieve number of comments of this entry
 		 */
-		$comments = $entryModel->countLinksWithModel($entryModel);
+		$ids = $parentEntryModel->linkedModelIds($entryModel);
+		$comments = count($ids);
+		
 		
 		/*
 		 * number of attachments
@@ -212,23 +274,28 @@ class logbuch_service_Entry
 		 * is it editable?
 		 */
 		$editable = ( $admin || $owner );
+		
+		
 		    		
 	  /*
 	   * create data
 	   */
     $data = array(
       'id'			    => $entryModel->id(),
-      'date'			  => date ("d.m.Y", strtotime( $entryModel->get("created") ) ),
+      'date'			  => date ("d.m.Y H:i", strtotime( $entryModel->get("created") ) ),
       'subject'     => $entryModel->get("subject"),
       'author'	 	  => $entryModel->authorName(),
       'text'		    => $entryModel->get("text"),
       'acl'					=> $entryModel->aclData(),
       'editable'	  => $editable,
       'categories'  => $categories,
-      'comments'	  => 3, //$comments,
-      'attachments' => 10 //$attachments
+      'comments'	  => $comments,
+      'attachments' => $attachments,
     );	
     
+    /*
+     * events
+     */
     if( in_array("event", $categories) )
     {
       $data['dateStart'] 	= date("Y-m-d", strtotime( $entryModel->get('dateStart') ) ); 
@@ -236,6 +303,16 @@ class logbuch_service_Entry
   		$data['timeStart'] 	= date("H:i", 	strtotime( $entryModel->get('dateStart') ) ); 
   	  $data['timeEnd'] 		= date("H:i", 	strtotime( $entryModel->get('dateEnd') ) );
     }
+    
+		/*
+		 * replies
+		 */
+		if( $replyToId = $entryModel->_get("parentEntryId") )
+		{
+		  $parentEntryModel->load($replyToId);
+		  $data['replyToId'] = $parentEntryModel->id();
+      $data['replyToSubject'] = $parentEntryModel->get("subject");
+		}    
     return $data;
 	}
 	
@@ -318,7 +395,7 @@ class logbuch_service_Entry
 		/*
 		 * subject and text
 		 */
-		$text = str_replace(array("<br>","<br />","<br/>"), "", $data->text);
+		$text = str_replace(array("<br>","<br />","<br/>","dummyText"), "", $data->text);
 		qcl_import("qcl_data_xml_SimpleXMLElement");
 		$xml = '<?xml version="1.0" encoding="utf-8"?><html>' . $text  . '</html>';
 		$xmlDoc = qcl_data_xml_SimpleXMLElement::createFromString($xml);
@@ -347,12 +424,21 @@ class logbuch_service_Entry
 		 * merge item and acl data 
 		 */
 		$itemData = array_merge( $itemData, $aclData->data() );
+		
+
 				
 		/*
 		 * create or update record
 		 */
 		if( $id === null )
 		{
+			/*
+  		 * if this is a reply, set the parentEntryId
+  		 */
+  		if ( is_numeric( $data->replyToId ) )
+  		{
+  		  $itemData['parentEntryId'] = $data->replyToId;
+  		}		  
 		  $newId = $entryModel->create( $itemData );  
 		}
 		elseif ( $id and is_numeric( $id ) )
@@ -385,13 +471,16 @@ class logbuch_service_Entry
 		  } catch( qcl_data_model_RecordExistsException $e) {}
 		}
 		
+		/*
+		 * notify other clients
+		 */
 		if( $id )
 		{
-		  //$this->broadcastClientMessage("entry.updated",$itemData);
+		  $this->broadcastClientMessage("entry.updated",$this->_getEntryData($entryModel), true );
 		}
 		else 
 		{
-		  //$this->broadcastClientMessage("entry.created",$itemData);
+		  $this->broadcastClientMessage("entry.created",$this->_getEntryData($entryModel), true );
 		}
 		
 		/*
@@ -407,7 +496,7 @@ class logbuch_service_Entry
 	 */
 	function method_delete( $category, $id)
 	{
-		
+		$this->notImplemented(__CLASS__);
 		$model = $this->getDatasourceModel( "demo" )->getModelOfType( $category );
 		$model->load( $id );
 		
@@ -468,6 +557,43 @@ class logbuch_service_Entry
 		$data['dateStart'] 	= date("Y/m/d",  $dateStart ); 
 	  $data['dateEnd'] 		= date("Y/m/d",  $dateEnd );		
 		return $data;
+	}
+	
+	function method_querybox($fragment)
+	{
+	  $result = array( 
+	    "query"   => $fragment,
+	    "results"	=> array()
+	  );
+	  
+	  $datasourceModel = $this->getDatasourceModel("demo"); // FIXME 
+		$entryModel      = $datasourceModel->getModelOfType( "entry" );
+		
+		$entryModel->find( new qcl_data_db_Query( array(
+		  where       => "subject LIKE :fragment or text like :fragment",
+		  parameters  => array(
+		    ":fragment"	=> "%$fragment%"
+		  )
+		) ) );
+		
+	  while ( $entryModel->loadNext() )
+	  {
+	    if( $this->_getEntryData($entryModel))
+	    {
+  	    foreach( $entryModel->categories() as $category )
+  	    {
+    	    $result['results'][] = array(
+    	      "title"        => $entryModel->get("subject"),
+    	      "link"         => "javascript:loadSingleEntry(" . $entryModel->id() . ")",
+    	      "description"  => "",
+    	      "id"           => $entryModel->id(),
+    	      "category"	   => $this->locale[$category]
+    	    );
+  	    }
+	    }
+	  }
+		
+		return $result;
 	}
 }
 ?>

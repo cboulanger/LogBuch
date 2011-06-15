@@ -14,10 +14,10 @@
 dojo.declare("marumushi.widget.QueryBox", null, {
 	
 	//what should we display by default
-	defaultMessage				:'Search...',
+	defaultMessage				:"Suchwort eingeben...",
 	
 	//displayed when no resuts are found				
-	noResultsMessage			:'no results where found for ',
+	noResultsMessage			:"Keine entsprechenden EintrŠge vorhanden",
 	
 	//url to your results script
 	queryURL					:'search?q=',
@@ -33,7 +33,7 @@ dojo.declare("marumushi.widget.QueryBox", null, {
 	keyDownTimeout				:200, 
 	
 	// (milis) how long until we give up waiting for results to come back.						
-	requestTimeout				:5000, 
+	requestTimeout				:20000, 
 	
 	//should we submit the query when user hasn't selected anything yet.							
 	submitOnInputBlur			:true,
@@ -128,7 +128,7 @@ dojo.declare("marumushi.widget.QueryBox", null, {
 		if(url){
 			this.queryURL = url;
 		}else{
-			str = 	"ERROR instantiating QueryBox.\n"+
+			var str = 	"ERROR instantiating QueryBox.\n"+
 					"When instantiating QueryBox you must provide a URL to the script that will return the search results to QueryBox.\n"+
 					"The URL should be the path to the script we'll use to query for results.\n" +
 				  	"ex: var qbox = new marumushi.widget.LiveSearchQueryBox('http://domain.com/search.php?q=','my_div_id');\n";
@@ -137,7 +137,7 @@ dojo.declare("marumushi.widget.QueryBox", null, {
 		if(divID){
 			this.queryBoxContainerID = divID;
 		}else{
-			str = 	"ERROR instantiating QueryBox.\n"+
+			var str = 	"ERROR instantiating QueryBox.\n"+
 					"When instantiating QueryBox you must provide the ID where QueryBox will be rendered.\n"+
 				  	"ex: var qbox = new marumushi.widget.LiveSearchQueryBox('http://domain.com/search.php?q=','my_div_id');\n";
 			console.error(str);
@@ -294,12 +294,14 @@ dojo.declare("marumushi.widget.QueryBox", null, {
 		this.activeRequest = dojo.xhrGet( { 
 	    	url: this.queryURL +query, 
 	    	handleAs: "json",
+        failOk : true,
 	    	timeout: this.requestTimeout, // millis
 	    	load: function(response, ioArgs) { 
 		      	scope.onRequestData(response.results);
 		      	return response;
 	    	},
 			error: function(response, ioArgs) {
+        if (response.dojoType=='cancel') { return; }
 				console.error("HTTP status code: ", ioArgs.xhr.status); 
 				return response;
 			}
@@ -326,10 +328,10 @@ dojo.declare("marumushi.widget.QueryBox", null, {
 	     */
 	    var n = str.indexOf(query);
 		if(n>=0){
-			before = str.substr(0,n);
-			word   = str.substr(n,query.length);
-			after  = str.substr(n+query.length);
-			str    = before+'<b>'+word+'</b>'+after;
+			var before = str.substr(0,n);
+			var word   = str.substr(n,query.length);
+			var after  = str.substr(n+query.length);
+			var str    = before+'<b>'+word+'</b>'+after;
 			//console.log(str);
 		}
 		return str;

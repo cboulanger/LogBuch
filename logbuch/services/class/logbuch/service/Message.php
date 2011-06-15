@@ -88,65 +88,6 @@ class logbuch_service_Message
 		  $data    = object2array( $messageData->data );
 		  $aclData = null;
 		  $prefix = implode("/", array_slice( explode("/",$channel), 0,2 ) );
-		  switch( $prefix  )
-		  {
-		    case "logbuch/comment":
-		      $categoryModel = $this->getDatasourceModel("demo")->getInstanceOfType($data['category']); // FIXME
-		      $categoryModel->load( (int) $data['itemId'] );
-		      $aclData = $categoryModel->aclData();
-		      
-		      // FIXME hack to make author of entry a recipient
-		      $aclData['moreMembers'] = array_unique( array_merge(
-		        $aclData['moreMembers'], array( $categoryModel->get("personId") )  
-		      ));
-		      
-		      /*
-		       * add missing data to the outgoing message
-		       */
-		      $author = $personModel->getFullName();
-		      $data['senderId'] = $personModel->id(); // FIXME
-		      $data['icon'] = $personModel->get( "image" );
-		      $data['label'] = 
-		        "<b>$author"  . // "<br/>" .
-		        //date( "d.m.Y H:i", strtotime( $data['date'] ) ) . 
-		        "</b><br/>" .
-		        $this->createLinks( $data['message'] );
-		        
-		       /*
-		        * save a copy in the database
-		        */
-		       $commentModel = $this->getDatasourceModel("demo")->getInstanceOfType("comment");
-		       $commentModel->create(array(
-		          'channel' => $channel,
-		          'message' => $data['message']
-		       ));
-		       $commentModel->save();
-		       $personModel->linkModel( $commentModel );
-		          
-           /*
-            * notify if requested
-            */
-           if ( $categoryModel->get("notify")  )
-           {
-              $subject = "Neuer Logbuch-Kommentar";
-              $body = "Sehr geehrte/r LogBuch-Teilnehmer/in,\n\n";
-              $body .= "Es wurde ein neuer Kommentar geschrieben: \n\n";
-              $body .=  strip_tags( str_replace("<br/>", "\n\n", $data['label'] ) ) . "\n\n";         
-              $body .= "\nSie können den Eintrag unter dem folgenden Link abrufen: \n\n";
-              $body .= dirname( dirname( qcl_server_Server::getUrl() ) ) . 
-                    "/html/teamblog?" . urlencode( 
-                    "showItem=" . $data['itemId'] .
-                    "&showComments=1" ); // FIXME
-                    
-              $body .= "\n\n---\n\nBitte antworten Sie nicht auf diese E-Mail.";
-                                  
-              qcl_import("logbuch_service_Notification");
-              $notification = new logbuch_service_Notification();
-              $notification->notifyAll("demo", $subject, $body, $aclData); // FIXME
-            }
-
-		       break;
-		  }
 		  $this->getMessageBus()->broadcast( $channel, $data, $aclData );
 			
 		}
@@ -167,64 +108,27 @@ class logbuch_service_Message
 	
 	/**
 	 * Subscribes the client to a channel
-	 * @param unknown_type $channel
+	 * @param string|array $channels
 	 */
-	public function method_subscribe( $channel )
+	public function method_subscribe( $channels )
 	{
-	  qcl_event_message_Bus::getInstance()->addChannel( $channel );
-    $aclData = null;
-    $parts = explode("/",$channel);
-    $prefix = implode("/", array_slice( $parts, 0, 2 ) );
-    switch( $prefix  )
-    {
-      case "logbuch/comment":
-         
-        $commentModel = $this->getDatasourceModel("demo")->getInstanceOfType("comment");
-        $query = $commentModel->findWhere(array(
-            'channel' => $channel
-         ));
-         
-        if ( $commentModel->foundNothing() )
-        {
-          break;
-        }
-
-        $personModel = $this->getDatasourceModel("demo")->getInstanceOfType("person"); // FIXME
-        while( $commentModel->loadNext($query) )
-        {
-          try 
-          {
-            $personModel->load( $commentModel->get("PersonId") ); // FIXME
-          }
-          catch( qcl_data_model_RecordNotFoundException $e )
-          {
-            // no person for this comment, delete
-            $commentModel->delete();
-            continue;
-          }
-          $data = array();
-          $data['senderId'] = $personModel->id(); // FIXME
-          $data['icon'] = $personModel->get( "image" );
-          $data['label'] = 
-            "<b>" . $personModel->getFullName() . // "<br/>" .
-            //$commentModel->getCreated()->format("d.m.Y H.i") . 
-            "</b><br/>" .
-            $this->createLinks( $commentModel->get("message") );        
-
-          // FIXME add ACL for security  
-          $this->getMessageBus()->publishClientMessage( $channel, $data );
-        }
-    }
+	  foreach( (array) $channels as $channel )
+	  {
+  	  qcl_event_message_Bus::getInstance()->addChannel( $channel );
+	  }
 	  return "OK";	
 	}
 	
   /**
    * Unsubscribes the client from a channel
-   * @param unknown_type $channel
+   * @param string|array $channels
    */	
-	public function method_unsubscribe( $channel )
+	public function method_unsubscribe( $channels )
 	{
-	  qcl_event_message_Bus::getInstance()->removeChannel( $channel );
+	  foreach( (array) $channels as $channel )
+	  {
+	    qcl_event_message_Bus::getInstance()->removeChannel( $channel );
+	  }
 	  return "OK";
 	}
 	
@@ -407,15 +311,14 @@ class logbuch_service_Message
 			$access = true;
 		}
 		
-//$this->debug( sprintf(
-//	"\n%s => user: %s, author: %s, recipient: %s, access: %s",
-//	$data['subject'],
-//	$activeUserPerson->getFullName(),
-//	$sender->getFullName(),
-//	$recipient->getFullName(),
-//	($access === true ? "yes" : "no" )
-//), __CLASS__, __LINE__ );		
-				
+$this->debug( sprintf(
+	"\n%s => user: %s, author: %s, recipient: %s, access: %s",
+	$data['subject'],
+	$activeUserPerson->getFullName(),
+	$sender->getFullName(),
+	$recipient->getFullName(),
+	($access === true ? "yes" : "no" )
+, __CLASS__, __LINE__ ));		
 		return $access;
 	}
 }
