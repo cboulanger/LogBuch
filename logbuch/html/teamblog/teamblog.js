@@ -39,6 +39,8 @@ dojo.require("dojox.form.uploader.plugins.Flash");
 dojo.require("dojox.timing");
 dojo.require("dojo.fx");
 dojo.require("dijit.Tooltip");
+dojo.require("dojox.widget.Standby");
+dojo.require("dojox.dtl.filter.htmlstrings");
 
 // Plugins
 dojo.registerModulePath("dowl", "../../lib/dowl");
@@ -112,13 +114,53 @@ function authenticate(token)
   });
 }
 
- var editorDirty = false;
+var editorDirty = false;
   
 function init( userData )
 {
-  resetEntryFilter();
+   
+  if ( ! window.console )
+  {
+    window.console = { log:function(){}, warn:function(){} };
+  }
   
-  // create reverse lookup index
+  // locale
+  initLocale();
+  
+  window.__preventLoadingOfEntries = true;
+  
+  // querybox
+  initQueryBox();
+  
+  // handle userdata
+  dojo.cookie("sessionId",userData.sessionId);
+  dojo.byId("username").innerHTML = userData.fullname;
+ 
+  // user grids 
+  initGrids();
+  
+  // prepare editor   
+  initEditor();
+  
+  // reset filters, this also loads the entries
+  resetEntryFilter();
+
+  // show main app
+  dojo.query("#appLayout").style({ visibility:"visible" });
+  
+  window.setTimeout(function(){
+    window.__preventLoadingOfEntries = false;
+    loadEntries();
+    
+    // start the message transport
+    subscribeToServerChannels(startPolling);
+  },500);    
+    
+  
+}
+
+function initLocale()
+{
   for ( var entry in locale )
   {
     if ( entry != "__index__" )
@@ -126,22 +168,35 @@ function init( userData )
       locale.__index__[locale[entry].toLowerCase()] = entry;
     }
   }
-  
-  /*
-   * querybox
-   */
+}
+
+var queryBox;
+function initQueryBox()
+{
   var url = "../../services/server.php?&qcl_output_format=raw&service=logbuch.entry&method=querybox&params=";
-  var queryBox  = new marumushi.widget.QueryBox(url,"qbox");
+  queryBox  = new marumushi.widget.QueryBox(url,"qbox");  
+  queryBox.onFormSubmit = function(){
+    this.hide();
+    this.displayLoader(false);
+    var selected = dojo.byId(this.selectedContainerID);
+    if(selected){
+      var url = selected.firstChild.getAttribute("href");
+      window.location = url;
+      return false;
+    }else{
+      entryFilter.search = dojo.byId(this.inputFieldID).value;
+      if(this.activeRequest){
+        this.activeRequest.cancel();
+      }
+      loadEntries();
+      return  false;
+    }
+  };
+}
 
-  
-  /************ user data ******************/
-  // handle userdata
-  dojo.cookie("sessionId",userData.sessionId);
-  dojo.byId("username").innerHTML = userData.fullname;
- 
 
-  /************ grids ******************/
-  
+function initGrids()
+{
   //dijit.byId("filterAuthorGrid").viewsHeaderNode.style.display="none";
   var userListServiceUrl = "../../services/server.php?service=logbuch.record&method=getUserItemList&params=[]&qcl_output_format=raw";
   var store1 = new dojo.data.ItemFileWriteStore({
@@ -200,18 +255,19 @@ function init( userData )
     store2.selectedIds = selectedIds;
   });
   dijit.byId("chooseUsersGrid").setStore(store2);
-  dijit.byId("chooseUsersGrid").startup();
+  dijit.byId("chooseUsersGrid").startup();  
+}
+
+function initEditor()
+{
+  //dijit.byId("entryEditor").onLoadDeferred.then(entryEditorReady);
   
-  
-  /********** EDITOR *********/
-  
-  dijit.byId("entryEditor").onLoadDeferred.then(entryEditorReady);
   var ed = dijit.byId("entryEditor");
   ed.addStyleSheet("style.css");
   
   // handle editor input
-  
   dojo.connect(ed, "onKeyUp", function(e){
+    dijit.byId("cancelEntryButton").set("disabled",false);
     if ( editorDirty == false )
     {
       updateMessageData();
@@ -219,10 +275,10 @@ function init( userData )
     }
      switch( e.keyCode ){
         case 13: 
-          analyseEntryText(); break;
+          handleEditorEnterKey(e); break;
         case 8:
         case 46:
-          
+          //@todo: check if headline node is being deleted
           break;
         default: 
           break;
@@ -230,12 +286,14 @@ function init( userData )
   });
   
   // handle editor click
-    dojo.connect(ed, "onClick", function(e){ 
+  dojo.connect(ed, "onClick", function(e){ 
+    dijit.byId("cancelEntryButton").set("disabled",false);
     var target = e.target || e.srcElement || e.originalTarget;
     //var selected = dojo.withGlobal(ed.window, "getSelectedText", dijit._editor.selection, [null]);
     if( dojo.hasClass(target,"dummyText") )
     {
       var range = rangy.createRange();
+      target.innerHTML="<span>&nbsp;</span>";
       range.selectNodeContents(target);
       var sel = rangy.getIframeSelection(dojo.byId("entryEditor_iframe"));
       sel.setSingleRange(range);
@@ -243,17 +301,7 @@ function init( userData )
     }
   });
   
-  resetEditor();
-
-  // show main app
-  dojo.query("#appLayout").style({ visibility:"visible" });
-  
-  // start the message transport
-  subscribeToServerChannels(startPolling);
-   
-  // go!
-  loadEntries();
-  
+  resetEditor();  
 }
 
 var entryFilter = {};
@@ -267,12 +315,22 @@ function resetEntryFilter()
     "to"         : null,
     "group"      : {},
     "personId"   : [],
-    "search"     : null
+    "search"     : null,
+    "offset"     : 0,
+    "limit"      : 10
   };
   
-  //FIXME uncheck widgets
+  queryBox.clear();
+  resetTimeFilter();
+  dijit.byId("filter-categories-all").set("value",true);
+  dijit.byId("filter-group-all").set("value",true);
   
-  updateEntries();
+  var store1 = dijit.byId("filterAuthorGrid").store;
+  store1.fetch({onComplete: function(items){
+    items.forEach( function(item){
+      store1.setValue(item,"selected", false);
+    }); 
+  }});
 }
 
 function loadSingleEntry( id )
@@ -287,27 +345,41 @@ function findEntries( fragment )
   loadEntries();
 }
 
-function loadEntries()
+var previousParams = "";
+
+function loadEntries(forceReload)
 {
+  if ( window.__preventLoadingOfEntries ) return; 
+  var params = dojo.toJson([entryFilter]);
+  if ( params == previousParams && !forceReload ) return;
+  
+  if (window.__activeRequest) window.__activeRequest.cancel();
+  previousParams = params;
+  
   dojo.byId("newsContainerNode").innerHTML = "Lade Einträge...";
+  dijit.byId("centerColStandByOverlay").show();
   // load messages
-  dojo.xhrGet({
+  window.__activeRequest = dojo.xhrGet({
     url: "../../services/server.php",
     content:{
       service: "logbuch.entry",
       method : "list",
-      params : dojo.toJson([entryFilter])
+      params : params
     },
     handleAs: "json",
+    failOk : true,
     load: function(response) 
     {
+      window.__activeRequest = null;
+      entryFilter.id = null;
+      dijit.byId("centerColStandByOverlay").hide();
       handleMessages(response);
       if( response && response.result ) {
         dojo.byId("newsContainerNode").innerHTML = createContent( response.result.data );
       }
       else
       {
-        alert( response && response.error ? response.error.message : "Unknown Error" );
+        dojo.byId("newsContainerNode").innerHTML = ( response && response.error ? response.error.message : "Unknown Error" );
       }
     },
     error: function(message) {
@@ -316,16 +388,49 @@ function loadEntries()
   });
 }
 
-var updateRequests = 0;
+function loadNextEntries(offset,limit)
+{
+  entryFilter.offset = offset;
+  entryFilter.limit  = limit;
+  var params = dojo.toJson([entryFilter]);  
+  dijit.byId("centerColStandByOverlay").show();
+  window.__activeRequest = dojo.xhrGet({
+    url: "../../services/server.php",
+    content:{
+      service: "logbuch.entry",
+      method : "list",
+      params : params
+    },
+    handleAs: "json",
+    failOk : true,
+    load: function(response) 
+    {
+      window.__activeRequest = null;
+      entryFilter.offset = 0;
+      entryFilter.limit = 10;//hardcoded
+      dijit.byId("centerColStandByOverlay").hide();
+      handleMessages(response);
+      if( response && response.result ) {
+        dojo.create("div",{innerHTML:createContent( response.result.data )},"nextEntries"+offset,"replace");
+      }
+      else
+      {
+        dojo.create("div",{innerHTML:"Unknown Error"},"nextEntries"+offset,"replace");
+      }
+    },
+    error: function(message) {
+      dojo.create("div",{innerHTML:"Error:" + message},"nextEntries"+offset,"replace");
+    }
+  });
+}
+
 function updateEntries()
 {
-  updateRequests++;
-  var tmp = updateRequests;
-  window.setTimeout(function(){
-    if( tmp == updateRequests )
-    {
-      loadEntries();
-    }
+  if (window.__loadEntriesTimer) {
+    window.clearTimeout(window.__loadEntriesTimer);
+  }
+  window.__loadEntriesTimer = window.setTimeout(function(){
+    loadEntries();
   },500);
 }
 
@@ -404,6 +509,10 @@ function handleMessages(response)
         case "entry.created":
           insertNewEntry( message.data );
           break;
+        
+        case "entry.deleted":
+          removeEntryNode( message.data );
+          break;
       }
     });
   }
@@ -413,30 +522,54 @@ function createContent( data )
 {
   if ( data.length == 0 )
   {
-    return "Es konnten keine Einträge gefungen werden, die der Abfrage entsprechen";
+    return "Keine Einträge vorhanden";
   }
   var content = "";
+  var loadNext = false;
   dojo.forEach( data,function(entry) {
-    content+= '<div id="entry' + entry.id + '">';
-    content+= createEntryBody( entry );
-    content+= "</div>"; // End of message  
-    content+= "<div class='entry-toolbar'>";
-    content+= '<img onmouseover="explain(this)" '+ 
-      'onclick="replyToEntry('+ entry.id + ')" ' +
-      'alt="Beantworten" src="img/email_go.png"/>'; 
-    if( entry.editable ) content+= '&nbsp;| <img onmouseover="explain(this)" '+ 
-      'onclick="editEntry('+ entry.id + ')" ' +
-      'alt="Eintrag bearbeiten" src="img/page_edit.png"/>'; 
-    if( entry.comments ) content+= "&nbsp;| " + entry.comments + 
-      '&nbsp;<img onmouseover="explain(this)" ' + 
-      'onclick="loadSingleEntry('+ entry.id + ')" ' +
-      'alt="' + entry.comments + ' Antworten" src="img/email.png"/>'; 
-    if( entry.attachments) content+= "&nbsp;| " + entry.attachments + 
-      '&nbsp;<img onmouseover="explain(this)" ' + 
-      'onclick="loadSingleEntry('+ entry.id + ')" ' +
-      'alt="' + entry.attachments + ' Anhänge" " src="img/email_attach.png"/>'; 
-    content+= "</div>";      
+    if ( entry.id )
+    {
+      content+= '<div id="containerEntry' + entry.id + '">'
+      content+= '<div id="entry' + entry.id + '">';
+      content+= createEntryBody( entry );
+      content+= "</div>"; // End of message  
+      content+= "<div class='entry-toolbar'>";
+      content+= '<img onmouseover="explain(this)" '+ 
+        'onclick="replyToEntry('+ entry.id + ')" ' +
+        'alt="Beantworten" src="img/email_go.png"/>'; 
+      if( entry.editable ) content+= '&nbsp;| <img onmouseover="explain(this)" '+ 
+        'onclick="editEntry('+ entry.id + ')" ' +
+        'alt="Eintrag bearbeiten" src="img/page_edit.png"/>'; 
+      if( entry.deletable ) content+= '&nbsp;| <img onmouseover="explain(this)" '+ 
+        'onclick="deleteEntry('+ entry.id + ')" ' +
+        'alt="Eintrag löschen" src="img/cross.png"/>';         
+      if( entry.comments ) content+= "&nbsp;| " + entry.comments + 
+        '&nbsp;<img onmouseover="explain(this)" ' + 
+        'onclick="loadSingleEntry('+ entry.id + ')" ' +
+        'alt="' + entry.comments + ' Antworten" src="img/email.png"/>'; 
+      if( entry.attachments) content+= "&nbsp;| " + entry.attachments + 
+        '&nbsp;<img onmouseover="explain(this)" ' + 
+        'onclick="loadSingleEntry('+ entry.id + ')" ' +
+        'alt="' + entry.attachments + ' Anhänge" " src="img/email_attach.png"/>'; 
+      content+= "</div>"; 
+      content+= "</div>";
+    }
+    else
+    {
+      loadNext = entry; 
+    }
   });
+   
+  
+  if( loadNext )
+  {
+    content+="<div class='entry-more' id='nextEntries"+ loadNext.offset + "'>" + 
+      ( loadNext.limit < loadNext.remaining ? "<a href='void(0)' onclick='loadNextEntries("+ loadNext.offset + "," + loadNext.limit +"); return false;'>" + 
+      "Weitere " + loadNext.limit + " Einträge laden</a> | " : "" ) + 
+      "<a href='void(0)' onclick='loadNextEntries("+ loadNext.offset + "," + loadNext.remaining +"); return false;'>" + 
+      "Die übrigen " + loadNext.remaining + " Einträge laden</a>" + 
+    "<div>";    
+  }
   return content;
 }
 
@@ -445,7 +578,20 @@ function createEntryBody( entry )
   var content="";
   content+= "<div class='entry-headline'>";
   content+= entry.subject + "</div>";
-  content+= "<div class='entry-author'>Verfasser: " + entry.author + " (" + entry.date + ")</div>";
+  
+  if (entry.dateStart )
+  {
+    content+= "<div class='entry-event'>Zeit: " + 
+      entry.dateStart + " " + entry.timeStart + " - " +
+      ( entry.dateStart != entry.dateEnd ? entry.dateEnd : "" ) +
+      entry.timeEnd +
+    "</div>";
+  }
+  
+  content+= "<div class='entry-author'>Verfasser/in: " + entry.author + "</div>";
+  content+= "<div class='entry-date'>Eingetragen am " + entry.created;
+  if( entry.created != entry.updated) content+= " (aktualisiert am " + entry.updated + ")";
+  content+= "</div>";
   content+= "<div class='entry-categories'>Kategorien: ";
   var categories=[];
   entry.categories.forEach(function(c){
@@ -455,8 +601,8 @@ function createEntryBody( entry )
   content+= "</div>";
   if(entry.replyToId)
   {
-    content+="<div>Antwort auf: <a href='void(0)' onclick='loadSingleEntry("+ entry.replyToId + "); return false;'>" + 
-      entry.replyToSubject + "</a></div>";
+    content+="<div class='entry-reply'>Antwort auf: <a href='void(0)' onclick='loadSingleEntry("+ entry.replyToId + "); return false;'>" + 
+      entry.replyToSubject + "</a>" + " von " + entry.replyToAuthor + "</div>";
   }
   content+="<div class='entry-text'>" + entry.text + "</div>";
   return content;
@@ -511,7 +657,7 @@ function editEntry(id)
 {
   var ed = dijit.byId("entryEditor");
   if (ed.entryId) resetEditor();
-  
+  dijit.byId("editorStandByOverlay").show();
   dojo.byId("rightColHeader").innerHTML = "Eintrag bearbeiten";
   ed.set("disabled",true);
   var entry = dojo.byId("entry"+id);
@@ -530,6 +676,8 @@ function editEntry(id)
     load: function(response) 
     {
       ed.set("disabled",false);
+      dijit.byId("editorStandByOverlay").hide();
+      dijit.byId("cancelEntryButton").set("disabled",false);
       handleMessages(response);
       if( response && response.result ) {
         window.__populatingForms = true;
@@ -560,7 +708,13 @@ function editEntry(id)
            {
              widget.set("value", entry.acl[node.value] );
            }
-        });        
+        });  
+        if( entry.timeStampStart )
+        {
+          dijit.byId("entry-date").set("value",new Date( entry.timeStampStart) );
+          dijit.byId("entry-time-from").set("value",new Date( entry.timeStampStart) );
+          dijit.byId("entry-time-to").set("value",new Date( entry.timeStampEnd) );
+        }
         editorDirty = true;
         dijit.byId("submitEntryButton").set("label","Aktualisieren");
         dijit.byId("rightCol").domNode.style.backgroundColor = "#DBEDFF";
@@ -582,6 +736,7 @@ function replyToEntry(id)
   var entry = dojo.byId("entry"+id);
   if (ed.entryId) resetEditor();
   ed.replyToId = id;  
+  dijit.byId("editorStandByOverlay").show();
   ed.set("disabled",true);
   var entry = dojo.byId("entry"+id);
   animateFocusBox( entry, ed.domNode );
@@ -599,6 +754,9 @@ function replyToEntry(id)
     load: function(response) 
     {
       ed.set("disabled",false);
+      
+      dijit.byId("editorStandByOverlay").hide();
+      dijit.byId("cancelEntryButton").set("disabled",false);
       handleMessages(response);
       if( response && response.result ) {
         window.__populatingForms = true;
@@ -652,6 +810,58 @@ function replyToEntry(id)
   });  
 }
 
+function deleteEntry(id)
+{
+  var entryNode = dojo.byId("entry"+id);
+  var containerNode = dojo.byId("containerEntry"+id);
+  fadeOut( containerNode );
+  
+  if( !confirm("Wollen Sie die Nachricht wirklich löschen?") )
+  {
+    fadeIn(containerNode);
+    return;
+  }
+  
+  var standby = new dojox.widget.Standby({
+    target: entryNode
+  });
+  document.body.appendChild(standby.domNode);
+  standby.startup();
+  standby.show();
+  dojo.xhrGet({
+    url: "../../services/server.php",
+    content:{
+      service: "logbuch.entry",
+      method : "delete",
+      params : dojo.toJson([id])
+    },
+    handleAs: "json",
+    load: function(response) 
+    {
+      handleMessages(response);
+      standby.hide();
+      if( response && response.result ) {
+        removeEntryNode(id);
+      }
+      else
+      {
+        alert( response && response.error ? response.error.message : "Unknown Error" );
+      }
+    },
+    error: function(message) {
+        alert( "Error:" + message);
+    }
+  });
+}
+
+function removeEntryNode(id)
+{
+  var containerNode = dojo.byId("containerEntry"+id);
+  if( containerNode )
+  {
+    dojo.fx.wipeOut({ node:containerNode }).play();  
+  }
+}
 
 function explain(node)
 {
@@ -692,11 +902,10 @@ function subscribeToServerChannels(callback)
     content:{
       service: "logbuch.message",
       method : "subscribe",
-      params : '[["entry.updated","entry.created"]]'
+      params : '[["entry.updated","entry.created","entry.deleted"]]'
     },
     handleAs: "json",
     load: function(response) {
-      console.log("Subscribed to server channels");
       if( typeof callback == "function") callback();
     },
     error: function(message) {
@@ -717,7 +926,7 @@ function unsubscribeFromServerChannels(callback)
     handleAs: "json",
     load: function(response) {
       handleMessages(response);
-      console.log("Unsubscribed from server channels");
+      //console.log("Unsubscribed from server channels");
       if( typeof callback == "function") callback();
     },
     error: function(message) {
@@ -728,7 +937,7 @@ function unsubscribeFromServerChannels(callback)
 
 function startPolling()
 {
-  window.__timer = new dojox.timing.Timer( 5000 );
+  window.__timer = new dojox.timing.Timer( 10000 );
   window.__timer.onTick = function(){
     dojo.xhrGet({
       url: "../../services/server.php",
@@ -737,12 +946,13 @@ function startPolling()
         method : "broadcast",
         params : "[]"
       },
+      failOk : true,
       handleAs: "json",
       load: function(response) {
         handleMessages(response);
       },
       error: function(message) {
-        alert( "Error:" + message);
+        console.log( "Error:" + message);
       }
     });
   };
@@ -777,8 +987,9 @@ function resetEditor()
   ed.replyToId = null;
   dojo.byId("rightColHeader").innerHTML = "Neuen Eintrag schreiben";
   dijit.byId("submitEntryButton").set('label',"Senden");
-  
+  dijit.byId("cancelEntryButton").set("disabled",true);
   dijit.byId("rightCol").domNode.style.backgroundColor = "transparent";
+  dijit.byId("editorStandByOverlay").hide();
 }
 
 function logout()
@@ -800,10 +1011,6 @@ function logout()
   
 }
 
-function entryEditorReady()
-{
-  var editor = dijit.byId("entryEditor");
-}
 
 
 
@@ -924,6 +1131,7 @@ function updateMessageData( widget )
 
 function createEntryOnServer()
 {
+  dijit.byId("editorStandByOverlay").show();
   var ed = dijit.byId("entryEditor");
   ed.set("disabled",true);
   dojo.xhrPost({
@@ -974,7 +1182,7 @@ function insertNewEntry( data )
 function updateEntryOnServer()
 {
   var ed = dijit.byId("entryEditor");
-  ed.set("disabled",true);
+  dijit.byId("editorStandByOverlay").show();
   dojo.xhrPost({
     url: "../../services/server.php",
     content:{
@@ -987,9 +1195,9 @@ function updateEntryOnServer()
       handleMessages(response);
       if( response && response.result )
       {
+        replaceEntry( response.result.data );
         resetEditor();
         updateMessageData();
-        replaceEntry( response.result.data );
       }
       else
       {
@@ -1008,14 +1216,13 @@ function updateEntryOnServer()
 function replaceEntry( data )
 {
   var content = createContent([data]);
-  var node = dojo.byId("entry"+data.id);
-  if(node){
-    node.innerHTML = createEntryBody(data);
+  var entryNode = dojo.byId("entry"+data.id);
+  if(entryNode){
+    entryNode.innerHTML = createEntryBody(data);
     var ed = dijit.byId("entryEditor");
     if ( ed.entryId == data.id )
     {
-      fadeIn(node);
-      animateFocusBox( ed.domNode, node  );
+      animateFocusBox( ed.domNode, entryNode ); 
     }
   }
 }
@@ -1054,8 +1261,9 @@ function toggleSelectUserTableOnRowClick(e)
   }
 }
 
-function analyseEntryText()
+function handleEditorEnterKey(e)
 {
+  //console.log(e);
   var editor = dijit.byId("entryEditor");
   var text = editor.get("value");
   
@@ -1069,5 +1277,58 @@ function analyseEntryText()
     {
       dijit.byId( "c-" + c ).set("value",true);
     }
+  }
+  
+  var counter = 0;
+  dojo.forEach( editor.document.body.childNodes, function(node){
+    if( counter++ == 0)
+    {
+      var content = dojo.trim(dojox.dtl.filter.htmlstrings.striptags(node.innerHTML));
+      node = dojo.create("div", { innerHTML: content, contentEditable : true  }, 
+        node, "replace");
+      dojo.addClass(node,"entry-headline");
+      if( content == "" || content == "&nbsp;" )
+      {
+        dojo.addClass(node,"dummyText");
+        node.innerHTML = "Zum Eingeben der Überschrift hier klicken";
+      }
+    }
+    else
+    {
+      if( dojo.hasClass(node,"entry-headline") )
+      {
+        if( dojo.hasClass(node,"dummyText" ) )
+        {
+          node.parentNode.removeChild(node);
+        }
+        else
+        {
+          dojo.removeClass(node,"entry-headline");
+        }
+      } 
+      else if( node.nodeType != 1 && typeof node.textContent != undefined )
+      {
+        var content =  dojo.trim(node.textContent);
+        if( content == "" || content == "&nbsp;" )
+        {
+          node.parentNode.removeChild(node);
+          counter--;
+        }
+        else
+        {
+          node = dojo.create("p", 
+            {innerHTML: content, contentEditable : true }, 
+            node, "replace");
+        }
+      }
+    }
+  });
+  //if the second node has been deleted, recreate it
+  if( counter == 1 )
+  {
+     var node = dojo.create("p", 
+      {innerHTML: "Zum Eingeben des Haupttextes hier klicken", contentEditable : true }, 
+      editor.document.body, "last");
+     dojo.addClass(node,"dummyText");
   }
 }

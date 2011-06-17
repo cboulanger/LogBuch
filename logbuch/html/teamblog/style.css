@@ -90,12 +90,16 @@ body.claro {
 	background-color: #EEEEEE;
 }
 
-.entry-author {
-	font-weight : bold;
+.entry-author, .entry-categories, .entry-date, .entry-reply, .entry-event {
+  color: #666666;
 }
 
-.entry-catetgories {
-	
+.entry-reply a, .entry-reply a:visited {
+	color : #7BB6EA;
+}
+
+.entry-author, .entry-event {
+	font-weight : bold;
 }
 
 .entry-text {
@@ -104,10 +108,6 @@ body.claro {
 
 .entry-toolbar {
   text-align : right;	
-}
-
-.entry-reply {
-  background-color : #E5B39A;	
 }
 
 

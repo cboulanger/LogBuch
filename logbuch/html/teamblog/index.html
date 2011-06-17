@@ -1,6 +1,6 @@
 <html>
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/> 
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 	<title>LogBuch TeamBlog</title>
 	<style type="text/css"> 
 	  @import "dojo/dijit/themes/claro/claro.css";
@@ -19,7 +19,6 @@
 	<!-- main code -->
 	<script src="teamblog.js"></script>
 </head>
-
 <body class="claro">
 
   <!----------------------- layout container ----------------------->
@@ -38,6 +37,7 @@
 			 Nachrichten werden geladen...
 			</div>
 		</div>
+		<div id="centerColStandByOverlay" dojoType="dojox.widget.Standby" target="centerCol"></div>
 		
 		<!----------------------- title bar ----------------------->
 		<div class="edgePanel" data-dojo-type="dijit.layout.ContentPane"
@@ -67,7 +67,7 @@
         dojoType="dijit.form.Button" 
         onClick="resetEntryFilter()">Zurück</button>
         
-        <!-- categories --> 
+        <!-- save/load filter data
         <div dojoType="dijit.form.DropDownButton">
           <span>Optionen</span>
 					<div dojoType="dijit.Menu" >
@@ -83,8 +83,8 @@
 					    onClick="alert('not actually pasting anything, just a test!')">
 					        Paste
 					    </div>
-					</div>        
-        </div>
+					</div>    
+        </div>-->
      </div>
         
 		<!-- Search Box -->
@@ -439,19 +439,22 @@
               <tr>
                 <td><label for="entry-date">Datum:</label></td>
                 <td><input 
-                  dojoType=dijit.form.DateTextBox name="date" id="entry-date"
+                  id="entry-date"
+                  dojoType=dijit.form.DateTextBox name="date" 
                   onChange="updateMessageData(this);"></td>
               </tr>
               <tr>
                 <td><label for="entry-time-from">Beginnt:</label></td>
                 <td><input 
-                  dojoType=dijit.form.TimeTextBox name="from" id="entry-time-from"
+                  id="entry-time-from"
+                  dojoType=dijit.form.TimeTextBox name="from" 
                   onChange="updateMessageData(this);"></td>
               </tr>
                 <tr>
                   <td><label for="entry-time-to">Endet:</label></td>
                   <td><input 
-                    dojoType=dijit.form.TimeTextBox name="to" id="entry-time-to"
+                    id="entry-time-to"
+                    dojoType=dijit.form.TimeTextBox name="to" 
                     onChange="updateMessageData(this);"></td>
                 </tr>               
             </table>
@@ -550,6 +553,7 @@
           data-dojo-type="dijit.Editor"
           data-dojo-props="plugins:['insertUnorderedList','createLink','pastefromword','fullscreen']">
         </div>
+        <div id="editorStandByOverlay" dojoType="dojox.widget.Standby" target="entryEditor"></div>
         
         <!-- send button -->
         <div id="submitEntryContainer">
@@ -558,6 +562,7 @@
             onClick="submitEntry();"
             disabled="true">Senden</button>
           <button id="cancelEntryButton" 
+            disabled="true"
             dojoType="dijit.form.Button" 
             onClick="resetEditor();">Abbrechen</button>  
         </div>
@@ -571,17 +576,14 @@
     <div id="footer" class="edgePanel"
       data-dojo-type="dijit.layout.ContentPane"
       data-dojo-props="region: 'bottom'">
-      <button
-        id="reloadEntriesButton"
-        dojoType="dijit.form.Button" 
-        onClick="loadEntries();">Einträge neu laden</button>
-      <!-- <button id="adminButton" 
+      <button id="adminButton" 
         dojoType="dijit.form.Button" 
         onClick="alert('noch nicht implementiert');"
         disabled="true">Admin</button>
       <button id="calenderButton" 
         dojoType="dijit.form.Button" 
-        onClick="alert('noch nicht implementiert');">Kalender</button>  --> 
+        onClick="alert('noch nicht implementiert');"
+        disabled="true">Kalender</button> 
     </div> 	
 	</div>
 	
@@ -628,7 +630,7 @@
   </div>  
 	
 	<!----------------------- focus box ----------------------->
-  <div id="focusBox" />
+  <div id="focusBox" ></div>
 	
 </body>
 </html>

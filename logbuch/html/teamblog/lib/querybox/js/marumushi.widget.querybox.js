@@ -30,7 +30,7 @@ dojo.declare("marumushi.widget.QueryBox", null, {
 	searchURL					:'',
 	
 	//(milis) time to wait to query backend script										
-	keyDownTimeout				:200, 
+	keyDownTimeout				:500, 
 	
 	// (milis) how long until we give up waiting for results to come back.						
 	requestTimeout				:20000, 
@@ -237,7 +237,7 @@ dojo.declare("marumushi.widget.QueryBox", null, {
 			//key up
 			case 38 : this.selectNext(event); break;
 			//escape
-			case 27 : this.hide(); break;
+			case 27 : this.clear(); break;
 			//anything else
 			default : this.start(); break;
 		}
@@ -312,7 +312,7 @@ dojo.declare("marumushi.widget.QueryBox", null, {
 	 * probably want to switch visibility to on/off. loading is not good.
 	 */
 	displayLoader:function(value){
-		var path = '../images/querybox/';
+		var path = 'lib/querybox/images/querybox/';
 		var imageURL = value ? 'ajax-loader.gif' : 'search-icon-light.gif';
 		dojo.byId(this.inputFieldID).style.backgroundImage='url('+path+imageURL+')';
 	},
@@ -384,7 +384,13 @@ dojo.declare("marumushi.widget.QueryBox", null, {
 			window.clearTimeout(scope.timer);
 		}
 		scope.timer = window.setTimeout(function(){scope.sendRequest();},scope.keyDownTimeout);
-	}
+	},
+  
+  clear : function()
+  {
+    this.hide();
+    dojo.byId(this.inputFieldID).value="";
+  }
 });
 
 

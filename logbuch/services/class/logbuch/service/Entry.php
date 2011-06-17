@@ -75,10 +75,18 @@ class logbuch_service_Entry
   		) );				  
 		}
 		
+		elseif ( is_string( $filter->search ) )
+		{
+  		$query = new qcl_data_db_Query( array(
+  		  'where'       => "subject LIKE :fragment or text LIKE :fragment",
+  		  'parameters'  => array(
+  		    ":fragment"	=> "%{$filter->search}%"
+  		  )
+  		) );		  
+		}
+		
 		else 
 		{
-		
-  		
   		/*
   		 * date
   		 */
@@ -125,18 +133,79 @@ class logbuch_service_Entry
 		}
 		
 		/*
+		 * paging
+		 */
+		$paging = false;
+  	if( is_numeric($filter->offset) && is_numeric( $filter->limit ))
+		{
+  		$paging = true;
+		}
+				
+		/*
 		 * execute query
 		 */
 		$entryModel->find($query);
 		$result = array();
-		
+		$counter1 = 0;
+		$counter2 = 0;
+		$denied = 0;
+		$skipped = 0;
 		while( $entryModel->loadNext($query) )
-		{
+		{ 
 		  $data = $this->_getEntryData($entryModel, $filter);
 		  if ( is_array($data) )
 		  {
-		    $result[] = $data;
+		    if( $paging ) 
+		    {   
+		      if( $counter2 >= $filter->offset and count($result) < $filter->limit )
+		      {
+		        $result[] = $data;
+		      }
+		      else
+		      {
+		        $skipped++;
+		      }
+		    }
+		    else
+		    {
+		      $result[] = $data;
+		    }
+		    $counter2++;
 		  }
+		  else
+	    {
+	      $denied++;
+	    }
+	    $counter1++;
+		}
+	  
+		if( $paging )
+		{
+		  $available = $counter2;
+		  $retrieved = count($result);
+		  $nextOffset = $filter->offset + $filter->limit;
+  		$remaining = max(array($available - $nextOffset ,0));
+  		/*
+		  $this->debug( array(
+		    'filter'		=> $filter,
+		    'records'   => $counter1,
+		    'denied'	  => $denied,
+		    'retrieved'	=> $retrieved,
+		    'available'	=> $available,
+		    'skipped'		=> $skipped,
+		    'remaining'	=> $remaining,
+		    'nextOffset'=> $nextOffset
+		  ), __CLASS__, __LINE__ );*/
+		  
+  		if( $remaining )
+  		{
+  		  $limit  = min(array( 10, $remaining ) );
+  		  $result[] = array(
+  	      "offset"	  => $nextOffset,
+  		    "remaining"	=> $remaining,
+  		    "limit"			=> $limit
+  		  );
+  		}
 		}
 		return $result;
 	}
@@ -282,12 +351,14 @@ class logbuch_service_Entry
 	   */
     $data = array(
       'id'			    => $entryModel->id(),
-      'date'			  => date ("d.m.Y H:i", strtotime( $entryModel->get("created") ) ),
+      'created'		  => date ("d.m.Y H:i", strtotime( $entryModel->get("created") ) ),
+      'updated'		  => date ("d.m.Y H:i", strtotime( $entryModel->get("modified") ) ),
       'subject'     => $entryModel->get("subject"),
       'author'	 	  => $entryModel->authorName(),
       'text'		    => $entryModel->get("text"),
       'acl'					=> $entryModel->aclData(),
       'editable'	  => $editable,
+      'deletable'		=> $editable && ($comments==0),
       'categories'  => $categories,
       'comments'	  => $comments,
       'attachments' => $attachments,
@@ -298,8 +369,10 @@ class logbuch_service_Entry
      */
     if( in_array("event", $categories) )
     {
-      $data['dateStart'] 	= date("Y-m-d", strtotime( $entryModel->get('dateStart') ) ); 
-  	  $data['dateEnd'] 		= date("Y-m-d", strtotime( $entryModel->get('dateEnd') ) );		
+      $data['timeStampStart']      = strtotime( $entryModel->get('dateStart') )*1000;
+      $data['timeStampEnd']        = strtotime( $entryModel->get('dateEnd') )*1000;
+      $data['dateStart'] 	= date("d.m.Y", strtotime( $entryModel->get('dateStart') ) ); 
+  	  $data['dateEnd'] 		= date("d.m.Y", strtotime( $entryModel->get('dateEnd') ) );		
   		$data['timeStart'] 	= date("H:i", 	strtotime( $entryModel->get('dateStart') ) ); 
   	  $data['timeEnd'] 		= date("H:i", 	strtotime( $entryModel->get('dateEnd') ) );
     }
@@ -311,7 +384,8 @@ class logbuch_service_Entry
 		{
 		  $parentEntryModel->load($replyToId);
 		  $data['replyToId'] = $parentEntryModel->id();
-      $data['replyToSubject'] = $parentEntryModel->get("subject");
+      $data['replyToSubject'] = $parentEntryModel->get("subject") ;
+      $data['replyToAuthor'] =  $parentEntryModel->authorName();
 		}    
     return $data;
 	}
@@ -399,20 +473,21 @@ class logbuch_service_Entry
 		qcl_import("qcl_data_xml_SimpleXMLElement");
 		$xml = '<?xml version="1.0" encoding="utf-8"?><html>' . $text  . '</html>';
 		$xmlDoc = qcl_data_xml_SimpleXMLElement::createFromString($xml);
-		$headNode = $xmlDoc->div;
-		
-		if ( ! $headNode )
+		$children = $xmlDoc->children();
+		$itemData['text'] = "";
+		$counter = 0;
+		foreach( $children as $tag => $node )
 		{
-        throw new InvalidJsonRpcArgumentException( 
-				  "Titel des Eintrages fehlt."
-			);
+	    if( $counter++ == 0 )
+	    {
+	      $itemData['subject'] =  trim( strip_tags( $node->asXML() ) ) ;
+	    }
+	    else 
+	    {
+	      $itemData['text'] .= trim( $node->asXML() );
+	    }
+	    
 		}
-		
-		$subject = (string) $headNode;
-		unset($xmlDoc->div);
-		$text = trim(str_replace(array('<?xml version="1.0" encoding="utf-8"?>','<html>','</html>'), "", $xmlDoc->asXML()));
-		$itemData['subject'] = $subject;
-		$itemData['text'] = $text;
 		
 		/*
 		 * acl
@@ -494,12 +569,10 @@ class logbuch_service_Entry
 	 * @param $category
 	 * @param $id
 	 */
-	function method_delete( $category, $id)
+	function method_delete( $id )
 	{
-		$this->notImplemented(__CLASS__);
-		$model = $this->getDatasourceModel( "demo" )->getModelOfType( $category );
+		$model = $this->getDatasourceModel( "demo" )->getModelOfType( "entry" );
 		$model->load( $id );
-		
 		if( $this->getActiveUser()->hasRole( QCL_ROLE_ADMIN ) ) // FIXME permission
 		{
 			$model->delete();
@@ -514,10 +587,10 @@ class logbuch_service_Entry
 			}
 			else
 			{
-				qcl_import("qcl_ui_dialog_Alert");
-				throw new JsonRpcError( $this->tr( "You cannot delete this entry because you do not own it.") );	
+				throw new JsonRpcError( $this->tr( "Sie dŸrfen diesen Eintrag nicht lšschen.") );	
 			}
 		}
+		$this->broadcastClientMessage("entry.deleted",$id,true);
 		return "OK";
 	}		
 	
@@ -585,7 +658,8 @@ class logbuch_service_Entry
     	    $result['results'][] = array(
     	      "title"        => $entryModel->get("subject"),
     	      "link"         => "javascript:loadSingleEntry(" . $entryModel->id() . ")",
-    	      "description"  => "",
+    	      "description"  => $entryModel->authorName() . " (" .
+    	                          date ("d.m.Y H:i", strtotime( $entryModel->get("modified") ) ) . ")" ,
     	      "id"           => $entryModel->id(),
     	      "category"	   => $this->locale[$category]
     	    );

@@ -48,10 +48,10 @@
 }
 
 .QueryBox .TextInput {
-	padding-right: 2px;
+	padding-left: 25px;
 	width: 100%;
 	background: #FFF url(../images/querybox/search-icon-light.gif) no-repeat
-		scroll 210px 6px;
+		scroll 6px 6px;
 }
 
 .QueryBox .ResultBox div,.QueryBox .ResultBox h1,.QueryBox .ResultBox h2,.QueryBox .ResultBox p
@@ -77,6 +77,7 @@
 }
 
 .QueryBox .ResultBox p {
+	font-size: 10px;
 	margin: 0px 0px 0px 4px;
 	color: #888;
 }
@@ -144,7 +145,7 @@
 
 .QueryBox .ResultsPage .Result h3 {
 	color: #000;
-	font-size: 16px;
+	font-size: 11px;
 	font-weight: normal;
 	padding: 0px;
 	margin: 5px 0px;
@@ -152,7 +153,7 @@
 
 .QueryBox .ResultsPage .Result p {
 	color: #444;
-	font-size: 14px;
+	font-size: 10px;
 	margin: 0px;
 	padding: 0px;
 }
