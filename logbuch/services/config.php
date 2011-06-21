@@ -82,6 +82,11 @@ define("APPLICATION_CLASS_PATH", "./class");
  */
 define( "QCL_LOG_FILE", "log/logbuch.log" );
 
+/*
+ * place to store attachemnts
+ */
+define( "QCL_UPLOAD_PATH", "attachments" );
+
 //-------------------------------------------------------------
 // Application-related configuration
 //-------------------------------------------------------------

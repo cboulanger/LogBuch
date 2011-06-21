@@ -23,36 +23,20 @@ class logbuch_service_File
   extends qcl_data_controller_Controller
 {
   
-  /**
-   * Returns the content type according to the file extension
-   */
-  protected function getContentType( $file )
-  {
-    $file_extension = strtolower(substr(strrchr($file,"."),1));
-    switch( $file_extension )
-    {
-      case "pdf": $ctype="application/pdf"; break;
-      case "txt": $ctype="text/plain"; break;
-      case "exe": die("Not allowed");
-      case "zip": $ctype="application/zip"; break;
-      case "doc": $ctype="application/msword"; break;
-      case "xls": $ctype="application/vnd.ms-excel"; break;
-      case "ppt": $ctype="application/vnd.ms-powerpoint"; break;
-      case "gif": $ctype="image/gif"; break;
-      case "png": $ctype="image/png"; break;
-      case "jpg": $ctype="image/jpg"; break;
-      default: $ctype="application/octet-stream";
-    }
-    return $ctype;
-  }
+
   
-  public function method_download( $filename, $basename )
+  public function method_download( $id )
   {
-    qcl_import("qcl_io_filesystem_local_File");
-    $path   = realpath("../html/valums/server/uploads/$basename");
-    $file   = new qcl_io_filesystem_local_File( "file://" . $path);
-    $size   = $file->size();
-    $ctype  = $this->getContentType( $filename );
+    $attModel   = $this->getDatasourceModel("demo")->getInstanceOfType("attachment");
+    $entryModel = $this->getDatasourceModel("demo")->getInstanceOfType("entry");
+    
+    // FIXME ACL!
+    
+    $attModel->load($id);
+    $filetype  = $attModel->get("mime");
+    $filename  = $attModel->get("filename");
+    $filepath  = $attModel->filepath();
+    $filesize  = $attModel->get("size");
     
     /*
      * headers
@@ -60,9 +44,9 @@ class logbuch_service_File
     header("Pragma: public");
     header("Expires: 0");
     header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-    header("Content-Type: $ctype" );
+    header("Content-Type: $filetype" );
     
-    if ( substr( $ctype, 0, 6 ) == "image/" )
+    if ( substr( $filetype, 0, 6 ) == "image/" )
     {
       // header("Content-Disposition: attachment; filename=\"$filename\"");
       // TODO is it possible to change the name of an inline download?
@@ -72,12 +56,14 @@ class logbuch_service_File
       header("Content-Disposition: attachment; filename=\"$filename\"");
     }
     header("Content-Transfer-Encoding: binary");
-    header("Content-Length: $size" );
+    header("Content-Length: $filesize" );
 
 
     /*
      * stream file content to client
      */
+    qcl_import("qcl_io_filesystem_local_File");
+    $file = new qcl_io_filesystem_local_File("file://$filepath");
     $file->open("r");
     while ( $data = $file->read(8*1024) )
     {
@@ -85,5 +71,69 @@ class logbuch_service_File
     }
     $file->close();
     exit;
-  }  
+  }
+  
+  function method_upload($entryId, $paths, $names)
+  {
+    $entryModel = $this->getDatasourceModel("demo")->getInstanceOfType("entry");
+    $attModel   = $this->getDatasourceModel("demo")->getInstanceOfType("attachment");
+    
+    qcl_assert_integer($entryId);
+    
+    if( $entryId )
+    {
+      $entryModel->load($entryId);
+    }
+    
+    $result = array( 
+      "message" => count($names) . " Datei(en) hochgeladen.",
+      "files"		=> array()
+    );
+    
+    for ($i = 0; $i < count($names); $i++)
+    {
+       $file = $names[$i];
+       $path = $paths[$i];
+       
+       /*
+        * get icon for file
+        */
+       $file_extension = strtolower(substr(strrchr($file,"."),1));
+       $iconpath = "img/fileicons/$file_extension.png";
+       if( ! file_exists("../html/teamblog/" . $iconpath ) )
+       {
+         $iconpath = "img/page_error.png";
+       } 
+       
+       /*
+        * create new attachment
+        */
+       $hash = substr(strrchr($path,"/"),1);
+       $attId = $attModel->create(array(
+         'filename' => $file,
+         'hash'     => $hash
+       ));
+       
+       /*
+        * link if entry id is already known
+        */
+       if( $entryId )
+       {
+         $entryModel->linkModel($attModel);
+       }
+       
+       /*
+        * create info data
+        */
+       $result['ids'][] = $attId;
+       $result['files'][] = array(
+         "name"	=> $file,
+         "icon"	=> $iconpath,
+         "id"   => $attId,
+         "mime"	=> $attModel->get("mime")
+       );
+    }
+    return $result;
+      
+  }
 }

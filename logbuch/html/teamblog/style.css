@@ -76,22 +76,36 @@ body.claro {
 	
 }
 
-.infoText {
+.infoText, .infoTextSmall {
 	color: #888888;
 }
+
+.infoTextSmall {
+  font-size: 10px !important;
+}
+
 .dummyText {
   color: #888888;
 }
 
 .entry-headline {
 	font-weight : bold;
-	font-size : 14;
+	font-size : 14px;
 	margin-bottom : 5px;
+	margin-top: 5px;
 	background-color: #EEEEEE;
+	padding: 2px;
 }
 
-.entry-author, .entry-categories, .entry-date, .entry-reply, .entry-event {
+.entry-author, 
+.entry-categories, 
+.entry-date, 
+.entry-reply, 
+.entry-event,
+.entry-access 
+{
   color: #666666;
+  font-size: 10px;
 }
 
 .entry-reply a, .entry-reply a:visited {
@@ -110,11 +124,112 @@ body.claro {
   text-align : right;	
 }
 
+div.entry-toolbar img:hover,
+table.entry-attachement-list img:hover{
+  cursor: pointer; cursor: hand;
+}
 
+#access-readonly-explanation{
+  display: none;
+  max-width: 100px !important;
+  width: 100px !important;	
+}
 #focusBox {
 	position : absolute;
 	display : none;
   border: 1px solid black;
   z-index: 2147483647;
 }
+
+.dojoxFileInput {}
+
+.dojoxUploaderFileList{}
+
+.dojoxUploaderFileListProgress {}
+
+.dojoxUploaderIndex
+{
+	width: 20px;
+}
+.dojoxUploaderIcon
+{
+	width: 50px;
+}
+.dojoxUploaderFileName
+{
+  width: 100px;
+}
+
+.dojoxUploaderSize
+{
+  width: 50px;
+}
+
+table.dojoxUploaderFileListTable{
+  margin-bottom: 20px;	
+}
+
+table.dojoxUploaderFileListTable,
+table.dojoxUploaderFileListContent,
+#attachment_filelist
+{
+	width: 100%;
+	border-spacing: 0px;
+}
+
+td.dojoxUploaderFileListContainer {
+	padding : 0px;
+}
+
+table.dojoxUploaderFileListTable th
+{ 
+	font-size: 10px !important;
+	font-weight: bold !important;
+	border-bottom: 1px solid;
+	text-align: left;
+}
+
+table.dojoxUploaderFileListTable td, 
+#attachment_filelist td,
+table.entry-attachment td,
+table.filter-summary td
+{
+  font-size: 10px !important;
+  font-weight: normal !important;
+  vertical-align: top;
+  text-align: left;
+}
 	
+#attachment_uploader_error
+{
+	color:red;
+}
+
+#attachment_uploader {
+  width: 250px;	
+}
+
+#attachment_uploader_sendbutton {
+  
+}
+
+table.entry-attachment
+{
+  width: 100%;
+}
+
+.entryLinkContainer, 
+.entry-attachment-container{
+  font-size: 10px;
+  height: 0px;
+  overflow: hidden;  
+}
+
+#dojoxLightboxDialog {
+  min-width: 200px;
+  min-height: 100px;	
+}
+
+#leftCol{
+  overflow: auto;
+}

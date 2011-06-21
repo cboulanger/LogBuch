@@ -128,7 +128,7 @@ class logbuch_service_Entry
   		
   		$query = new qcl_data_db_Query(array(
   		  'where'			=> $where,
-  			'orderBy'		=> "created DESC"
+  			'orderBy'		=> either($filter->orderBy, "created DESC")
   		));		
 		}
 		
@@ -327,6 +327,22 @@ class logbuch_service_Entry
 		if ( ! $access or !$display ) return null;
 		
 		/*
+		 * access for particular users? 
+		 */
+		$members = null;
+		if( count( $aclModel->get("moreMembers") ) )
+		{
+		  $personModel->findWhere( array( 
+		  	"id" => array( "IN", $aclModel->get("moreMembers") ) 
+		  ) );
+		  while( $personModel->loadNext() )
+		  {
+		    $members[] = $personModel->getFullName();
+		  }
+		}
+		
+		
+		/*
 		 * retrieve number of comments of this entry
 		 */
 		$ids = $parentEntryModel->linkedModelIds($entryModel);
@@ -344,8 +360,6 @@ class logbuch_service_Entry
 		 */
 		$editable = ( $admin || $owner );
 		
-		
-		    		
 	  /*
 	   * create data
 	   */
@@ -357,11 +371,12 @@ class logbuch_service_Entry
       'author'	 	  => $entryModel->authorName(),
       'text'		    => $entryModel->get("text"),
       'acl'					=> $entryModel->aclData(),
+      'members'			=> $members,
       'editable'	  => $editable,
       'deletable'		=> $editable && ($comments==0),
       'categories'  => $categories,
       'comments'	  => $comments,
-      'attachments' => $attachments,
+      'attachments' => $this->_getAttachmentData($entryModel),
     );	
     
     /*
@@ -390,6 +405,44 @@ class logbuch_service_Entry
     return $data;
 	}
 	
+	function _getAttachmentData( $entryModel )
+	{
+	  $data = array();
+	  static $attModel= null;
+	  if( $attModel === null )
+	  {
+	    $attModel = $this->getDatasourceModel("demo")->getInstanceOfType("attachment");
+	  }
+	  
+	  try 
+	  {
+  	  $attModel->findLinked($entryModel);
+  	  while( $attModel->loadNext() )
+  	  {
+  	    $filename = $attModel->get("filename");
+  	    
+         /*
+          * get icon for file
+          */
+         $file_extension = strtolower(substr(strrchr($filename,"."),1));
+         $iconpath = "img/fileicons/$file_extension.png";
+         if( ! file_exists("../html/teamblog/" . $iconpath ) )
+         {
+           $iconpath = "img/page_error.png";
+         }   	    
+  	    
+  	    $data[] = array(
+  	      'id'    => $attModel->id(),
+  	      'name'  => $filename,
+  	      'icon'	=> $iconpath,
+  	      'size'	=> qcl_format_filesize( $attModel->get("size") ),
+  	      'mime'  => $attModel->get("mime")
+  	    );
+  	  }
+	  }
+	  catch( qcl_data_model_RecordNotFoundException $e ){}
+	  return $data;
+	}
 	
 	/**
 	 * Reads a category entry
@@ -492,16 +545,15 @@ class logbuch_service_Entry
 		/*
 		 * acl
 		 */
-		$aclModel = new logbuch_model_AccessControlList();		
+		$aclModel = new logbuch_model_AccessControlList();
 		$aclData  = $aclModel->set($data->acl);
+		
 		
 		/*
 		 * merge item and acl data 
 		 */
 		$itemData = array_merge( $itemData, $aclData->data() );
-		
-
-				
+						
 		/*
 		 * create or update record
 		 */
@@ -547,15 +599,50 @@ class logbuch_service_Entry
 		}
 		
 		/*
+		 * attachments
+		 */
+		if( is_array( $data->attachmentIds ) )
+		{
+		  $attModel = $this->getDatasourceModel("demo")->getInstanceOfType("attachment");
+		  $before   = $attModel->linkedModelIds( $entryModel );
+		  $after    = $data->attachmentIds;
+		  $added    = array_diff( $after, $before );
+		  $deleted  = array_diff( $before, $after );
+		  foreach( $added as $attId )
+		  {
+		    if( ! is_integer($attId) ) continue; //FIXME hack
+		    $attModel->load($attId);
+		    $attModel->linkModel($entryModel);
+		  }
+		  
+		  foreach( $deleted as $attId )
+		  {
+		    $attModel->load($attId);
+		    $attModel->unlinkModel($entryModel);
+		    $attModel->delete();
+		  }
+		}
+		
+		/*
 		 * notify other clients
 		 */
+		$data = $this->_getEntryData($entryModel);
+		$data['editable'] = false;
+		$data['deletable'] = false;
 		if( $id )
 		{
-		  $this->broadcastClientMessage("entry.updated",$this->_getEntryData($entryModel), true );
+		  $this->broadcastClientMessage("entry.updated",$data, true );
 		}
 		else 
 		{
-		  $this->broadcastClientMessage("entry.created",$this->_getEntryData($entryModel), true );
+		  $this->broadcastClientMessage("entry.created", $data, true );
+		}
+		
+		// replies
+		if ( $data['replyToId'] )
+		{
+		  unset($data['text']);
+		  $this->broadcastClientMessage("entry.reply", $data, true );
 		}
 		
 		/*

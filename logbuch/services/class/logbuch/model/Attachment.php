@@ -59,7 +59,17 @@ class logbuch_model_Attachment
     'mime' => array (
       'check' => 'string',
       'sqltype' => 'varchar(30)'
-    )  
+    ),
+    
+    'hash' => array(
+      'check' => 'string',
+      'sqltype' => 'varchar(32)'
+    ),
+    
+    'size' => array(
+      'check' => 'integer',
+      'sqltype' => 'int(11)'
+    )
  );
 
   /**
@@ -100,7 +110,41 @@ class logbuch_model_Attachment
   *****************************************************************************
   */
   
+  public function filepath($name=null)
+  {
+    if ( ! $name )
+    {
+      $name = $this->get("hash");
+    }
+    return QCL_UPLOAD_PATH . "/$name";
+  }
+  
+  /**
+   * @override
+   * @see qcl_data_model_AbstractActiveRecord::create()
+   */
+  public function create($data)
+  {
+    if( ! $data["size"] )
+    {
+      $file = $this->filepath( $data['hash'] );
+      $data["size"] = filesize( $file );
+      $data['mime'] = qcl_get_content_type( $data['filename'] );
+    }
+    return parent::create($data);
+  }
+
+  /**
+   * @override
+   * @see qcl_data_model_AbstractActiveRecord::delete()
+   */
   public function delete()
+  {
+    unlink( $this->filepath() );
+    return parent::delete();
+  }
+  
+  public function deleteThumbnails()
   {
   	// FIXME!!
   	$this->checkLoaded();

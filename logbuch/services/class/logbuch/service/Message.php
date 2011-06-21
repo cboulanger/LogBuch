@@ -31,11 +31,7 @@ class logbuch_service_Message
 	 */
 	function method_broadcast( $msgQueue=array() )
 	{
-		// FIXME is this the right place to do this?
-		$this->getApplication()->getAccessController()->getUserModel()->cleanup();
-		qcl_access_model_Session::getInstance()->cleanup();
-		qcl_event_message_db_Message::getInstance()->cleanup();
-		
+	  
 		/*
 		 * person
 		 */
@@ -75,7 +71,15 @@ class logbuch_service_Message
 		{
 		  // count the logins
       $personModel->set( "countLogins", $personModel->get("countLogins") + 1 );
-      $personModel->save();		  
+      $personModel->save();	
+
+  		// cleanup session data
+  		$this->getApplication()->getAccessController()->getUserModel()->cleanup();
+  		qcl_access_model_Session::getInstance()->cleanup();
+  		qcl_event_message_db_Message::getInstance()->cleanup();
+
+  		// broadcast login @todo move into access controller
+  		$this->broadcastClientMessage("user.login",$personModel->getFullName(),true);
 		}
 		qcl_util_registry_Session::set( "lastPing", $time );
 		
@@ -94,17 +98,6 @@ class logbuch_service_Message
 		return "OK";
 	}
 	
-	/**
-	 * from http://buildinternet.com/2010/05/how-to-automatically-linkify-text-with-php-regular-expressions/
-	 * @param $text
-	 */
-  protected function createLinks($text)
-  {
-      $text= preg_replace("/(^|[\n ])([\w]*?)((ht|f)tp(s)?:\/\/[\w]+[^ \,\"\n\r\t<]*)/is", "$1$2<a href=\"$3\" target=\"_blank\">$3</a>", $text);
-      $text= preg_replace("/(^|[\n ])([\w]*?)((www|ftp)\.[^ \,\"\t\n\r<]*)/is", "$1$2<a href=\"http://$3\" target=\"_blank\">$3</a>", $text);
-      $text= preg_replace("/(^|[\n ])([a-z0-9&\-_\.]+?)@([\w\-]+\.([\w\-\.]+)+)/i", "$1<a href=\"mailto:$2@$3\">$2@$3</a>", $text);
-      return($text);
-  }	
 	
 	/**
 	 * Subscribes the client to a channel

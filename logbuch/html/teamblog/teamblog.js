@@ -32,7 +32,8 @@ dojo.require("dojo.data.ItemFileWriteStore");
 // Uploader
 dojo.require("dojox.form.Uploader");  
 dojo.require("dojox.form.uploader.FileList");
-dojo.require("dojox.form.uploader.plugins.HTML5");  
+dojo.require("dojox.form.uploader.plugins.HTML5"); 
+//dojo.require("dojox.form.uploader.plugins.IFrame"); 
 dojo.require("dojox.form.uploader.plugins.Flash");
 
 // Misc
@@ -41,6 +42,7 @@ dojo.require("dojo.fx");
 dojo.require("dijit.Tooltip");
 dojo.require("dojox.widget.Standby");
 dojo.require("dojox.dtl.filter.htmlstrings");
+dojo.require("dojox.image.Lightbox");
 
 // Plugins
 dojo.registerModulePath("dowl", "../../lib/dowl");
@@ -91,7 +93,7 @@ function authenticate(token)
     handleAs: "json",
     load: function(response) {
       var error;
-      if( response.result)
+      if( response.result && response.result.data && response.result.data.anonymous === false )
       {
         init(response.result.data);
       } 
@@ -115,6 +117,7 @@ function authenticate(token)
 }
 
 var editorDirty = false;
+var sessionId = null;
   
 function init( userData )
 {
@@ -133,8 +136,12 @@ function init( userData )
   initQueryBox();
   
   // handle userdata
-  dojo.cookie("sessionId",userData.sessionId);
+  sessionId = userData.sessionId;
+  dojo.cookie("sessionId",sessionId);
   dojo.byId("username").innerHTML = userData.fullname;
+  
+  // file uploader
+  initUploader(userData.sessionId);
  
   // user grids 
   initGrids();
@@ -148,15 +155,43 @@ function init( userData )
   // show main app
   dojo.query("#appLayout").style({ visibility:"visible" });
   
+  // parse querystring
+  window.location.params = {};
+  window.location.search.replace( 
+    new RegExp( "([^?=&]+)(=([^&]*))?", "g" ), 
+    function( $0, $1, $2, $3 ){
+      window.location.params[ $1 ] = $3;
+    }
+  );
+  
   window.setTimeout(function(){
+
+    // entry id in the URL?
+    if( window.location.params.showEntry )
+    {
+      entryFilter.id = new Number(window.location.params.showEntry) + 0;
+    }
+    
+    // load
     window.__preventLoadingOfEntries = false;
     loadEntries();
     
     // start the message transport
     subscribeToServerChannels(startPolling);
-  },500);    
+    
+  },1000);    
     
   
+}
+
+function initUploader(sessionId)
+{
+
+    
+  dojo.connect(dijit.byId("attachment_uploader"), "onComplete", onUploadComplete );
+  dojo.connect(dijit.byId("attachment_uploader"), "onChange", function(){
+    dijit.byId("attachment_uploader_sendbutton").set("disabled",false);
+  });  
 }
 
 function initLocale()
@@ -305,9 +340,21 @@ function initEditor()
 }
 
 var entryFilter = {};
+var showAll = false;
+
+function onResetFilterButtonClick()
+{
+  if ( window.location.search )
+  {
+    // this reloads the page //FIXME
+    window.location.search="";
+  }
+  resetEntryFilter();
+}
 
 function resetEntryFilter()
 {
+   
   entryFilter = {
     "id"         : null,
     "category"   : {},
@@ -317,7 +364,8 @@ function resetEntryFilter()
     "personId"   : [],
     "search"     : null,
     "offset"     : 0,
-    "limit"      : 10
+    "limit"      : 10,
+    "orderBy"    : null
   };
   
   queryBox.clear();
@@ -331,6 +379,7 @@ function resetEntryFilter()
       store1.setValue(item,"selected", false);
     }); 
   }});
+  showAll = true;
 }
 
 function loadSingleEntry( id )
@@ -375,7 +424,13 @@ function loadEntries(forceReload)
       dijit.byId("centerColStandByOverlay").hide();
       handleMessages(response);
       if( response && response.result ) {
+        // sucess!
         dojo.byId("newsContainerNode").innerHTML = createContent( response.result.data );
+        if( window.location.params.showEntry )
+        {
+          toggleAttachments( window.location.params.showEntry )
+          window.location.params.showEntry = false;
+        }
       }
       else
       {
@@ -491,9 +546,48 @@ function updateFilter(wgt)
     case "filter_author":
       entryFilter.personId = wgt.selectedIds;
       break;
-  } 
+  }
+  dojo.byId("filter-description").innerHTML = filterToText();
   updateEntries();
+  showAll = false;
 }
+
+function filterToText()
+{
+  var t = '<table class="filter-summary">';
+ 
+  // time
+  t += "<tr><td><b>Zeitraum</b></td><td>" + 
+    ( entryFilter.from ? dojo.date.locale.format( new Date(entryFilter.from), {selector:"date"}) : "" )+ 
+    "-" +
+    ( entryFilter.to ? dojo.date.locale.format( new Date(entryFilter.to), {selector:"date"}) : "" ) + 
+    "</td></tr>";
+  
+  // categories
+  var c=[];
+  for( var category in entryFilter.category )
+  {
+    c.push( locale[category] );
+  }
+  t+="<tr><td><b>Kategorien</b></td><td>" + ( c.length ? c.join(", ") : "Alle" ) + "</td></tr>"; 
+  
+  // group
+  var g=[];
+  for( var group in entryFilter.group )
+  {
+    g.push( locale[group] );
+  }
+  t+="<tr><td><b>Gruppen</b></td><td>" + ( g.length ? g.join(", ") : "Alle" ) + "</td></tr>"; 
+  
+  // users
+  var u = dijit.byId("filterAuthorGrid").store.selectedUsers;
+  t+="<tr><td><b>Benutzer/ innen</b></td><td>" + (u.length ? u.join(", ") : "Alle")  + "</td></tr>";
+    
+  t+="</table>";
+  
+  return t;
+}
+  
 
 function handleMessages(response)
 {
@@ -503,22 +597,54 @@ function handleMessages(response)
       switch( message.name )
       {
         case "entry.updated": 
-          replaceEntry( message.data );
-          break;
+          if ( dojo.byId("entryContainer" + message.data.id) )
+          {
+            replaceEntry( message.data ); 
+            return;
+          }
+          // fallthrough
           
         case "entry.created":
-          insertNewEntry( message.data );
+          if( showAll )
+          {
+            insertNewEntry( message.data );
+          }
           break;
         
         case "entry.deleted":
           removeEntryNode( message.data );
           break;
+        
+        case "entry.reply":
+          var entry = message.data;
+          new dowl.Notification({
+            message : "Neue Antwort auf:" + entry.replyToSubject +  
+              "(" + entry.replyToAuthor + ") von " + entry.author +
+              "<br>Klicken zum Öffnen",
+            onClick : function(){
+              loadSingleEntry(entry.replyToId);
+            }
+          });
+          break;
+          
+        case "user.login":
+          new dowl.Notification({
+            message : message.data + " hat sich angemeldet."
+          });
+          break;
+          
+        case "user.logout":
+          new dowl.Notification({
+            message : message.data + " hat sich abgemeldet"
+          });
+          break;    
+          
       }
     });
   }
 }
 
-function createContent( data )
+function createContent( data, omitContainerNode )
 {
   if ( data.length == 0 )
   {
@@ -526,33 +652,17 @@ function createContent( data )
   }
   var content = "";
   var loadNext = false;
-  dojo.forEach( data,function(entry) {
+  dojo.forEach( data ,function(entry) {
     if ( entry.id )
     {
-      content+= '<div id="containerEntry' + entry.id + '">'
+      if ( ! omitContainerNode ) content+= '<div id="entryContainer' + entry.id + '">';
       content+= '<div id="entry' + entry.id + '">';
       content+= createEntryBody( entry );
       content+= "</div>"; // End of message  
-      content+= "<div class='entry-toolbar'>";
-      content+= '<img onmouseover="explain(this)" '+ 
-        'onclick="replyToEntry('+ entry.id + ')" ' +
-        'alt="Beantworten" src="img/email_go.png"/>'; 
-      if( entry.editable ) content+= '&nbsp;| <img onmouseover="explain(this)" '+ 
-        'onclick="editEntry('+ entry.id + ')" ' +
-        'alt="Eintrag bearbeiten" src="img/page_edit.png"/>'; 
-      if( entry.deletable ) content+= '&nbsp;| <img onmouseover="explain(this)" '+ 
-        'onclick="deleteEntry('+ entry.id + ')" ' +
-        'alt="Eintrag löschen" src="img/cross.png"/>';         
-      if( entry.comments ) content+= "&nbsp;| " + entry.comments + 
-        '&nbsp;<img onmouseover="explain(this)" ' + 
-        'onclick="loadSingleEntry('+ entry.id + ')" ' +
-        'alt="' + entry.comments + ' Antworten" src="img/email.png"/>'; 
-      if( entry.attachments) content+= "&nbsp;| " + entry.attachments + 
-        '&nbsp;<img onmouseover="explain(this)" ' + 
-        'onclick="loadSingleEntry('+ entry.id + ')" ' +
-        'alt="' + entry.attachments + ' Anhänge" " src="img/email_attach.png"/>'; 
-      content+= "</div>"; 
-      content+= "</div>";
+      content+= createEntryToolbar(entry);
+      content+= createEntryAttachmentHtml(entry.id, entry.attachments);
+      content+= '<div class="entryLinkContainer" id="entryLinkContainer' + entry.id + '"></div>'
+      if ( ! omitContainerNode ) content+= "</div>";
     }
     else
     {
@@ -581,18 +691,18 @@ function createEntryBody( entry )
   
   if (entry.dateStart )
   {
-    content+= "<div class='entry-event'>Zeit: " + 
+    content+= "<div class='entry-event'><b>Zeit:</b> " + 
       entry.dateStart + " " + entry.timeStart + " - " +
       ( entry.dateStart != entry.dateEnd ? entry.dateEnd : "" ) +
       entry.timeEnd +
     "</div>";
   }
   
-  content+= "<div class='entry-author'>Verfasser/in: " + entry.author + "</div>";
-  content+= "<div class='entry-date'>Eingetragen am " + entry.created;
+  content+= "<div class='entry-author'><b>Verfasser/in:</b> " + entry.author + "</div>";
+  content+= "<div class='entry-date'><b>Eingetragen am </b>" + entry.created;
   if( entry.created != entry.updated) content+= " (aktualisiert am " + entry.updated + ")";
   content+= "</div>";
-  content+= "<div class='entry-categories'>Kategorien: ";
+  content+= "<div class='entry-categories'><b>Kategorien:</b> ";
   var categories=[];
   entry.categories.forEach(function(c){
     categories.push(locale[c]);
@@ -601,11 +711,98 @@ function createEntryBody( entry )
   content+= "</div>";
   if(entry.replyToId)
   {
-    content+="<div class='entry-reply'>Antwort auf: <a href='void(0)' onclick='loadSingleEntry("+ entry.replyToId + "); return false;'>" + 
+    content+="<div class='entry-reply'>" +
+        "<b>Antwort auf:</b> " +
+        "<a target=_blank href='" + createEntryLink(entry.id) + "' " +
+          "onclick='loadSingleEntry("+ entry.replyToId + "); return false;'>" + 
       entry.replyToSubject + "</a>" + " von " + entry.replyToAuthor + "</div>";
   }
+  content+=createAccessHtml(entry);
+  
   content+="<div class='entry-text'>" + entry.text + "</div>";
   return content;
+}
+
+function createAccessHtml(entry)
+{
+  var acl = entry.acl;
+  var groups = [];
+  for ( key in acl)
+  {
+    if ( key == "moreMembers" )
+    {
+      if( entry.members) groups.push( entry.members.join(", ") );
+    }
+    else if( acl[key] )
+    {
+      groups.push(locale[key]);
+    }
+  }
+
+  return '<div class="entry-access"><b>Sichtbar für: </b>' +
+    ( groups.length ? groups.join(", ") : "Niemand" ) +
+    "</div>";
+}
+
+function createEntryToolbar(entry)
+{
+  var content = "<div class='entry-toolbar'>";
+
+//  if( entry.replyToId ) content+= '<img onmouseover="explain(this)" '+ 
+//    'onclick="replyToEntry('+ entry.replyToId + ')" ' +
+//    'alt="Auf den ursprünglichen Eintrag antworten" src="img/mail-reply-all.png"/>&nbsp;| ';
+  content+= '<img onmouseover="explain(this)" '+ 
+    'onclick="replyToEntry('+ entry.id + ')" ' +
+    'alt="Auf diesen Eintrag antworten" src="img/mail-reply-sender.png"/>';     
+  if( entry.editable ) content+= '&nbsp;| <img onmouseover="explain(this)" '+ 
+    'onclick="editEntry('+ entry.id + ')" ' +
+    'alt="Eintrag bearbeiten" src="img/page_edit.png"/>'; 
+  if( entry.deletable ) content+= '&nbsp;| <img onmouseover="explain(this)" '+ 
+    'onclick="deleteEntry('+ entry.id + ')" ' +
+    'alt="Eintrag löschen" src="img/cross.png"/>';         
+  if( entry.comments ) content+= "&nbsp;| " + entry.comments + 
+    '&nbsp;<img onmouseover="explain(this)" ' + 
+    'onclick="window.timeout(function(){loadSingleEntry('+ entry.id + ')},100);" ' +
+    'alt="Klicken sie hier, um den Eintrag und ' + entry.comments +
+    ( entry.comments > 1 ? " Antworten" : " Antwort" ) +
+    ' anzuzeigen" src="img/email.png"/>'; 
+  if( entry.attachments.length ) content+= "&nbsp;| " + entry.attachments.length + 
+    '&nbsp;<img onmouseover="explain(this)" ' + 
+    'onclick="toggleAttachments('+ entry.id + ')" ' +
+    'alt="Klicken sie hier, um ' + entry.attachments.length +
+    ( entry.attachments.length > 1 ? " Anhänge":" Anhang" ) +
+    ' anzuzeigen." src="img/attach.png"/>'; 
+  content+= '&nbsp;| <img onmouseover="explain(this)" ' + 
+    'onclick="toggleLink('+ entry.id + ')" ' +
+    'alt="Klicken sie hier, um den Link zu diesem Eintrag anzuzeigen." src="img/page_white_link.png"/>';     
+  content+= "</div>"; 
+  return content;
+}
+
+function toggleLink( entryId )
+{
+  var entryLinkContainerNode = dojo.byId("entryLinkContainer" + entryId);
+  var url = createEntryLink( entryId );
+  entryLinkContainerNode.innerHTML = '<b>Link zum Eintrag:</b><br><a href="' + url + '" target=_blank>' + url + '</a>';
+  if( entryLinkContainerNode ){
+    if ( entryLinkContainerNode.__visible )
+    {
+      dojo.fx.wipeOut({ node:entryLinkContainerNode }).play();
+      entryLinkContainerNode.__visible = false;
+    }
+    else
+    {
+      dojo.fx.wipeIn({ node:entryLinkContainerNode }).play();
+      entryLinkContainerNode.__visible = true;
+    }
+  }  
+}
+
+function createEntryLink( entryId )
+{
+  var l = window.location;
+  var url = l.protocol + "//" + l.host + l.pathname + "?showEntry=" + entryId;
+  return url;
 }
 
 
@@ -651,18 +848,18 @@ function animateFocusBox( node1, node2 )
   }).play(); 
 }
 
-
-
 function editEntry(id)
 {
   var ed = dijit.byId("entryEditor");
   if (ed.entryId) resetEditor();
+  
   dijit.byId("editorStandByOverlay").show();
   dojo.byId("rightColHeader").innerHTML = "Eintrag bearbeiten";
   ed.set("disabled",true);
-  var entry = dojo.byId("entry"+id);
-  fadeOut( entry );
-  animateFocusBox( entry, ed.domNode );
+  
+  var entryContainer = dojo.byId("entryContainer"+id);
+  fadeOut( entryContainer );
+  animateFocusBox( entryContainer, ed.domNode );
   
   // load messages
   dojo.xhrGet({
@@ -684,6 +881,8 @@ function editEntry(id)
         window.setTimeout(function(){
             window.__populatingForms = false;
         },500);        
+        
+        // populate form
         var entry = response.result.data;
         ed.setValue("<div class='entry-headline'>" + entry.subject + "</div>" + entry.text);
         ed.entryId = entry.id;
@@ -718,6 +917,11 @@ function editEntry(id)
         editorDirty = true;
         dijit.byId("submitEntryButton").set("label","Aktualisieren");
         dijit.byId("rightCol").domNode.style.backgroundColor = "#DBEDFF";
+        
+        /*
+         * attachments
+         */
+        updateAttachmentList( entry.attachments );
       }
       else
       {
@@ -733,13 +937,17 @@ function editEntry(id)
 function replyToEntry(id)
 {
   var ed = dijit.byId("entryEditor");
-  var entry = dojo.byId("entry"+id);
   if (ed.entryId) resetEditor();
   ed.replyToId = id;  
   dijit.byId("editorStandByOverlay").show();
   ed.set("disabled",true);
-  var entry = dojo.byId("entry"+id);
-  animateFocusBox( entry, ed.domNode );
+  
+  var entryContainer = dojo.byId("entryContainer"+id);
+  if( entryContainer )
+  {
+    animateFocusBox( entryContainer, ed.domNode );
+  }
+  
   dojo.byId("rightColHeader").innerHTML = "Eintrag beantworten";
   
   // load messages
@@ -764,6 +972,7 @@ function replyToEntry(id)
             window.__populatingForms = false;
         },500);        
 
+       
         
         var entry = response.result.data;
         ed.setValue( "<div class='entry-headline dummyText'>Antwort auf: " + entry.subject + "</div>" + 
@@ -777,6 +986,7 @@ function replyToEntry(id)
         });
         dojo.query('input[name="access"]').forEach(function(node){
           var widget = dijit.getEnclosingWidget(node);
+          
           if( node.value == "moreMembers" )
           {
             widget.set("value", entry.acl[node.value].length > 0 );
@@ -795,6 +1005,13 @@ function replyToEntry(id)
         });        
         editorDirty = true;
         
+        // disable checkboxes
+        dojo.query('input[name="access"]').forEach(function(node){
+          var wgt = dijit.getEnclosingWidget(node);
+          wgt.set("readOnly",true);
+        });        
+        dojo.byId("access-readonly-explanation").style.display="inline";
+        
         dijit.byId("submitEntryButton").set("label","Antworten");
         dijit.byId("rightCol").domNode.style.backgroundColor = "#E5B39A";   // todo use class       
 
@@ -812,18 +1029,17 @@ function replyToEntry(id)
 
 function deleteEntry(id)
 {
-  var entryNode = dojo.byId("entry"+id);
-  var containerNode = dojo.byId("containerEntry"+id);
-  fadeOut( containerNode );
+  var entryContainer = dojo.byId("entryContainer"+id);
+  fadeOut( entryContainer );
   
   if( !confirm("Wollen Sie die Nachricht wirklich löschen?") )
   {
-    fadeIn(containerNode);
+    fadeIn(entryContainer);
     return;
   }
   
   var standby = new dojox.widget.Standby({
-    target: entryNode
+    target: entryContainer
   });
   document.body.appendChild(standby.domNode);
   standby.startup();
@@ -856,41 +1072,19 @@ function deleteEntry(id)
 
 function removeEntryNode(id)
 {
-  var containerNode = dojo.byId("containerEntry"+id);
-  if( containerNode )
+  var entryContainer = dojo.byId("entryContainer"+id);
+  if( entryContainer )
   {
-    dojo.fx.wipeOut({ node:containerNode }).play();  
+    dojo.fx.wipeOut({ node:entryContainer }).play();  
   }
 }
 
 function explain(node)
 {
-  var bgColor = node.style.backgroundColor;
-  dojo.animateProperty({
-    node: node,
-    duration: 300,
-    properties: {
-        backgroundColor: {
-            start: bgColor,
-            end: "black"
-        }
-    },
-    onEnd: function() {
-      dojo.animateProperty({
-        node: node,
-        duration: 300,
-        properties: {
-            backgroundColor: {
-                start: "black",
-                end: bgColor
-            }
-        }
-      }).play();       
-    }
-  }).play();
   new dijit.Tooltip({
      connectId: [node],
-     label: node.alt
+     label: node.alt,
+     showDelay : 0
   });
   
 }
@@ -902,7 +1096,7 @@ function subscribeToServerChannels(callback)
     content:{
       service: "logbuch.message",
       method : "subscribe",
-      params : '[["entry.updated","entry.created","entry.deleted"]]'
+      params : '[["entry.updated","entry.created","entry.deleted","entry.reply","user.login","user.logout"]]'
     },
     handleAs: "json",
     load: function(response) {
@@ -947,6 +1141,7 @@ function startPolling()
         params : "[]"
       },
       failOk : true,
+      timeout : 9000 ,
       handleAs: "json",
       load: function(response) {
         handleMessages(response);
@@ -979,17 +1174,45 @@ function resetEditor()
       "Wenn Sie den Eintrag veröffentlichen wollen, müssen Sie ihn freigeben (Menu 'Freigabe'). " +
       "Sie können für jeden Beitrag auch Anhänge hochladen.";  
   },500);
-  editorDirty = false;
+
+  // visual fx
   if( ed.entryId ){
-    fadeIn( "entry" + ed.entryId );
+    var entryContainer = dojo.byId("entryContainer" + ed.entryId);
+    if( entryContainer )
+    {
+      fadeIn( entryContainer );
+    }
+    else
+    {
+      console.warn("could not find entry container for " + ed.entryId);
+    }
   }
-  ed.entryId = null;
-  ed.replyToId = null;
+  
+  editorDirty = false;
+  ed.replyToId = null;   
+  setEntryId(0);
+
+  // appearance
   dojo.byId("rightColHeader").innerHTML = "Neuen Eintrag schreiben";
   dijit.byId("submitEntryButton").set('label',"Senden");
   dijit.byId("cancelEntryButton").set("disabled",true);
   dijit.byId("rightCol").domNode.style.backgroundColor = "transparent";
   dijit.byId("editorStandByOverlay").hide();
+  
+  // enable checkboxes
+  dojo.query('input[name="access"]').forEach(function(node){
+    var wgt = dijit.getEnclosingWidget(node);
+    wgt.set("readOnly",false);
+  });  
+  dojo.byId("access-readonly-explanation").style.display="none";
+
+  // attachments
+  ed.attachmentIds = [];
+  dojo.byId("attachment_count").innerHTML = "0";
+  dojo.byId("attachment_filelist").innerHTML = "<div class='infoText'>Keine Anhänge vorhanden.<div>";
+  dojo.byId("attachment_uploader_error").innerHTML = "";
+  
+  
 }
 
 function logout()
@@ -1012,23 +1235,41 @@ function logout()
 }
 
 
-
-
 /**
  * 
  */
+
 function updateMessageData( widget )
 {
-
-  var attUploader    = dijit.byId("entryAttachmentUploader");
+  // toggle access  
+  if ( widget && widget.name == "access" && widget.get("value") )
+  {
+    if( widget.id == "access-all"  )
+    {
+      dojo.query('input[name="access"]').forEach(function(node){
+        var wgt = dijit.getEnclosingWidget(node);
+        if( wgt.id  != "access-all" ) wgt.set("value",false);
+      });
+    }
+    else
+    {
+      dijit.byId("access-all").set("value", false); 
+    }
+  }
+ 
+  var ed          = dijit.byId("entryEditor");
+  var attUploader = dijit.byId("entryAttachmentUploader");
+  var attCount    = new Number(dojo.byId("attachment_count").innerHTML);
+  var access      = dijit.byId("entryAccess").get("value").access;
   var data = {
-    'categories'  : dijit.byId("entryCategories").get("value").categories,
-    'eventTime'   : dijit.byId("entryEventTime").get("value"),
-    'text'        : dijit.byId("entryEditor").get("value"),
-    'acl'         : {},
-    'replyToId'   : dijit.byId("entryEditor").replyToId
+    'categories'    : dijit.byId("entryCategories").get("value").categories,
+    'eventTime'     : dijit.byId("entryEventTime").get("value"),
+    'text'          : ed.get("value"),
+    'acl'           : {},
+    'replyToId'     : ed.replyToId,
+    'attachmentIds' : ed.attachmentIds
   };
-  var access = dijit.byId("entryAccess").get("value").access;
+  
   
   // clean data
   if ( data.categories.indexOf("event") == -1 )
@@ -1107,21 +1348,31 @@ function updateMessageData( widget )
   
   if ( categories.length )
   {
-    info += "Der Eintrag wird veröffentlicht unter den Kategorien <b>" + categories.join(", ") + "</b> ";
+    info += "Der Eintrag wird veröffentlicht unter den Kategorien <b>" + categories.join(", ") + "</b>";
   }
   else
   {
-    info += "<span style='color:red'>Der Eintrag ist noch keiner Kategorie zugeordnet</span> ";
+    info += "<span style='color:red'>Der Eintrag ist noch keiner Kategorie zugeordnet</span>";
     allowSend = false;
+  }
+  
+  
+  if ( attCount == 1 )
+  {
+    info += ", hat 1 Anhang ";
+  }
+  else if ( attCount > 1 )
+  {
+    info += ", hat " + attCount + " Anhänge ";
   }
   
   if ( groups.length )
   {
-     info += "und ist für folgende Personengruppen sichtbar: <b>" + groups.join(", ") + "</b>.";   
+     info += " und ist für folgende Personengruppen sichtbar: <b>" + groups.join(", ") + "</b>.";   
   }
   else
   {
-    info += "und ist zur Zeit <b>nur für Sie sichtbar</b>.";
+    info += " und ist zur Zeit <b>nur für Sie sichtbar</b>.";
   }
   
   dojo.byId("entryInformationMessage").innerHTML = info;
@@ -1170,12 +1421,12 @@ function insertNewEntry( data )
 {
   var content = createContent( [data] );
   dojo.byId("newsContainerNode").innerHTML = content + dojo.byId("newsContainerNode").innerHTML;
-  var entryNode = dojo.byId("entry"+data.id);
+  var entryContainer = dojo.byId("entryContainer"+data.id);
   var ed = dijit.byId("entryEditor");  
-  dojo.fx.wipeIn({ node:entryNode }).play();
+  dojo.fx.wipeIn({ node:entryContainer }).play();
   if ( ed.entryId == data.id )
   {
-    animateFocusBox( ed.domNode, entryNode );  
+    animateFocusBox( ed.domNode, entryContainer );  
   }
 }
 
@@ -1215,15 +1466,15 @@ function updateEntryOnServer()
 
 function replaceEntry( data )
 {
-  var content = createContent([data]);
-  var entryNode = dojo.byId("entry"+data.id);
-  if(entryNode){
-    entryNode.innerHTML = createEntryBody(data);
+  var entryContainer = dojo.byId("entryContainer"+data.id);
+  if(entryContainer){
     var ed = dijit.byId("entryEditor");
     if ( ed.entryId == data.id )
     {
-      animateFocusBox( ed.domNode, entryNode ); 
+      animateFocusBox( ed.domNode, entryContainer );
+      fadeIn( entryContainer );
     }
+    entryContainer.innerHTML = createContent([data],true);
   }
 }
 
@@ -1331,4 +1582,212 @@ function handleEditorEnterKey(e)
       editor.document.body, "last");
      dojo.addClass(node,"dummyText");
   }
+}
+
+function setEntryId( id )
+{
+  dijit.byId("entryEditor").entryId = id;
+  dojo.byId("attachment_uploader_form").action = 
+    "../../services/server.php?sessionId=" + sessionId +
+    "&application=logbuch&service=logbuch.file&method=upload&params=[" + id + "]";  
+}
+
+function onUploadComplete(result)
+{
+  var ed = dijit.byId("entryEditor");
+  dijit.byId("attachment_uploader_sendbutton").set("disabled",true);
+  var response = dojo.eval("(" + result + ")" );
+  
+  if ( response.error )
+  {
+    dojo.byId("attachment_uploader_error").innerHTML = response.error.message;
+  }
+  else
+  {
+    var data = response.result.data;
+    dojo.byId("attachment_uploader_error").innerHTML ="";
+    new dowl.Notification({message: data.message});
+    updateAttachmentList( data.files );
+  }
+}
+
+function updateAttachmentList(files)
+{
+  var ed = dijit.byId("entryEditor");
+  var ids = [];
+  var html = '<table class="entry-attachement-list">';
+  files.forEach(function(file){
+    html+='<tr><td>' +
+      ( file.mime.substr(0,6) =="image/"  
+        ? '<img src="' + file.icon + '" ' +
+            'onmouseover="explain(this)" ' +
+            'alt="Klicken, um Bild anzuzeigen" ' +
+            'onClick="displayAttachment(' + file.id + ');">'
+        : '<img src="' + file.icon + '" ' +
+            'onmouseover="explain(this)" ' +
+            'alt="Datei laden" ' +
+            'onDblClick="downloadAttachment(' + file.id + ');">' ) +
+      '</td><td>' + file.name + 
+      '</td><td>' +
+      '<img src="img/cross.png" onmouseover="explain(this)" alt="Anhang löschen" onClick="removeAttachment(this,' + "\'"+  file.name + "\',"+ file.id + ');">' +
+      '</td></tr>';
+      ids.push( file.id );
+  });  
+  html+="</table>";
+  if( ed.attachmentIds.length == 0 )
+  {
+    dojo.byId("attachment_filelist").innerHTML = html;
+  }
+  else
+  {
+    dojo.byId("attachment_filelist").innerHTML = dojo.byId("attachment_filelist").innerHTML + html;
+  }
+  ed.attachmentIds = ed.attachmentIds.concat( ids );
+  dojo.byId("attachment_count").innerHTML= ( ed.attachmentIds.length );
+    updateMessageData();
+  dijit.byId("cancelEntryButton").set("disabled",false);
+  
+}
+
+function toggleAttachments( entryId )
+{
+  var attachmentContainer = dojo.byId("entryAttachment" +  entryId);
+  if( attachmentContainer ){
+    if ( attachmentContainer.__visible )
+    {
+      dojo.fx.wipeOut({ node:attachmentContainer }).play();
+      attachmentContainer.__visible = false;
+    }
+    else
+    {
+      dojo.fx.wipeIn({ node:attachmentContainer }).play();
+      attachmentContainer.__visible = true;
+    }
+  }
+}
+
+function removeAttachment(node,name,id)
+{
+  if( !confirm("Sind Sie sicher, dass sie die Datei '" + name + "' löschen möchten?") ) return;
+  var ed = dijit.byId("entryEditor");
+  var pos = ed.attachmentIds.indexOf(id);
+  if( pos != -1 )
+  {
+    ed.attachmentIds.splice(pos,1);
+  }
+  var tr =  node.parentNode.parentNode;
+  tr.parentNode.removeChild(tr);
+  dojo.byId("attachment_count").innerHTML= ed.attachmentIds.length;
+}
+
+var lightboxes = [];
+function createEntryAttachmentHtml( entryId, files )
+{
+  var html = '<div id="entryAttachment' +  entryId + 
+    '" class="entry-attachment-container"><table class="entry-attachment">';
+  files.forEach(function(file){
+    var url = "../../services/server.php?" +
+            "sessionId=" + sessionId +
+            "&service=logbuch.file&method=download&params=[" + file.id + "]";
+    html+='<tr><td>'; 
+    if( file.mime && file.mime.substr(0,6) == "image/" )
+    {
+      if ( ! lightboxes[file.id] ){
+        
+        var lb = new dojox.image.Lightbox({ 
+          title: file.name + " (" + file.size + ")", 
+          group: "group" + entryId, 
+          href: url
+        });
+        lb.startup();
+        lightboxes[file.id] = lb;
+      }
+      html+= '<img src="' + file.icon + '"></td>' +
+          '<td><a target=_blank href="' + url + '" ' +
+          'onClick="displayAttachment(' + file.id + '); ' +
+          'return false;">' + 
+          file.name + '</a></td>';
+    }
+    else
+    {
+      html+= '<img src="' + file.icon + '"></td>' +
+          '<td><a target=_blank href="' + url + '" ' +
+          'onClick="downloadAttachment(' + file.id + '); ' +
+          'return false;">' + 
+          file.name + '</a></td>';   
+    }
+    html+= '<td>' + file.size +  '</td></tr>';
+    
+  });  
+  html+="</table></div>";
+  return html;
+}
+
+function displayAttachment( id )
+{
+  lightboxes[id].show();
+}
+
+function downloadAttachment(id)
+{
+  var url = "../../services/server.php?" +
+      "sessionId=" + sessionId +
+      "&service=logbuch.file&method=download&params=[" + id + "]";
+  window.open(url);
+}
+
+function printEntries()
+{
+  var win = window.open();
+  
+  var html = '<style type="text/css">' +
+      '@import "style.css";' +
+      'body {' +
+        'padding:10px;' +
+        'overflow:auto;' +
+      '}' +
+      '.entry-attachment-container{' +
+        'height:auto !important;' +
+      '}' +
+      '.entry-toolbar, .entry-more {' +
+        'display:none;' +
+      '}' +      
+      '</style>';
+      
+  html += "<h1>LogBuch Auszug</h1>" + 
+    filterToText() +
+    "<p>Stand vom " + dojo.date.locale.format( new Date(), {selector:"date"}) + "</p>";
+    
+  
+  entryFilter.limit   = null;
+  entryFilter.orderBy = "created"; 
+  
+  var params = dojo.toJson([entryFilter]);
+  dojo.xhrGet({
+    url: "../../services/server.php",
+    content:{
+      service: "logbuch.entry",
+      method : "list",
+      params : params
+    },
+    handleAs: "json",
+    failOk : true,
+    load: function(response) 
+    {
+      handleMessages(response);
+      entryFilter.orderBy = null;
+      if( response && response.result ) {
+        win.document.write( html + createContent( response.result.data ).replace(/onclick/i,"dummy"));
+        win.document.close();
+      }
+      else
+      {
+        win.document.write( response && response.error ? response.error.message : "Unknown Error" );
+      }
+    },
+    error: function(message) {
+        win.document.write("Error:" + message);
+    }
+  });    
+  
 }

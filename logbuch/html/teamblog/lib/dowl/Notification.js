@@ -13,6 +13,8 @@ dojo.declare('dowl.Notification', [dijit._Widget, dijit._Templated], {
 
     // Custom template variable
     message: null,
+    
+    onClick : null,
 
     // Length of duration in milliseconds
     timeout: 3000,
@@ -85,6 +87,17 @@ dojo.declare('dowl.Notification', [dijit._Widget, dijit._Templated], {
         this.setTimeout();
         
         dojo.removeClass(this.domNode, 'hover');
+    },
+    
+    _onClick : function()
+    {
+      if ( typeof this.onClick == "function" )
+      {
+        if( this.onClick() !== false )
+        {
+          this.close();
+        }
+      }
     },
 
     // Public "close" function for fading out node before removing it from DOM
