@@ -1,52 +1,57 @@
-//parser
-dojo.require("dojo.parser");
-
-// Layout
-dojo.require("dijit.layout.BorderContainer");
-dojo.require("dijit.layout.TabContainer");
-dojo.require("dijit.layout.ContentPane");
-dojo.require("dijit.TitlePane");
-
-// Editor
-dojo.require("dijit.Editor");
-dojo.require("dijit._editor.plugins.LinkDialog");
-dojo.require("dojox.editor.plugins.PasteFromWord");
-//dojo.require("dojox.editor.plugins.UploadImage");
-dojo.require("dijit._editor.plugins.FullScreen");
-dojo.require("dojox.editor.plugins.Save");
-
-// Dialog & Form
-dojo.require("dijit.Dialog");
-dojo.require("dijit.form.TextBox");
-dojo.require("dijit.form.CheckBox");
-dojo.require("dijit.form.TimeTextBox");
-dojo.require("dijit.form.Button");
-dojo.require("dijit.form.DateTextBox");
-dojo.require("dijit.form.FilteringSelect");
-
-// Grid
-dojo.require("dojox.grid.DataGrid");
-dojo.require("dojox.grid.cells.dijit");
-dojo.require("dojo.data.ItemFileWriteStore");
-
-// Uploader
-dojo.require("dojox.form.Uploader");  
-dojo.require("dojox.form.uploader.FileList");
-dojo.require("dojox.form.uploader.plugins.HTML5"); 
-//dojo.require("dojox.form.uploader.plugins.IFrame"); 
-dojo.require("dojox.form.uploader.plugins.Flash");
-
-// Misc
-dojo.require("dojox.timing");
-dojo.require("dojo.fx");
-dojo.require("dijit.Tooltip");
-dojo.require("dojox.widget.Standby");
-dojo.require("dojox.dtl.filter.htmlstrings");
-dojo.require("dojox.image.Lightbox");
-
-// Plugins
-dojo.registerModulePath("dowl", "../../lib/dowl");
-dojo.require("dowl.Notification");
+dojo.addOnLoad(function(){
+  //toolkit
+  dojo.require("dojo.parser");
+  
+  // Layout
+  dojo.require("dijit.layout.BorderContainer");
+  dojo.require("dijit.layout.TabContainer");
+  dojo.require("dijit.layout.ContentPane");
+  dojo.require("dijit.TitlePane");
+  
+  // Editor
+  dojo.require("dijit.Editor");
+  dojo.require("dijit._editor.plugins.LinkDialog");
+  dojo.require("dojox.editor.plugins.PasteFromWord");
+  //dojo.require("dojox.editor.plugins.UploadImage");
+  dojo.require("dijit._editor.plugins.FullScreen");
+  dojo.require("dojox.editor.plugins.Save");
+  
+  // Dialog & Form
+  dojo.require("dijit.Dialog");
+  dojo.require("dijit.form.TextBox");
+  dojo.require("dijit.form.CheckBox");
+  dojo.require("dijit.form.TimeTextBox");
+  dojo.require("dijit.form.Button");
+  dojo.require("dijit.form.DateTextBox");
+  dojo.require("dijit.form.FilteringSelect");
+  
+  // Grid
+  dojo.require("dojox.grid.DataGrid");
+  dojo.require("dojox.grid.cells.dijit");
+  dojo.require("dojo.data.ItemFileWriteStore");
+  
+  // Uploader
+  dojo.require("dojox.form.Uploader");  
+  dojo.require("dojox.form.uploader.FileList");
+  dojo.require("dojox.form.uploader.plugins.HTML5"); 
+  //dojo.require("dojox.form.uploader.plugins.IFrame"); 
+  dojo.require("dojox.form.uploader.plugins.Flash");
+  
+  // Misc
+  dojo.require("dojox.timing");
+  dojo.require("dojo.fx");
+  dojo.require("dijit.Tooltip");
+  dojo.require("dojox.widget.Standby");
+  dojo.require("dojox.dtl.filter.htmlstrings");
+  dojo.require("dojox.image.Lightbox");
+  
+  // Plugins
+  dojo.registerModulePath("dowl", "../../lib/dowl");
+  dojo.require("dowl.Notification");
+  dojo.registerModulePath("querybox", "../../lib/querybox");
+  dojo.require("querybox.QueryBox");
+  
+});
 
 var locale = {
   "__index__"       : {},
@@ -57,6 +62,7 @@ var locale = {
   "minutes"         : "Protokoll",
   "result"          : "Ergebnis",
   "idea"            : "Idee",
+  "question"        : "Frage",
   "coop"            : "Kooperation",
   "hint"            : "Tipps",
   "photo"           : "Photo",
@@ -92,13 +98,21 @@ function authenticate(token)
     },
     handleAs: "json",
     load: function(response) {
-      var error;
-      if( response.result && response.result.data && response.result.data.anonymous === false )
+      
+      if( response.result && response.result.data )
       {
-        init(response.result.data);
+        if (  response.result.data.anonymous === false )
+        {
+          init(response.result.data);
+        }
+        else
+        {
+          dijit.byId("loginDialog").show();
+        }
       } 
       else 
       {
+        var error;
         if( response.error ){
           error = response.error.message;
         }
@@ -106,8 +120,8 @@ function authenticate(token)
         {
           error = "Unbekannter Fehler.";
         }
-        dijit.byId("loginDialog").show();
         alert(error);
+        dijit.byId("loginDialog").show();
       }
     },
     error: function(message) {
@@ -121,7 +135,15 @@ var sessionId = null;
   
 function init( userData )
 {
-   
+  // parse querystring
+  window.location.params = {};
+  window.location.search.replace( 
+    new RegExp( "([^?=&]+)(=([^&]*))?", "g" ), 
+    function( $0, $1, $2, $3 ){
+      window.location.params[ $1 ] = $3;
+    }
+  );
+  
   if ( ! window.console )
   {
     window.console = { log:function(){}, warn:function(){} };
@@ -130,7 +152,6 @@ function init( userData )
   // locale
   initLocale();
   
-  window.__preventLoadingOfEntries = true;
   
   // querybox
   initQueryBox();
@@ -149,29 +170,15 @@ function init( userData )
   // prepare editor   
   initEditor();
   
-  // reset filters, this also loads the entries
+  // reset filter without loading entries
+  window.__preventLoadingOfEntries = true;
   resetEntryFilter();
 
   // show main app
   dojo.query("#appLayout").style({ visibility:"visible" });
   
-  // parse querystring
-  window.location.params = {};
-  window.location.search.replace( 
-    new RegExp( "([^?=&]+)(=([^&]*))?", "g" ), 
-    function( $0, $1, $2, $3 ){
-      window.location.params[ $1 ] = $3;
-    }
-  );
-  
   window.setTimeout(function(){
-
-    // entry id in the URL?
-    if( window.location.params.showEntry )
-    {
-      entryFilter.id = new Number(window.location.params.showEntry) + 0;
-    }
-    
+  
     // load
     window.__preventLoadingOfEntries = false;
     loadEntries();
@@ -209,7 +216,7 @@ var queryBox;
 function initQueryBox()
 {
   var url = "../../services/server.php?&qcl_output_format=raw&service=logbuch.entry&method=querybox&params=";
-  queryBox  = new marumushi.widget.QueryBox(url,"qbox");  
+  queryBox  = new querybox.QueryBox(url,"qbox");  
   queryBox.onFormSubmit = function(){
     this.hide();
     this.displayLoader(false);
@@ -349,6 +356,7 @@ function onResetFilterButtonClick()
     // this reloads the page //FIXME
     window.location.search="";
   }
+  previousParams="";
   resetEntryFilter();
 }
 
@@ -380,7 +388,46 @@ function resetEntryFilter()
     }); 
   }});
   showAll = true;
+  if( window.location.params.showEntry )
+  {
+    entryFilter.id = new Number(window.location.params.showEntry) + 0;
+  }
 }
+
+function showEntry(id)
+{
+  var entryNode = dojo.byId("entry"+id);
+  if ( entryNode )
+  {
+    dojo.window.scrollIntoView( entryNode );
+//    dojo.animateProperty({
+//      node:"centerCol",
+//      properties: {
+//          scrollTop: dojo.byId("centerCol").scrollTop-400,
+//      }
+//    }).play();
+    blink( entryNode, 3);
+  }
+  else
+  {
+    loadSingleEntry( id );
+  }
+}
+
+function blink(node, count){
+    var effects = new Array();
+     
+    var hide = dojo.fadeOut({node: node});
+    var show = dojo.fadeIn({node: node});
+     
+    for(var i = 0; i < count; i++){
+        effects.push(hide);
+        effects.push(show);
+    }
+     
+    dojo.fx.chain(effects).play()
+}
+
 
 function loadSingleEntry( id )
 {
@@ -420,12 +467,15 @@ function loadEntries(forceReload)
     load: function(response) 
     {
       window.__activeRequest = null;
-      entryFilter.id = null;
       dijit.byId("centerColStandByOverlay").hide();
       handleMessages(response);
       if( response && response.result ) {
         // sucess!
-        dojo.byId("newsContainerNode").innerHTML = createContent( response.result.data );
+        var data = response.result.data.data;
+        var from = new Date(response.result.data.from);
+        var to   = new Date(response.result.data.to);
+        dojo.byId("newsContainerNode").innerHTML = createContent( data );
+        dojo.byId("filter-description").innerHTML = filterToText(from,to);
         if( window.location.params.showEntry )
         {
           toggleAttachments( window.location.params.showEntry )
@@ -466,7 +516,7 @@ function loadNextEntries(offset,limit)
       dijit.byId("centerColStandByOverlay").hide();
       handleMessages(response);
       if( response && response.result ) {
-        dojo.create("div",{innerHTML:createContent( response.result.data )},"nextEntries"+offset,"replace");
+        dojo.create("div",{innerHTML:createContent( response.result.data.data )},"nextEntries"+offset,"replace");
       }
       else
       {
@@ -511,8 +561,16 @@ function resetTimeFilter()
   updateEntries();
 }
 
+function isValidDate(d) {
+  if ( Object.prototype.toString.call(d) !== "[object Date]" )
+    return false;
+  return !isNaN(d.getTime());
+}
+
+
 function updateFilter(wgt)
 {
+  var value;
   switch( wgt.name )
   {
     case "filter_category":
@@ -527,10 +585,14 @@ function updateFilter(wgt)
       }
       break;
     case "filter-date-from":
-      entryFilter.from = dojo.date.stamp.toISOString( wgt.value );
+      entryFilter.from = null;
+      value = ( isValidDate(wgt.value) ) ? wgt.value : wgt._lastValueReported;
+      if ( isValidDate(value) ) entryFilter.from = dojo.date.stamp.toISOString( value );
       break;
     case "filter-date-to":
-      entryFilter.to = dojo.date.stamp.toISOString( wgt.value );
+      entryFilter.to = null;
+      value = ( isValidDate(wgt.value)  ) ? wgt.value : wgt._lastValueReported;
+      if ( isValidDate(value) ) entryFilter.to = dojo.date.stamp.toISOString( value );
       break;
     case "filter_group":
       if ( wgt.checked )
@@ -552,15 +614,17 @@ function updateFilter(wgt)
   showAll = false;
 }
 
-function filterToText()
+function filterToText(from,to)
 {
   var t = '<table class="filter-summary">';
  
   // time
+  from = from || entryFilter.from;
+  to   = to ||  entryFilter.to;
   t += "<tr><td><b>Zeitraum</b></td><td>" + 
-    ( entryFilter.from ? dojo.date.locale.format( new Date(entryFilter.from), {selector:"date"}) : "" )+ 
+    ( from ? dojo.date.locale.format( new Date(from), {selector:"date"}) : "" )+ 
     "-" +
-    ( entryFilter.to ? dojo.date.locale.format( new Date(entryFilter.to), {selector:"date"}) : "" ) + 
+    ( to ? dojo.date.locale.format( new Date(to), {selector:"date"}) : "" ) + 
     "</td></tr>";
   
   // categories
@@ -581,8 +645,10 @@ function filterToText()
   
   // users
   var u = dijit.byId("filterAuthorGrid").store.selectedUsers;
-  t+="<tr><td><b>Benutzer/ innen</b></td><td>" + (u.length ? u.join(", ") : "Alle")  + "</td></tr>";
-    
+  if (u )
+  {
+    t+="<tr><td><b>Benutzer/ innen</b></td><td>" + (u.length ? u.join(", ") : "Alle")  + "</td></tr>";
+  }  
   t+="</table>";
   
   return t;
@@ -714,7 +780,7 @@ function createEntryBody( entry )
     content+="<div class='entry-reply'>" +
         "<b>Antwort auf:</b> " +
         "<a target=_blank href='" + createEntryLink(entry.id) + "' " +
-          "onclick='loadSingleEntry("+ entry.replyToId + "); return false;'>" + 
+          "onclick='showEntry("+ entry.replyToId + "); return false;'>" + 
       entry.replyToSubject + "</a>" + " von " + entry.replyToAuthor + "</div>";
   }
   content+=createAccessHtml(entry);
@@ -762,7 +828,7 @@ function createEntryToolbar(entry)
     'alt="Eintrag löschen" src="img/cross.png"/>';         
   if( entry.comments ) content+= "&nbsp;| " + entry.comments + 
     '&nbsp;<img onmouseover="explain(this)" ' + 
-    'onclick="window.timeout(function(){loadSingleEntry('+ entry.id + ')},100);" ' +
+    'onclick="dijit.hideTooltip(this);loadSingleEntry('+ entry.id + ');" ' +
     'alt="Klicken sie hier, um den Eintrag und ' + entry.comments +
     ( entry.comments > 1 ? " Antworten" : " Antwort" ) +
     ' anzuzeigen" src="img/email.png"/>'; 
@@ -1081,7 +1147,7 @@ function removeEntryNode(id)
 
 function explain(node)
 {
-  new dijit.Tooltip({
+  return new dijit.Tooltip({
      connectId: [node],
      label: node.alt,
      showDelay : 0
@@ -1420,8 +1486,17 @@ function createEntryOnServer()
 function insertNewEntry( data )
 {
   var content = createContent( [data] );
-  dojo.byId("newsContainerNode").innerHTML = content + dojo.byId("newsContainerNode").innerHTML;
+  if( entryFilter.id )
+  {
+    dojo.byId("newsContainerNode").innerHTML = dojo.byId("newsContainerNode").innerHTML + content;
+  }
+  else
+  {
+    dojo.byId("newsContainerNode").innerHTML = content + dojo.byId("newsContainerNode").innerHTML;
+  }
+  
   var entryContainer = dojo.byId("entryContainer"+data.id);
+  dojo.window.scrollIntoView( entryContainer );
   var ed = dijit.byId("entryEditor");  
   dojo.fx.wipeIn({ node:entryContainer }).play();
   if ( ed.entryId == data.id )
@@ -1740,24 +1815,9 @@ function printEntries()
 {
   var win = window.open();
   
-  var html = '<style type="text/css">' +
-      '@import "style.css";' +
-      'body {' +
-        'padding:10px;' +
-        'overflow:auto;' +
-      '}' +
-      '.entry-attachment-container{' +
-        'height:auto !important;' +
-      '}' +
-      '.entry-toolbar, .entry-more {' +
-        'display:none;' +
-      '}' +      
-      '</style>';
-      
-  html += "<h1>LogBuch Auszug</h1>" + 
-    filterToText() +
-    "<p>Stand vom " + dojo.date.locale.format( new Date(), {selector:"date"}) + "</p>";
-    
+  win.document.open();
+  win.document.write("Ausdruck wird erstellt, bitte warten...");
+  win.document.close();  
   
   entryFilter.limit   = null;
   entryFilter.orderBy = "created"; 
@@ -1777,7 +1837,31 @@ function printEntries()
       handleMessages(response);
       entryFilter.orderBy = null;
       if( response && response.result ) {
-        win.document.write( html + createContent( response.result.data ).replace(/onclick/i,"dummy"));
+        // write result
+        var html = '<style type="text/css">' +
+            '@import "style.css";' +
+            'body {' +
+              'padding:10px;' +
+              'overflow:auto;' +
+            '}' +
+            '.entry-attachment-container{' +
+              'height:auto !important;' +
+            '}' +
+            '.entry-toolbar, .entry-more {' +
+              'display:none;' +
+            '}' +      
+            '</style>';
+        
+        var data = response.result.data.data;
+        var from = new Date(response.result.data.from);
+        var to   = new Date(response.result.data.to);
+        
+        html += "<h1>LogBuch Auszug</h1>" + 
+          filterToText(from,to) +
+          "<p>Stand vom " + dojo.date.locale.format( new Date(), {selector:"date"}) + "</p>";        
+         
+        win.document.open();
+        win.document.write( html + createContent( data ).replace(/onclick/i,"dummy"));
         win.document.close();
       }
       else

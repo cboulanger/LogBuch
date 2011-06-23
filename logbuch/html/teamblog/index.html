@@ -1,25 +1,32 @@
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8; IE=EmulateIE9">
 	<title>LogBuch TeamBlog</title>
-	<style type="text/css"> 
-	  @import "dojo/dijit/themes/claro/claro.css";
-	  @import "dojo/dojox/editor/plugins/resources/css/PasteFromWord.css";
-	  @import "dojo/dojox/grid/resources/Grid.css";
-	  @import "dojo/dojox/grid/resources/claroGrid.css";
-	  @import "dojo/dojox/image/resources/image.css";
-	  @import "dojo/dojox/image/resources/Lightbox.css";
-	  @import "lib/querybox/css/querybox.css";
-	  @import "lib/dowl/Notification.css";
-	  @import "style.css";
-	</style>	
+	
+  <style type="text/css"> 
+    @import "lib/dojo/dijit/themes/claro/claro.css";
+    @import "dojo/dojox/editor/plugins/resources/css/PasteFromWord.css";
+    @import "dojo/dojox/grid/resources/Grid.css";
+    @import "dojo/dojox/grid/resources/claroGrid.css";
+    @import "dojo/dojox/image/resources/image.css";
+    @import "dojo/dojox/image/resources/Lightbox.css";  
+  
+    @import "lib/querybox/css/querybox.css";
+    @import "lib/dowl/Notification.css";
+    @import "style.css";
+  </style>  
+
 	<!-- dojo -->
-	<script src="dojo/dojo/dojo.js" data-dojo-config="isDebug: true, parseOnLoad: true"></script>
-	<!-- libraries -->
-	<script type="text/javascript" src="lib/querybox/js/marumushi.widget.querybox.js"></script>
-	<script src="lib/rangy/rangy-core.js"></script>
-	<!-- main code -->
+	<script src="lib/dojo/dojo.js" data-dojo-config="isDebug: false, parseOnLoad: true"></script>
+	
+  <!-- libraries -->
+  <script src="lib/rangy/rangy-core.js"></script>
+  	
+	<!-- application code including dependency declaration -->
 	<script src="teamblog.js"></script>
+	
+
 </head>
 <body class="claro">
 
@@ -39,7 +46,7 @@
 			 Nachrichten werden geladen...
 			</div>
 		</div>
-		<div id="centerColStandByOverlay" dojoType="dojox.widget.Standby" target="centerCol"></div>
+		<div id="centerColStandByOverlay" dojoType="dojox.widget.Standby" target="centerCol" text="Bitte warten..."></div>
 		
 		<!----------------------- title bar ----------------------->
 		<div class="edgePanel" data-dojo-type="dijit.layout.ContentPane"
@@ -67,7 +74,7 @@
       <button
         id="clearFilterButton"
         dojoType="dijit.form.Button" 
-        onClick="onResetFilterButtonClick()">Alles anzeigen</button>
+        onClick="onResetFilterButtonClick()">Alle anzeigen</button>
         
         <!-- save/load filter data
         <div dojoType="dijit.form.DropDownButton">
@@ -404,7 +411,15 @@
                    onChange="updateMessageData(this);">
               </td><td>
                 <label for="c-idea">Idee</label><br/>
-              </td></tr>                          
+              </td></tr>       
+              
+              <tr><td>
+                <input dojoType="dijit.form.CheckBox" 
+                   id="c-question" name="categories" value="question"
+                   onChange="updateMessageData(this);">
+              </td><td>
+                <label for="c-question">Frage</label><br/>
+              </td></tr> 
     
               <tr><td>
                 <input dojoType="dijit.form.CheckBox" 
@@ -605,7 +620,7 @@
         </div>
         
         <!-- Informational message -->
-        <p id="entryInformationMessage" class="infoText"></p>
+        <p id="entryInformationMessage" class="infoTextSmall"></p>
               
     </div>		
    <!----------------------- footer ----------------------->
@@ -630,7 +645,7 @@
 	<!----------------------- login dialog ----------------------->
 	<div dojoType="dijit.Dialog" id="loginDialog" title="LogBuch TeamBlog: Bitte anmelden"
 	    execute="authenticate(arguments[0].name +','+arguments[0].password);">
-	  <table>
+	  <table style="min-width:250px">
 	    <tr>
 	      <td><label for="name">Name: </label></td>
 	      <td><input dojoType="dijit.form.TextBox" type="text" name="name" id="name"></td>

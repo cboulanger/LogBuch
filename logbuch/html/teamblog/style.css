@@ -230,6 +230,6 @@ table.entry-attachment
   min-height: 100px;	
 }
 
-#leftCol{
+#leftCol, #rightCol{
   overflow: auto;
 }

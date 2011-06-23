@@ -60,7 +60,10 @@ class logbuch_service_Entry
 	  $datasourceModel = $this->getDatasourceModel( "demo" ); // FIXME 
 		$entryModel      = $datasourceModel->getInstanceOfType( "entry" );
 		$where = array();
-		
+		$parameters = array();
+		$from = null;
+    $to   = null;
+    
 		/*
 		 * a specific entry and its comment?
 		 */
@@ -90,6 +93,7 @@ class logbuch_service_Entry
   		/*
   		 * date
   		 */
+		  
   		if( $filter->from || $filter->to )
   		{
   		  $from = strtotime( $filter->from );
@@ -101,19 +105,33 @@ class logbuch_service_Entry
     		  {
     		    throw new InvalidArgumentException("Das Enddatum muss nach dem Startdatum liegen!");
     		  }  		  
-    		  $where['created'] = array( 
-    		  	"BETWEEN", 
-    		    date("Y-m-d 00:00:00", $from ), 
-    		    date("Y-m-d 23:59:59", $to  ) 
+    		  //$where['created'] = array( 
+    		  //	"BETWEEN", 
+    		  //  date("Y-m-d 00:00:00", $from ), 
+    		  //  date("Y-m-d 23:59:59", $to  ) 
+    		  //);
+    		  $where = "created between :from and :to or dateStart between :from and :to";
+    		  $parameters = array(
+    		    ":from" => date("Y-m-d 00:00:00", $from ),
+    		    ":to"		=> date("Y-m-d 23:59:59", $to  )
     		  );
+    		  
     		}
     		elseif ($filter->from)
     		{
-    		  $where['created'] = array( ">=", date("Y-m-d 00:00:00", $from ) );
+    		  //$where['created'] = array( ">=", date("Y-m-d 00:00:00", $from ) );
+    		  $where = "created >= :from or dateStart >= :from";
+    		  $parameters = array(
+    		    ":from" => date("Y-m-d 00:00:00", $from )
+    		  );    		  
     		}
     		elseif ($filter->to)
     		{
-    		  $where['created'] = array( "<=", date("Y-m-d 23:59:59", $to ) );
+    		  //$where['created'] = array( "<=", date("Y-m-d 23:59:59", $to ) );
+    		  $where = "created <= :to or dateStart <= :to";
+    		  $parameters = array(
+    		    ":to"		=> date("Y-m-d 23:59:59", $to )
+    		  );      		  
     		}
   		}
   				
@@ -127,8 +145,9 @@ class logbuch_service_Entry
   
   		
   		$query = new qcl_data_db_Query(array(
-  		  'where'			=> $where,
-  			'orderBy'		=> either($filter->orderBy, "created DESC")
+  		  'where'			  => $where,
+  			'orderBy'		  => either($filter->orderBy, "created DESC"),
+  		  'parameters'	=> $parameters
   		));		
 		}
 		
@@ -155,6 +174,19 @@ class logbuch_service_Entry
 		  $data = $this->_getEntryData($entryModel, $filter);
 		  if ( is_array($data) )
 		  {
+		    // update from/to 
+		    $timestampFrom = either( $data['timeStampStart']/1000, strtotime( $data['created'] ) );
+		    if ( ! $from or $timestampFrom < $from )
+		    {
+		      $from = $timestampFrom;
+		    }
+		    $timestampTo = either( $data['timeStampEnd']/1000, strtotime( $data['created'] ) );
+		    if ( ! $to or $timestampTo > $to )
+		    {
+		      $to = $timestampTo;
+		    }
+		    
+		    // paging
 		    if( $paging ) 
 		    {   
 		      if( $counter2 >= $filter->offset and count($result) < $filter->limit )
@@ -200,14 +232,18 @@ class logbuch_service_Entry
   		if( $remaining )
   		{
   		  $limit  = min(array( 10, $remaining ) );
-  		  $result[] = array(
+  		  $result[] = array( // @todo move this next to from and to
   	      "offset"	  => $nextOffset,
   		    "remaining"	=> $remaining,
   		    "limit"			=> $limit
   		  );
   		}
 		}
-		return $result;
+		return array( 
+		  "data" => $result,
+		  "from" => $from*1000,
+		  "to"   => $to*1000
+		);
 	}
 	
 	function _getEntryData( $entryModel, $filter=null )

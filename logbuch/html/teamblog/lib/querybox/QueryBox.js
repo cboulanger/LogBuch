@@ -11,7 +11,9 @@
  * a search query and continuously show all valid results as they type.
  * This widget is built on top of the Dojo javascript framework.
  */
-dojo.declare("marumushi.widget.QueryBox", null, {
+dojo.provide("querybox.QueryBox");
+
+dojo.declare("querybox.QueryBox", null, {
 	
 	//what should we display by default
 	defaultMessage				:"Suchwort eingeben...",
