@@ -46,7 +46,7 @@ class logbuch_Application
    * The version of the application
    * @var string
    */
-  protected $applicationVersion = "0.1-pre";
+  protected $applicationVersion = "2.0-pre";
 
   /**
    * The path to the application ini-file

@@ -52,6 +52,22 @@ extends qcl_core_Object
 	}
 	
 	/**
+	 * Returns true if the item is not accessible for anyone except the 
+	 * item author
+	 */
+	public function isPrivate()
+	{
+	  return ! (
+	    $this->allConsultants or 
+	    $this->allMembers or
+	    $this->analyst or 
+	    count($this->moreMembers)>0 or 
+	    $this->ownCompany or
+	    $this->ownConsultant  
+	  );
+	}
+	
+	/**
 	 * Checks access to a resource.
 	 * @param logbuch_model_Person $sender
 	 * @param logbuch_model_Person $recipient

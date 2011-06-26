@@ -139,30 +139,19 @@ qx.Class.define("logbuch.Application",
       core.setServerUrl("../services/server.php");
       core.setAccessService("logbuch.access");
       core.setConfigService("logbuch.config");
+      core.setDelayChannelSubscriptionsUntilAuthenticated(true);
       
-      /*
-       * start message transport, using rpc-polling
-       */
-      core.startMessageTransport({
-        mode          : "poll",
-        transport     : "rpc",
-        service       : "logbuch.message",
-        interval      : 10,
-        authenticated : true,
-        stopOnError   : false
-      });      
+  
       
       /*
        * visual modules
        */
       this.__loginDialog = new logbuch.component.Login( core );
       this.__mainWorkspace = this._createMainWorkspace();
-      this.__messageModules = this._createMessageModule();
       this.__setupDialog = this._createSetupDialog();
       this.__userManagement = this._createUserManagement();
       this.__organizationManagement = this._createOrganizationManagement();
       this.__registrationDialog = this._createRegistrationDialog();
-      this.__reportDialog = this._createReportDialog();
       
       /*
        * build and start all modules 
@@ -175,43 +164,35 @@ qx.Class.define("logbuch.Application",
        * FIXME create on demand
        */
       this.getRoot().add( this.__mainWorkspace, { edge: 0 } );
-      this.getRoot().add( this.__messageModules, { top: 100, left : 100 } );
       this.getRoot().add( this.__setupDialog, { top: 100, left : 100 } );
       this.getRoot().add( this.__registrationDialog, { top: 100, left : 100 } );
-      this.getRoot().add( this.__reportDialog, { top: 100, left : 100 } );
       this.getRoot().add( this.__userManagement, { left : 100, top : 100 } ); 
       this.getRoot().add( this.__organizationManagement, { left : 100, top : 100 } ); 
       this.getRoot().add( this.__loginDialog, { left : 100, top : 100 } ); 
        
       /*
-       * determine ui changes on application state change / authentication
+       * dispatch "authenticated" message when the active user
+       * changes
        */
       core.addListener("changeActiveUser", function(e){
         new qx.util.DeferredCall( function(){
-          core.publish("authenticated", e.getData() && ! e.getData().isAnonymous()  );
-          var state = core.getApplicationState("view");
-          core.setApplicationState( "view", 
-            e.getData() && e.getData().isAnonymous() 
-              ? ( state == "register" ? "register" : "login" ) 
-              : ( state == "login" ? "main" : state ) 
-          );
+          core.publish("authenticated", e.getData() !==null && ! e.getData().isAnonymous()  );
         },this).schedule();
       },this);
+      
+      /*
+       * method called when the "view" state changes
+       */
       core.onApplicationStateChange( "view", this._updateView, this );      
       
       /*
-       *  Allow incoming server dialogs. 
-       *  Needs to be done for each authentication
+       * action to be taken on login/logout
        */
-      core.subscribe("authenticated",function(e){
-        if( e.getData() )
-        {
-          core.allowServerDialogs(true);
-        }
-      },this);
+      core.subscribe("authenticated", this._onChangeAuthenticated,this);
 
       /*
        * synchronize current date with the application state
+       * @todo move into method
        */
       core.subscribe("change-date",function(e){
         if ( ! e.getData() instanceof Date ) return;
@@ -219,6 +200,7 @@ qx.Class.define("logbuch.Application",
         core.setApplicationState("time", e.getData().getTime() );
         this.__doNotChangeDate = false;
       },this);
+      
       core.onApplicationStateChange( "time", function(e){
         if ( this.__doNotChangeDate ) return;
         var time = parseInt( e.getData().value);
@@ -227,29 +209,6 @@ qx.Class.define("logbuch.Application",
           return;
         }
         core.publish("change-date", new Date( time ) );
-      },this );
-      core.subscribe("logout", function(){
-        core.removeApplicationState("time");    
-      },this);       
-      
-      /*
-       * load a category item from the state
-       */
-      core.subscribe("load-category-item",function(e){
-        var data = e.getData();
-        this.__doNotLoadCategoryItem = true;
-        core.setApplicationState( "itemId", data.id );
-        this.__doNotLoadCategoryItem = false;
-      },this);
-      core.onApplicationStateChange( "itemId", function(e){
-        var itemId = e.getData().value;
-        if ( ! itemId || this.__doNotLoadCategoryItem ) {
-          return;
-        }
-        core.publish("load-category-item", {
-          category : itemId.substr(0, itemId.indexOf("/") ), // FIXME
-          id : itemId
-        } );
       },this );
 
       /*
@@ -270,7 +229,7 @@ qx.Class.define("logbuch.Application",
     _connect : function()
     {
       this.info("Connecting ...");
-      
+    
       /*
        * (re-) authenticate
        */
@@ -280,14 +239,7 @@ qx.Class.define("logbuch.Application",
         /*
          * add logout event
          */
-        core.subscribe("logout", function(){
-          core.showNotification( this.tr("Logging out ...") );
-          core.unsubscribeFromAllChannels(function(){
-            core.logout( function(){
-              core.hideNotification();
-            },this);
-          },this);
-        },this);          
+        core.subscribe("logout", this._onLogout, this);          
         
         /*
          * load config values and continue 
@@ -304,14 +256,8 @@ qx.Class.define("logbuch.Application",
     _initializeState : function()
     {
       this.info("Initializing application state ...");
-      /*
-       * initialize application state
-       */
       core.getStateManager().setHistorySupport(true);
       core.getStateManager().updateState();
-      
-      this.info("Starting message transport...");
-      
       this._finalize();
     },    
     
@@ -321,6 +267,7 @@ qx.Class.define("logbuch.Application",
      */
     _finalize :  function() 
     {
+      
       /*
        * reset popup to remove splash screen
        */
@@ -344,6 +291,64 @@ qx.Class.define("logbuch.Application",
     
     /*
     ---------------------------------------------------------------------------
+       EVENT HANDLERS
+    ---------------------------------------------------------------------------
+    */    
+    
+    
+    /*
+     * called when the authenticated message is published
+     */
+    _onChangeAuthenticated : function(e)
+    {
+      /*
+       * change view when authentication changes
+       */
+      var state = core.getApplicationState("view");
+      core.setApplicationState( "view", 
+        e.getData()
+          ? ( state == "login" ? "main" : state ) 
+          : ( state == "register" ? "register" : "login" )  
+      );
+      
+      /*
+       * (dis-) allow server dialogs
+       */
+      core.allowServerDialogs(e.getData()!==null);
+      
+      /*
+       * start or stop message transport, using rpc-polling
+       */        
+      if( e.getData() )
+      {
+        core.startMessageTransport({
+          mode          : "poll",
+          transport     : "rpc",
+          service       : "logbuch.message",
+          interval      : 10,
+          authenticated : true,
+          stopOnError   : false
+        });
+      }
+      else
+      {
+        core.stopMessageTransport();
+      }
+    },
+    
+    /**
+     * Called when the logout event is fired
+     */
+    _onLogout : function(){
+      core.removeApplicationState("time");  
+      core.showNotification( this.tr("Logging out ...") );          
+      core.logout( function(){
+        core.hideNotification();
+      },this);
+    },
+    
+    /*
+    ---------------------------------------------------------------------------
        INTERNAL (HELPER) METHODS
     ---------------------------------------------------------------------------
     */
@@ -351,58 +356,7 @@ qx.Class.define("logbuch.Application",
     _getLayoutConfigInit : function()
     {
       return {
-	      categories : {
-	        ids : [ "event", "goal", "documentation", "diary", "inspiration" ],
-	        structure : {
-	          event : { 
-	            label   : this.tr("Event"),
-	            fields  : {
-	              subject      : this.tr("Subject"),
-	              location     : this.tr("Location"),
-                participants : this.tr("Participants"),
-                notes        : this.tr("Notes")
-	            }
-	          },
-            goal : {
-              label   : this.tr("Goal"),
-              fields  : {
-                subject         : this.tr("Subject"),
-                location        : this.tr("Location"),
-                participants    : this.tr("Participants"),
-                notes           : this.tr("Notes")
-              }
-            },
-            documentation : {
-              label   : this.tr("Documentation"),
-              fields  : {
-                process         : this.tr("Consultancy process"),
-                result          : this.tr("Result"),
-                heureka         : this.tr("Heureka!"),
-                stumblingBlock  : this.tr("Stumbling block"),
-                incentive       : this.tr("Incentive"),
-                miscellaneous   : this.tr("Miscellaneous")
-              }
-            },
-            diary : {
-              label   : this.tr("Diary"),
-              fields  : {
-                heureka         : this.tr("Heureka!"),
-                encounters      : this.tr("Encounters"),
-                stumblingBlock  : this.tr("Stumbling block"),
-                incentive       : this.tr("Incentive"),
-                miscellaneous   : this.tr("Miscellaneous")
-              }
-            },
-            inspiration : {
-              label   : this.tr("Inspiration"),
-              fields  : {
-                idea            : this.tr("Idea"),
-                source          : this.tr("Inspiration source"),
-                links           : this.tr("Links")
-              }
-            }
-	        }
-	      },
+	   
 	      viewport :
 	      {
 	        maxHeight : 610,
@@ -417,7 +371,6 @@ qx.Class.define("logbuch.Application",
 	      },
 	      calendar:
 	      {
-	        categories      : [ "event", "goal", "documentation", "diary", "inspiration" ],
 	        rowLabels       : ["<","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00",">"],
           dateRowHeight   : 30,
 	        boxHeight       : 30,
@@ -489,13 +442,7 @@ qx.Class.define("logbuch.Application",
       this._showIfTrue(  this.__mainWorkspace.getUserData( "workspace"), view == "main" );
     
       // registration
-      this._showIfTrue( this.__registrationDialog, view == "register" );
-      
-      // messages
-      this._showIfTrue( this.__messageModules, view == "messages" );
-      
-      // report
-      this._showIfTrue( this.__reportDialog, view == "report" );     
+      this._showIfTrue( this.__registrationDialog, view == "register" );  
       
       // user management
       this._showIfTrue( this.__userManagement, view == "users" );
@@ -563,76 +510,10 @@ qx.Class.define("logbuch.Application",
 
       var categories =[];
       
-      /*
-       * events
-       */
-      var eventModule = new logbuch.module.Event();
-      categories.push( eventModule.getName() );
-      core.register( eventModule.getName(), eventModule );
-      sidebar.addModule( eventModule );
-      workspace.add( eventModule, { edge: 0 } );
-      
-      /*
-       * goals
-       */
-      var goalModule = new logbuch.module.Goal();
-      categories.push( goalModule.getName() );
-      core.register( goalModule.getName(), goalModule );
-      sidebar.addModule( goalModule );
-      workspace.add( goalModule, { edge: 0 } );
-
-      /*
-       * documentation
-       */
-      var docModule = new logbuch.module.Documentation();
-      categories.push( docModule.getName() );
-      core.register(  docModule.getName(), docModule );
-      sidebar.addModule( docModule );
-      workspace.add( docModule, { edge: 0 } );      
-
-      /*
-       * diary
-       */
-      var diaryModule = new logbuch.module.Diary();
-      categories.push( diaryModule.getName() );
-      core.register( diaryModule.getName(), diaryModule );
-      sidebar.addModule( diaryModule );
-      workspace.add( diaryModule, { edge: 0 } );       
-      
-      /*
-       * inspiration
-       */
-      var inspirationModule = new logbuch.module.Inspiration();
-      categories.push( inspirationModule.getName() );
-      core.register( inspirationModule.getName(), inspirationModule );
-      sidebar.addModule( inspirationModule );
-      workspace.add( inspirationModule, { edge: 0 } ); 
-      
       return ui;
       
     },
     
-    _createMessageModule : function()
-    {
-      var hbox = new qx.ui.container.Composite( new qx.ui.layout.HBox(5) ).set({
-        width   : 800,
-        height  : 500,
-        visibility : "hidden"
-      });
-      
-      var left = new logbuch.module.MessageBoard( this.tr("logBUCH Messages") );
-      core.register("messageBoard", left );  
-      hbox.add( left, { flex : 3 } );
-      
-      var right = new logbuch.module.MessageConsole( this.tr("Message") );
-      core.register("messageConsole", right );
-      hbox.add( right, { flex : 1 } );
-      
-      left.setUserData("buddy",right);
-      right.setUserData("buddy",left);      
-      
-      return hbox;
-    },
     
     _createSetupDialog : function()
     {
@@ -700,15 +581,7 @@ qx.Class.define("logbuch.Application",
       return hbox;
     },    
     
-    _createReportDialog : function()
-    {
-      var report = new logbuch.module.Report().set({
-        width : 800, height : 500, visibility: "hidden"
-      });
-      core.register("report", report );
-      return report;
-    },
-    
+      
     
     _createUserManagement : function()
     {

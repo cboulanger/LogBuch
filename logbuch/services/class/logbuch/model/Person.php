@@ -172,14 +172,7 @@ class logbuch_model_Person
       	'class'    		=> "logbuch_model_Attachment",
  				'dependent'		=> true 
  			)
-    ),
-    'Comment_Person' => array(
-      'type'        => QCL_RELATIONS_HAS_MANY,
-      'target'      => array( 
-        'class'       => "logbuch_model_Comment",
-        'dependent'   => true 
-      )
-    )    
+    )
   );
 
   /*

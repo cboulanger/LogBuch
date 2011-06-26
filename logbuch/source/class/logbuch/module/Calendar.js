@@ -127,16 +127,6 @@ qx.Class.define("logbuch.module.Calendar",
     {
       check : "Array",
       nullable : true
-    },
-    
-    /**
-     * The name of the active category, or null if none is active
-     * @type String|null
-     */
-    activeCategory :
-    {
-      check : "String",
-      nullable : true
     }
   },
   
@@ -220,7 +210,6 @@ qx.Class.define("logbuch.module.Calendar",
        */
       this.__scroller = this.createScroller();
 	    var pane = this.__scroller.getPane();
-      pane.addListener("cellDblclick", this._onCellDblclick, this );
       pane.addListener("cellClick", this._onCellClick, this );
       pane.addListener("scrollX", this._onScrollX, this );
       this.add( this.__scroller );
@@ -264,7 +253,6 @@ qx.Class.define("logbuch.module.Calendar",
     {
       this.__sandbox.subscribe("change-date", this._onSandboxChangeDate, this);
       this.__sandbox.subscribe("change-date-today", this._onSandboxChangeDateToday, this);
-      this.__sandbox.subscribe("activate-category", this._onSandboxActivateCategory, this);
       this.__sandbox.subscribe("reload-calendar", this._onReloadCalendar, this);
       this.__sandbox.subscribe("authenticated", this._onAuthenticated, this);
     },
@@ -276,7 +264,6 @@ qx.Class.define("logbuch.module.Calendar",
     {
       this.__sandbox.unsubscribe("change-date", this._onSandboxChangeDate, this);
       this.__sandbox.unsubscribe("change-date-today", this._onSandboxChangeDateToday, this);
-      this.__sandbox.unsubscribe("activate-category", this._onSandboxActivateCategory, this);
       this.__sandbox.unsubscribe("reload-calendar", this._onReloadCalendar, this);
       this.__sandbox.unsubscribe("authenticated", this._onAuthenticated, this);
       // FIXME unsubscribe channel
@@ -419,14 +406,14 @@ qx.Class.define("logbuch.module.Calendar",
       if ( e.getData() )
       {
         this.__sandbox.subscribeToChannel(
-          "logbuch/display-category-item", this._onDisplayCategoryItem, this,
+          ["entry.created"], this._onEntryMessage, this,
           this.load, this          
-        );  
+        );
       }
     },
     
     /**
-     * Load category items
+     * Load items
      */
     load : function()
     {
@@ -448,8 +435,11 @@ qx.Class.define("logbuch.module.Calendar",
         this.__sandbox.showNotification( this.tr("Loading LogBuch data ...") );
         this.__sandbox.rpcRequest(
           "logbuch.message","collect", 
-          [ this.getFirstDateLoaded().toDateString(), 
-            this.getLastDateLoaded().toDateString() ],
+          [{ 
+              from :      this.getFirstDateLoaded().toDateString(), 
+              to:         this.getLastDateLoaded().toDateString(),
+              category :  { event: true }
+           }],
           function()
           {
             this.__sandbox.hideNotification();
@@ -552,17 +542,7 @@ qx.Class.define("logbuch.module.Calendar",
     {
       return column * this.__sandbox.getLayoutConfig().getCalendar().getBoxWidth();
     },
-    
-    /**
-     * Given a category, return the corresponding row
-     * @param category {String}
-     * @return {Integer}
-     */
-    getRowFromCategory : function( category )
-    {
-      var lc = this.__sandbox.getLayoutConfig();
-      return lc.getCalendar().getCategories().indexOf(category)+1;
-    },
+   
     
 
     
@@ -590,37 +570,20 @@ qx.Class.define("logbuch.module.Calendar",
      */
     _onCellClick : function(e)
     {
-      // do not accept a double click on the date row 
+      // do not accept a click on the date row 
       if ( e.getRow() == 0 ) return;   
       
-      this.__sandbox.publish("activate-category",null);
-      
-      e.preventDefault();
-      
-      // do not accept a click when a category is active
-      //if ( this.getActiveCategory() ) return;
-      
+      //e.preventDefault();
+
       var col  = e.getColumn();
       var row  = e.getRow();
       var date = this.getDateFromCoordinate( col, row );  
-      this.setDate( date );
+      //this.setDate( date );
       
-      this.__sandbox.publish("calendar/row",row);
-      //this.displayMessages( date, category );
+      //this.__sandbox.publish("calendar/row",row);
     },    
     
-    /**
-     * Called when the user double-clicks on a cell.
-     * @param e {qx.event.type.Data}
-     */
-    _onCellDblclick : function(e)
-    {
-      // do not accept a double click on the date row 
-      if ( e.getRow() == 0 ) return;      
-      
-      var date = this.getDateFromCoordinate( e.getColumn(), e.getRow() ); // FIXME period
-      //this._handleCellAction( date );
-    },
+
 
     
     /**
@@ -632,61 +595,105 @@ qx.Class.define("logbuch.module.Calendar",
       //console.log(e.getData());
     },
     
-    /**
-     * Called when the "activate-category" message is received
-     * @param e {qx.event.type.Data}
-     */
-    _onSandboxActivateCategory : function(e)
-    {
-      this.setActiveCategory( e.getData() );
-      this.__scroller.getPane().fullUpdate();
-    },
     
     /**
      * Listens for messages that contain item data to display in the calendar.
      * @param e {qx.event.message.Message}
      * 
      */
-    _onDisplayCategoryItem : function( e )
+    _onEntryMessage : function( e )
     {
-      var data = e.getData(); 
+       var data    = e.getData(); 
+       var channel = e.getName();
       
+       
       /*
        * unmarshal dates
        */
-      data.date          = new Date( data.date );
-      data.itemDateStart = new Date( data.itemDateStart );
-      //data.itemDateEnd   = new Date( data.itemDateEnd );
-      
-      /*
-       * get row from category
-       */
-      var row  = this.getRowFromCategory( data.category );
-      
+      var dateStart, dateEnd;
+      if( data.timestampStart )
+      {
+        dateStart = new Date(data.timestampStart);
+        dateEnd   = new Date(data.timestampEnd);
+      }
+      else
+      {
+        dateStart = new Date(data.timestamp);
+      }
+     
       /*
        * get column from start date
        */
       try
       {
-        var col  = this.getColumnFromDate( data.itemDateStart );
+        var col  = this.getColumnFromDate( dateStart );
       }
       catch( e )
       {
         // FIXME! Server sends unneccesary data!
-        this.warn( e + " " + data.itemDateStart );
+        this.warn( e + " " + dateStart );
         return;
+      }
+      
+      /*
+       * get row from category
+       */
+      var row  = this.getRowFromTime( dateStart );
+      
+      /*
+       * if it is an entry with duration (i.e., an event),
+       * set cell spans
+       */
+      if( dateEnd )
+      {
+        this.__cellLayer.setCellSpan(
+          row, col,
+          this.getRowFromTime( dateEnd ) - row, 1
+        );      
       }
       
       /*
        * display in calendar
        */
-      var label = data.label || "";
-      var text = "<b>" + label + "</b> (" + data.initials + ")";
+      var text = "<b>" +
+        data.timeStart + "-" + data.timeEnd +
+        '<br/>' + data.subject + 
+        "</b>";
       if ( data.isPrivate )
       {
         text = "<span style='color:#853506'>" + text + "</span>";
       }
+      
+      /*
+       * link
+       */
+      var l = window.document.location; 
+      var url = l.protocol + "//" + l.host + l.pathname + "../html/teamblog/?showEntry=" + data.id;
+      text = '<span onclick="window.open(\"' + url + '\"">' + text + '</span>';
+      
+      /*
+       * add to cell row
+       */
       this.addCellText( row, col, text, data );  
+    },
+    
+    getRowFromTime : function( date )
+    {
+      var row, hour = date.getHours();
+      if( hour < 8 )
+      {
+        row = 1;
+      }
+      else if( hour > 18 )
+      {
+        row = 13;
+      }
+      else
+      {
+        row = hour-6;
+      }
+      return row;
+      
     },
     
 
@@ -736,8 +743,8 @@ qx.Class.define("logbuch.module.Calendar",
       /*
        * date cell renderer
        */
-      var dateCellRenderer = new qx.ui.virtual.cell.Date( this.__dateFormatter );
-      dateCellRenderer.set({
+      this.__dateCellRenderer = new qx.ui.virtual.cell.Date( this.__dateFormatter );
+      this.__dateCellRenderer.set({
         appearance : "logbuch-datecell",
         paddingTop : 6 // FIXME
       });     
@@ -745,150 +752,19 @@ qx.Class.define("logbuch.module.Calendar",
       /*
        * cell renderer
        */
-      var cellRenderer = new qx.ui.virtual.cell.Cell().set({
+      this.__cellRenderer = new qx.ui.virtual.cell.Cell().set({
         backgroundColor: "logbuch-background-calendar"
       });
       
       /*
        * current date renderer
        */
-      var currentDateCellRenderer = new qx.ui.virtual.cell.Cell().set({
+      this.__currentDateCellRenderer = new qx.ui.virtual.cell.Cell().set({
         backgroundColor: "logbuch-background-calendar-current-date"
-      });
-      
-      /*
-       * weekend cell renderer
-       */
-      var weekendCellRenderer = new qx.ui.virtual.cell.Cell().set({
-        backgroundColor: "logbuch-background-calendar-weekend"
-      });      
+      });    
      
-      /*
-       *  selected cell renderer
-       */
-      var selectedCellRenderer = new qx.ui.virtual.cell.Cell().set({
-        backgroundColor: "logbuch-background-calendar-selected"
-      });
+
       
-      /*
-       * selection manager
-       */
-      var manager = new qx.ui.virtual.selection.CellRectangle(scroller.getPane(), {
-        styleSelectable : function(item, type, wasAdded) {
-          cellLayer.updateLayerData();
-        }
-      });
-      manager.attachMouseEvents(scroller.getPane());
-      manager.attachKeyEvents(scroller);
-      manager.set({
-        mode : "multi",
-        drag : true
-      });
-      scroller.setUserData("manager", manager);      
-      
-      /*
-       * cell layer
-       */
-      var _this = this;
-      var cellLayer = new qx.ui.virtual.layer.HtmlCell({
-        getCellProperties : function(row, column)
-        {
-          
-          var activeCategory = _this.getActiveCategory();
-          var states = {};
-          
-          if (manager.isItemSelected({row: row, column: column})) 
-          {
-            states.selected = true;
-          }
-          
-          /*
-           * date cell
-           */
-          if ( row == 0 )
-          {
-            
-            if ( activeCategory )
-            {
-	            if ( column == _this.getSelectedDateColumn() )
-	            {
-                dateCellRenderer.setFont("logbuch-label-box");
-	              dateCellRenderer.setTextColor("logbuch-label-box");
-                dateCellRenderer.setBackgroundColor( "logbuch-category-" + activeCategory );
-	            }
-	            else if ( column == _this.getCurrentDateColumn() )
-              {
-                //dateCellRenderer.setFont("logbuch-label-box");
-                dateCellRenderer.setTextColor("logbuch-label-box");
-                dateCellRenderer.resetBackgroundColor();
-              }
-              else 
-	            {
-                //dateCellRenderer.setFont("small");
-                dateCellRenderer.setFont("logbuch-label-box");
-	              dateCellRenderer.setTextColor("logbuch-label-box-disabled");
-                dateCellRenderer.resetBackgroundColor();
-	            }
-            }
-            else
-            {
-              if ( column == _this.getSelectedDateColumn() )
-              {
-                dateCellRenderer.setFont("logbuch-label-box");
-                dateCellRenderer.setTextColor("logbuch-label-box");
-                dateCellRenderer.setBackgroundColor("logbuch-background-calendar-selected");
-              }
-              else if ( column == _this.getCurrentDateColumn() )
-              {
-                dateCellRenderer.setFont("logbuch-label-box");
-                dateCellRenderer.setTextColor("background-application");
-                dateCellRenderer.setBackgroundColor("logbuch-background-calendar-current-date");
-              }
-              else 
-              {
-                dateCellRenderer.setFont("small");
-                dateCellRenderer.setTextColor("logbuch-label-box");
-                //dateCellRenderer.resetBackgroundColor(); //IXME
-                dateCellRenderer.setBackgroundColor("logbuch-background-calendar");
-              }
-            }
-            return dateCellRenderer.getCellProperties( _this._getCellDate( column ), states );
-            
-          }
-          
-          /*
-           * selected calender cell
-           */
-          else if (states.selected) 
-          {
-            return selectedCellRenderer.getCellProperties( _this._getCellHtml( row, column ), states);
-          } 
-          
-          /*
-           * the currently selected date
-           */
-          else if ( column == _this.getCurrentDateColumn() )
-          {
-            return currentDateCellRenderer.getCellProperties( _this._getCellHtml( row, column ), states);
-          }
-          
-          /*
-           * normal cell
-           */
-          else 
-          {
-            if ( qx.lang.Array.contains( _this.getNotAWorkDayCols(), column ) )
-            {
-              return weekendCellRenderer.getCellProperties( _this._getCellHtml( row, column ), states);
-            }
-            else
-            {
-              return cellRenderer.getCellProperties( _this._getCellHtml( row, column ), states);
-            }
-          }
-        }
-      });
-      pane.addLayer(cellLayer);
       
       /*
        * grid lines
@@ -901,10 +777,100 @@ qx.Class.define("logbuch.module.Calendar",
       
       pane.addLayer( vLines );
       pane.addLayer( hLines );  
+      
+            /*
+       * main cell layer
+       */
+      this.__cellLayer = new qx.ui.virtual.layer.HtmlCellSpan(
+        this,
+        pane.getRowConfig(),
+        pane.getColumnConfig()
+      );      
+      pane.addLayer(this.__cellLayer);
               
     
       return scroller;
     },    
+    
+    /**
+     * Returns the html for the given cell
+     * @param {} row
+     * @param {} column
+     * @return {}
+     */
+    getCellProperties : function(row, column)
+    {
+      
+      var states = {};
+          
+      /*
+       * date cell
+       */
+      if ( row == 0 )
+      {
+        
+        if ( false )
+        {
+
+        }
+        else
+        {
+          if ( column == this.getSelectedDateColumn() )
+          {
+            this.__dateCellRenderer.setFont("logbuch-label-box");
+            this.__dateCellRenderer.setTextColor("logbuch-label-box");
+            this.__dateCellRenderer.setBackgroundColor("logbuch-background-calendar-selected");
+          }
+          else if ( column == this.getCurrentDateColumn() )
+          {
+            this.__dateCellRenderer.setFont("logbuch-label-box");
+            this.__dateCellRenderer.setTextColor("background-application");
+            this.__dateCellRenderer.setBackgroundColor("logbuch-background-calendar-current-date");
+          }
+          else 
+          {
+            this.__dateCellRenderer.setFont("small");
+            this.__dateCellRenderer.setTextColor("logbuch-label-box");
+            //this.__dateCellRenderer.resetBackgroundColor(); //IXME
+            this.__dateCellRenderer.setBackgroundColor("logbuch-background-calendar");
+          }
+        }
+        return this.__dateCellRenderer.getCellProperties( this._getCellDate( column ), states );
+        
+      }
+           
+      /*
+       * the currently selected date
+       */
+      else if ( column == this.getCurrentDateColumn() )
+      {
+        return this.__currentDateCellRenderer.getCellProperties( this._getCellHtml( row, column ), states);
+      }
+      
+      /*
+       * normal cell
+       */
+      else 
+      {
+        var html = this._getCellHtml( row, column );
+        var cr   = this.__cellRenderer;
+        
+        if( html )
+        {
+           cr.setBackgroundColor("logbuch-background-calendar-selected");
+        }
+        else if ( qx.lang.Array.contains( this.getNotAWorkDayCols(), column ) )
+        {
+          cr.setBackgroundColor("logbuch-background-calendar-weekend");
+        }
+        else
+        {
+          cr.resetBackgroundColor();          
+        }
+        return cr.getCellProperties( html, states);
+      }
+    },
+   
        
     /**
      * Returns a date object for the given cell
@@ -940,17 +906,19 @@ qx.Class.define("logbuch.module.Calendar",
     // FIXME width
     _styleEntryHtml : function( text )
     {
-      return '<span style="width:100px;height:12px;overflow:hidden;font-size:10px; white-space: nowrap;">' + text + '<span><br/>';
+      return '<span style="font-size:10px;">' + text + '<span><br/>';
     },
     
     /**
-     * Adss text to a calendar cell, identified by an id
+     * Adds text to a calendar cell
      * @param row {Integer}
      * @param col {Integer}
      * @param id {String}
      * @param text {String}
      * @param data {Object}
      * @param sortFunction {Function|undefined}
+     * @return {Integer} An id by which to identify this particular piece of text
+     * inside the cell. 
      */
     addCellText : function( row, col, text, data, sortFunction )
     {
@@ -971,7 +939,8 @@ qx.Class.define("logbuch.module.Calendar",
         };
       } 
       var cell = this.__data[row][col];
-      cell.order.push(cell.entries.length);
+      var id = cell.entries.length;
+      cell.order.push(id);
       cell.entries.push(text);
       cell.data.push(data);
       
@@ -992,7 +961,9 @@ qx.Class.define("logbuch.module.Calendar",
         }
       });
       
-      this.__scroller.getPane().fullUpdate();      
+      this.__scroller.getPane().fullUpdate();
+      
+      return id;
     },
     
     /**
@@ -1004,6 +975,7 @@ qx.Class.define("logbuch.module.Calendar",
      */
     removeCellText : function( row, col, id, sortFunction )
     {    
+      this.error("not implemented");
       var cell = this.__data[row][col];
       delete cell.entries[id];
       qx.lang.Array.remove( cell.order, id );
@@ -1014,7 +986,7 @@ qx.Class.define("logbuch.module.Calendar",
       cell.order.sort( function(a,b){
         if ( sortFunction ) 
         {
-          return sortFunction( cell.entries[a], cell.entries[b] )
+          return sortFunction( cell.entries[a], cell.entries[b] );
         }
         else
         {
@@ -1026,118 +998,45 @@ qx.Class.define("logbuch.module.Calendar",
     },
     
     /**
+     * Updates the text in a calendar cell, identified by an id. 
+     * @param row {Integer}
+     * @param col {Integer}
+     * @param id {String}
+     * @param sortFunction {Function|undefined}
+     */
+    updateCellText : function( row, col, id, text, data, sortFunction )
+    {    
+      this.error("not implemented");
+      var cell = this.__data[row][col];
+      cell.entries[id];
+      qx.lang.Array.remove( cell.order, id );
+      
+      /*
+       * sort the array
+       */
+      cell.order.sort( function(a,b){
+        if ( sortFunction ) 
+        {
+          return sortFunction( cell.entries[a], cell.entries[b] );
+        }
+        else
+        {
+          return ( a > b ? 1 : ( a < b ? -1 : 0) ); 
+        }
+      });
+      
+      this.__scroller.getPane().fullUpdate();      
+    },    
+    
+    /**
      * Displays the messages in a category in a day
      * @param {} date
      * @param {} category
      */
     _handleCellAction : function( date, category )
     {
-      /*
-       * create message list if necessary
-       */
-      if ( ! this.__messageList )
-      {
-        var msglist = new logbuch.component.MessageList(this.__sandbox).set({
-          width   : 300,
-          height  : 400
-        });
-        this.getApplicationRoot().add( msglist);
-        this.__messageList = msglist;
-        msglist.addListener("disappear", function(){
-          this.__sandbox.publish("activate-category",null);
-        },this);
-        this.__sandbox.subscribe("activate-category",function(e){
-          if ( e.getData() === null )
-          {
-            msglist.hide();
-          }
-        },this);
-      }
-      else
-      {
-        var msglist = this.__messageList;
-        msglist.reset();
-      }
       
-      /*
-       * caption
-       */
-      var lc = this.__sandbox.getLayoutConfig();
-      //msglist.setCaption( );
-     
-      /*
-       * change ui
-       */
-      this.__sandbox.publish( "activate-category", category );      
-
-      /*
-       * get data
-       */
-      var col   = this.getColumnFromDate( date );
-      var row   = this.getRowFromCategory( category );
-      var found = false;
-   
-      if ( this.__data[row] && this.__data[row][col] )
-      {
-        var cell = this.__data[row][col];
-        for( var i=0; i< cell.order.length; i++ )
-        {
-          var data = cell.data[cell.order[i]];
-          found = true;
-          msglist.addMessage( new logbuch.component.Message( 
-            data.date,
-            data.sender  + " (" + data.initials + ")",
-            data.label + ": " + data.subject,
-            data.body,
-            data.category,
-            data.itemId
-          ) );
-        }
-        
-        /*
-         * if data was found, show message list
-         */
-        if ( found )
-        {
-		      /*
-		       * position message list
-		       */
-		      var mycol = this.getColumnFromDate( date );
-		      var leftcol = this.getColumnFromDate( this.getFirstDateVisible() );          
-		      msglist.setLayoutProperties({
-		        top   : 140,
-		        left  : 135 + ( (mycol-leftcol) * 120 ) // FIXME
-		      });          
-          
-          /*
-           * add button label and callback
-           */
-          msglist.setAddButtonLabel( this.tr("New entry ...") );
-          var _this = this;
-          msglist.setAddButtonCallback( function(){
-            msglist.hide();
-            qx.util.TimerManager.getInstance().start(function(){
-	            _this.__sandbox.publish( "new-category-item", {
-	              category  : category,
-	              date      : date
-	            });            
-            },null,null,null,100);
-          });
-          
-          msglist.show();
-        }
-      }
       
-      /*
-       * enter new item if none was found
-       */
-      if ( ! found )
-      {
-        this.__sandbox.publish( "new-category-item", {
-          category  : category,
-          date      : date
-        });
-      }      
     },
     
     reset : function()

@@ -15,7 +15,6 @@
 
 qcl_import("logbuch_service_Controller");
 qcl_import("logbuch_model_AccessControlList");
-qcl_import("logbuch_model_Comment");
 qcl_import("qcl_util_registry_Session");
 
 /**
@@ -136,58 +135,21 @@ class logbuch_service_Message
 	
 	/**
 	 * Returns all messages in a specific period and category and 
-	 * @param string $date_start
-	 * @param string $date_end
-	 * @param array $categories
-	 * @param array $acl
-	 * 		Associated array with the acces control list for the messages
-	 * @todo Do we need the acl part? If yes, re-implement
+	 * @param object $filter
 	 */
-	function method_collect( $date_start, $date_end, $categories=array(), $acl = array() )
-	{
-		$dateStart = date ("Y-m-d", strtotime( $date_start ) );
-		$dateEnd   = date ("Y-m-d", strtotime( $date_end ) );
-		
-		//$this->info( "Getting messages for $dateStart - $dateEnd ");
-		
-		if( count( $categories) == 0 )
-		{
-			$categories = array( "event", "goal", "documentation", "diary", "inspiration" );
-		}
-		
-		foreach( $categories as $category )
-		{
-			$model = $this->getDatasourceModel( "demo" )->getModelOfType( $category );
-			try 
-			{
-//				$where = array_merge( $acl, array(
-//					"dateStart"  => array( ">=", $dateStart ),
-//				 	"dateStart"	 => array( "<=", $dateEnd )
-//				));
-        $query = new qcl_data_db_Query(array(
-          'where'       => "dateStart BETWEEN :dateStart AND :dateEnd",
-          'parameters'  => array(
-            ':dateStart'  => $dateStart,
-            ':dateEnd'    => $dateEnd 
-          )
-        ));
-				$model->find( $query );
-				$bus = qcl_event_message_Bus::getInstance();
-				while( $model->loadNext( $query ) )
-				{
-					foreach( $model->createMessages( "logbuch/display-category-item" ) as $message )
-					{
-						$message->setAcl( $model->aclData() );
-						$data = $message->getData();
-						$data['isPrivate'] = $model->isPrivate();
-						$message->setData( $data );
-						$bus->dispatch( $message );
-					}
-				}
-			}
-			catch( qcl_data_model_RecordNotFoundException $e ){}
-		}
-		
+	function method_collect( $filter )
+	{ 
+	  qcl_assert_object($filter);
+	  qcl_import("logbuch_service_Entry");
+	  $entryController = new logbuch_service_Entry();
+	  $result = $entryController->method_list($filter);
+	  foreach( $result['data'] as $entry )
+	  {
+	    if( $entry['id'] )
+	    {
+	      $this->dispatchClientMessage("entry.created",$entry);  
+	    }
+	  }
 		return "OK";
 	}
 	

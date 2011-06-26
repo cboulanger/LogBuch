@@ -102,7 +102,8 @@ body.claro {
 .entry-date, 
 .entry-reply, 
 .entry-event,
-.entry-access 
+.entry-access,
+.entry-private 
 {
   color: #666666;
   font-size: 10px;
@@ -112,8 +113,12 @@ body.claro {
 	color : #7BB6EA;
 }
 
-.entry-author, .entry-event {
+.entry-author, .entry-event, .entry-private {
 	font-weight : bold;
+}
+
+.entry-private {
+  color : #3e5da4;	
 }
 
 .entry-text {

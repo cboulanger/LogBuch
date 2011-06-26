@@ -162,6 +162,21 @@ qx.Class.define("logbuch.module.Footer",
       this.add( forwardButton );
       
       this.add( new qx.ui.core.Spacer(), {flex: 1} );
+      
+      /*
+       * teamblog
+       */
+      var button = new qx.ui.form.Button( this.tr("TeamBlog") ).set({
+        //decorator : "main",
+        maxHeight   : lc.getFooter().getControlsHeight(),
+        minWidth       : lc.getFooter().getButtonWidth(),
+        marginTop   : lc.getFooter().getMarginTop()
+      });
+      button.addListener("execute",function(){
+        var url="../html/teamblog/#S_" + this.__sandbox.getSessionId();
+        window.open(url, "teamblog");
+      },this);
+      this.add( button );          
 
       /*
        * users
@@ -175,36 +190,7 @@ qx.Class.define("logbuch.module.Footer",
       button.addListener("execute",function(){
         this.__sandbox.setApplicationState("view","users");
       },this);
-      this.add( button );        
-      
-      /*
-       * report button 
-       */
-      var reportButton = new qx.ui.form.Button(this.tr("Report"));
-      reportButton.set({
-        maxHeight   : lc.getFooter().getControlsHeight(),
-        width       : lc.getFooter().getButtonWidth(),
-        marginTop   : lc.getFooter().getMarginTop()
-      });
-      reportButton.addListener("execute",function(){
-        this.__sandbox.setApplicationState("view","report");
-      },this);
-      this.add( reportButton );
-      
-      /*
-       * Messages button 
-       */
-//      var msgButton = new qx.ui.form.Button(this.tr("Messages"));
-//      msgButton.set({
-//        maxHeight   : lc.getFooter().getControlsHeight(),
-//        width       : lc.getFooter().getButtonWidth(),
-//        marginTop   : lc.getFooter().getMarginTop()
-//      });
-//      msgButton.addListener("execute",function(){
-//        this.__sandbox.setApplicationState("view","messages");
-//      },this);
-//      this.add( msgButton );     
-      
+      this.add( button );         
     
       
       /*

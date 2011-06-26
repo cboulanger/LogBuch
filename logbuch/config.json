@@ -21,6 +21,7 @@
     "pretty",
     "profiling",
     "source",
+    "source-hybrid",
     "test",
     "test-source",
     "translation"
@@ -37,7 +38,7 @@
     "QXTHEME"        : "logbuch.theme.Theme",
     "LOCALES"        : [ "en","de" ],
     "ROOT"           : ".",
-    "OPTIMIZE"       : ["variables", "basecalls", "strings"],
+    //"OPTIMIZE"       : ["variables", "basecalls", "strings"],
 
     // Contributions: download them from the repository (a)
     // or use absolute path to an existing checkout (b)

@@ -57,6 +57,11 @@ class logbuch_service_Setup
 
   public function method_setup()
   {
+    
+    
+    /*
+     * do the setup
+     */
     $app = $this->getApplication();
 
     /*
@@ -107,7 +112,6 @@ class logbuch_service_Setup
       $lock->release();
       throw $e;
     }
-    
   }
 
   /**

@@ -1,57 +1,56 @@
-dojo.addOnLoad(function(){
-  //toolkit
-  dojo.require("dojo.parser");
+//toolkit
+dojo.require("dojo.parser");
+
+// Layout
+dojo.require("dijit.layout.BorderContainer");
+dojo.require("dijit.layout.TabContainer");
+dojo.require("dijit.layout.ContentPane");
+dojo.require("dijit.TitlePane");
+
+// Editor
+dojo.require("dijit.Editor");
+dojo.require("dijit._editor.plugins.LinkDialog");
+dojo.require("dojox.editor.plugins.PasteFromWord");
+//dojo.require("dojox.editor.plugins.UploadImage");
+dojo.require("dijit._editor.plugins.FullScreen");
+dojo.require("dojox.editor.plugins.Save");
+
+// Dialog & Form
+dojo.require("dijit.Dialog");
+dojo.require("dijit.form.TextBox");
+dojo.require("dijit.form.CheckBox");
+dojo.require("dijit.form.TimeTextBox");
+dojo.require("dijit.form.Button");
+dojo.require("dijit.form.DateTextBox");
+dojo.require("dijit.form.FilteringSelect");
+
+// Grid
+dojo.require("dojox.grid.DataGrid");
+dojo.require("dojox.grid.cells.dijit");
+dojo.require("dojo.data.ItemFileWriteStore");
+
+// Uploader
+dojo.require("dojox.form.Uploader");  
+dojo.require("dojox.form.uploader.FileList");
+dojo.require("dojox.form.uploader.plugins.HTML5"); 
+//dojo.require("dojox.form.uploader.plugins.IFrame"); 
+dojo.require("dojox.form.uploader.plugins.Flash");
+
+// Misc
+dojo.require("dojox.timing");
+dojo.require("dojo.fx");
+dojo.require("dijit.Tooltip");
+dojo.require("dojox.widget.Standby");
+dojo.require("dojox.dtl.filter.htmlstrings");
+dojo.require("dojox.image.Lightbox");
+
+// Plugins
+dojo.registerModulePath("dowl", "../../lib/dowl");
+dojo.require("dowl.Notification");
+dojo.registerModulePath("querybox", "../../lib/querybox");
+dojo.require("querybox.QueryBox");
   
-  // Layout
-  dojo.require("dijit.layout.BorderContainer");
-  dojo.require("dijit.layout.TabContainer");
-  dojo.require("dijit.layout.ContentPane");
-  dojo.require("dijit.TitlePane");
-  
-  // Editor
-  dojo.require("dijit.Editor");
-  dojo.require("dijit._editor.plugins.LinkDialog");
-  dojo.require("dojox.editor.plugins.PasteFromWord");
-  //dojo.require("dojox.editor.plugins.UploadImage");
-  dojo.require("dijit._editor.plugins.FullScreen");
-  dojo.require("dojox.editor.plugins.Save");
-  
-  // Dialog & Form
-  dojo.require("dijit.Dialog");
-  dojo.require("dijit.form.TextBox");
-  dojo.require("dijit.form.CheckBox");
-  dojo.require("dijit.form.TimeTextBox");
-  dojo.require("dijit.form.Button");
-  dojo.require("dijit.form.DateTextBox");
-  dojo.require("dijit.form.FilteringSelect");
-  
-  // Grid
-  dojo.require("dojox.grid.DataGrid");
-  dojo.require("dojox.grid.cells.dijit");
-  dojo.require("dojo.data.ItemFileWriteStore");
-  
-  // Uploader
-  dojo.require("dojox.form.Uploader");  
-  dojo.require("dojox.form.uploader.FileList");
-  dojo.require("dojox.form.uploader.plugins.HTML5"); 
-  //dojo.require("dojox.form.uploader.plugins.IFrame"); 
-  dojo.require("dojox.form.uploader.plugins.Flash");
-  
-  // Misc
-  dojo.require("dojox.timing");
-  dojo.require("dojo.fx");
-  dojo.require("dijit.Tooltip");
-  dojo.require("dojox.widget.Standby");
-  dojo.require("dojox.dtl.filter.htmlstrings");
-  dojo.require("dojox.image.Lightbox");
-  
-  // Plugins
-  dojo.registerModulePath("dowl", "../../lib/dowl");
-  dojo.require("dowl.Notification");
-  dojo.registerModulePath("querybox", "../../lib/querybox");
-  dojo.require("querybox.QueryBox");
-  
-});
+
 
 var locale = {
   "__index__"       : {},
@@ -75,26 +74,47 @@ var locale = {
   "moreMembers"     : "Einzelne Teilnehmer/innen"
 };
 
+/**
+ * The session id
+ * @type string
+ */
+var sessionId = null;
+
 dojo.ready(function()
-{
-  if ( ! dojo.cookie("sessionId")  )
+{ 
+  var hash = window.location.hash;
+  if ( hash=="" )
   {
     dijit.byId("loginDialog").show();
   }
   else
   {
-    authenticate( dojo.cookie("sessionId") );
+    sessionId = hash.substr(1);
+    /*
+     * sibling session suppport
+     */
+    if ( sessionId.substr(0,2) == "S_" )
+    {
+      sessionId += ("_" + qcl.crypto.md5.createRandom());
+    }
+    authenticate(sessionId);
   }
 });
 
 function authenticate(token)
 {
+  if ( ! ( token || sessionId ) )
+  {
+    sessionId = qcl.crypto.md5.createRandom();
+    window.location.hash=sessionId;
+  }
+  
   dojo.xhrGet({
-    url: "../../services/server.php",
+    url: "../../services/server.php?QCLSESSID="+sessionId,
     content:{
       service: "logbuch.access",
       method : "authenticate",
-      params : token
+      params : (token || sessionId)
     },
     handleAs: "json",
     load: function(response) {
@@ -125,16 +145,22 @@ function authenticate(token)
       }
     },
     error: function(message) {
-      alert(message);
+      //alert("Error during authentication: " + message );
     }
   });
 }
 
 var editorDirty = false;
-var sessionId = null;
-  
+
 function init( userData )
 {
+  console.log("init!");
+    
+  // handle userdata
+  sessionId = userData.sessionId;
+  window.location.hash = sessionId;
+  dojo.byId("username").innerHTML = userData.fullname;  
+  
   // parse querystring
   window.location.params = {};
   window.location.search.replace( 
@@ -148,35 +174,29 @@ function init( userData )
   {
     window.console = { log:function(){}, warn:function(){} };
   }
-  
+
   // locale
   initLocale();
-  
   
   // querybox
   initQueryBox();
   
-  // handle userdata
-  sessionId = userData.sessionId;
-  dojo.cookie("sessionId",sessionId);
-  dojo.byId("username").innerHTML = userData.fullname;
-  
   // file uploader
   initUploader(userData.sessionId);
- 
+
   // user grids 
   initGrids();
   
-  // prepare editor   
+  // prepare editor
   initEditor();
-  
+
   // reset filter without loading entries
   window.__preventLoadingOfEntries = true;
   resetEntryFilter();
 
   // show main app
   dojo.query("#appLayout").style({ visibility:"visible" });
-  
+
   window.setTimeout(function(){
   
     // load
@@ -240,7 +260,7 @@ function initQueryBox()
 function initGrids()
 {
   //dijit.byId("filterAuthorGrid").viewsHeaderNode.style.display="none";
-  var userListServiceUrl = "../../services/server.php?service=logbuch.record&method=getUserItemList&params=[]&qcl_output_format=raw";
+  var userListServiceUrl = "../../services/server.php?service=logbuch.record&method=getUserItemList&params=[]&qcl_output_format=raw&QCLSESSID="+sessionId;
   var store1 = new dojo.data.ItemFileWriteStore({
     url : userListServiceUrl,
     urlPreventCache : true
@@ -258,8 +278,8 @@ function initGrids()
       }
       if (oldValue)
       {
-        selectedUsers.splice( selectedUsers.indexOf( name ),1 );
-        selectedIds.splice( selectedIds.indexOf( id ),1 );
+        selectedUsers.splice( dojo.indexOf( selectedUsers, name ),1 );
+        selectedIds.splice( dojo.indexOf( selectedIds, id ),1 );
       }
     }
     store1.selectedUsers = selectedUsers;
@@ -289,8 +309,8 @@ function initGrids()
       }
       if (oldValue)
       {
-        selectedUsers.splice( selectedUsers.indexOf( name ),1 );
-        selectedIds.splice( selectedIds.indexOf( id ),1 );
+        selectedUsers.splice( dojo.indexOf( selectedUsers, name ),1 );
+        selectedIds.splice( dojo.indexOf( selectedIds, id ),1 );
       }
     }
     store2.selectedUsers = selectedUsers;
@@ -347,7 +367,7 @@ function initEditor()
 }
 
 var entryFilter = {};
-var showAll = false;
+var showAll = true;
 
 function onResetFilterButtonClick()
 {
@@ -376,14 +396,17 @@ function resetEntryFilter()
     "orderBy"    : null
   };
   
-  queryBox.clear();
+  try
+  {
+    queryBox.clear();
+  }catch(e){}
   resetTimeFilter();
   dijit.byId("filter-categories-all").set("value",true);
   dijit.byId("filter-group-all").set("value",true);
   
   var store1 = dijit.byId("filterAuthorGrid").store;
   store1.fetch({onComplete: function(items){
-    items.forEach( function(item){
+    dojo.forEach( items, function(item){
       store1.setValue(item,"selected", false);
     }); 
   }});
@@ -425,7 +448,7 @@ function blink(node, count){
         effects.push(show);
     }
      
-    dojo.fx.chain(effects).play()
+    dojo.fx.chain(effects).play();
 }
 
 
@@ -457,6 +480,9 @@ function loadEntries(forceReload)
   // load messages
   window.__activeRequest = dojo.xhrGet({
     url: "../../services/server.php",
+    headers: {
+      'x-qcl-sessionid': sessionId
+    },
     content:{
       service: "logbuch.entry",
       method : "list",
@@ -478,7 +504,7 @@ function loadEntries(forceReload)
         dojo.byId("filter-description").innerHTML = filterToText(from,to);
         if( window.location.params.showEntry )
         {
-          toggleAttachments( window.location.params.showEntry )
+          toggleAttachments( window.location.params.showEntry );
           window.location.params.showEntry = false;
         }
       }
@@ -501,6 +527,9 @@ function loadNextEntries(offset,limit)
   dijit.byId("centerColStandByOverlay").show();
   window.__activeRequest = dojo.xhrGet({
     url: "../../services/server.php",
+    headers: {
+      'x-qcl-sessionid': sessionId
+    },    
     content:{
       service: "logbuch.entry",
       method : "list",
@@ -541,7 +570,7 @@ function updateEntries()
 
 function toggleFilter(wgt,name)
 {
-  dojo.query('input[name="'+ name +'"]').forEach(function(node){
+  dojo.forEach( dojo.query('input[name="'+ name +'"]'), function(node){
     var widget = dijit.getEnclosingWidget(node);
     if( wgt.checked) widget.set("value",false);
   });
@@ -611,7 +640,7 @@ function updateFilter(wgt)
   }
   dojo.byId("filter-description").innerHTML = filterToText();
   updateEntries();
-  showAll = false;
+  //showAll = false; //FIXME
 }
 
 function filterToText(from,to)
@@ -620,7 +649,7 @@ function filterToText(from,to)
  
   // time
   from = from || entryFilter.from;
-  to   = to ||  entryFilter.to;
+  to   = to || entryFilter.to;
   t += "<tr><td><b>Zeitraum</b></td><td>" + 
     ( from ? dojo.date.locale.format( new Date(from), {selector:"date"}) : "" )+ 
     "-" +
@@ -659,7 +688,7 @@ function handleMessages(response)
 {
   if( response && response.result && dojo.isArray(response.result.messages) )
   {
-    response.result.messages.forEach(function(message){
+    dojo.forEach( response.result.messages, function(message){
       switch( message.name )
       {
         case "entry.updated": 
@@ -674,6 +703,18 @@ function handleMessages(response)
           if( showAll )
           {
             insertNewEntry( message.data );
+          }
+          else
+          {
+            var entry = message.data;
+            new dowl.Notification({
+              message : "Neue Nachricht '" + entry.subject +  
+                " von " + entry.author +
+                "<br>Klicken zum Öffnen",
+              onClick : function(){
+                loadSingleEntry(entry.id);
+              }
+            });
           }
           break;
         
@@ -718,7 +759,7 @@ function createContent( data, omitContainerNode )
   }
   var content = "";
   var loadNext = false;
-  dojo.forEach( data ,function(entry) {
+  dojo.forEach( data, function(entry) {
     if ( entry.id )
     {
       if ( ! omitContainerNode ) content+= '<div id="entryContainer' + entry.id + '">';
@@ -727,7 +768,7 @@ function createContent( data, omitContainerNode )
       content+= "</div>"; // End of message  
       content+= createEntryToolbar(entry);
       content+= createEntryAttachmentHtml(entry.id, entry.attachments);
-      content+= '<div class="entryLinkContainer" id="entryLinkContainer' + entry.id + '"></div>'
+      content+= '<div class="entryLinkContainer" id="entryLinkContainer' + entry.id + '"></div>';
       if ( ! omitContainerNode ) content+= "</div>";
     }
     else
@@ -770,7 +811,7 @@ function createEntryBody( entry )
   content+= "</div>";
   content+= "<div class='entry-categories'><b>Kategorien:</b> ";
   var categories=[];
-  entry.categories.forEach(function(c){
+  dojo.forEach( entry.categories, function(c){
     categories.push(locale[c]);
   });
   content+= categories.join(", ");
@@ -783,7 +824,16 @@ function createEntryBody( entry )
           "onclick='showEntry("+ entry.replyToId + "); return false;'>" + 
       entry.replyToSubject + "</a>" + " von " + entry.replyToAuthor + "</div>";
   }
-  content+=createAccessHtml(entry);
+  
+  
+  if( entry.isPrivate )
+  {
+    content+= "<div class='entry-private'>Der Eintrag wurde noch nicht veröffentlicht.</div>";
+  }
+  else
+  {
+    content+=createAccessHtml(entry);
+  }
   
   content+="<div class='entry-text'>" + entry.text + "</div>";
   return content;
@@ -930,6 +980,9 @@ function editEntry(id)
   // load messages
   dojo.xhrGet({
     url: "../../services/server.php",
+    headers: {
+      'x-qcl-sessionid': sessionId
+    },    
     content:{
       service: "logbuch.entry",
       method : "read",
@@ -954,9 +1007,9 @@ function editEntry(id)
         ed.entryId = entry.id;
         dojo.query('input[name="categories"]').forEach(function(node){
           var widget = dijit.getEnclosingWidget(node);
-          widget.set("value", entry.categories.indexOf(node.value) != -1 );
+          widget.set("value", dojo.indexOf( entry.categories, node.value ) != -1 );
         });
-        dojo.query('input[name="access"]').forEach(function(node){
+        dojo.forEach( dojo.query('input[name="access"]'), function(node){
           var widget = dijit.getEnclosingWidget(node);
           if( node.value == "moreMembers" )
           {
@@ -965,7 +1018,7 @@ function editEntry(id)
             var memberIds = entry.acl.moreMembers;
             store.fetch({
               onItem: function(item){
-                store.setValue( item, "selected", memberIds.indexOf( store.getValue( item, "id") ) != -1 );    
+                store.setValue( item, "selected", dojo.indexOf( memberIds, store.getValue( item, "id") ) != -1 );    
               }
             });
            }
@@ -974,11 +1027,11 @@ function editEntry(id)
              widget.set("value", entry.acl[node.value] );
            }
         });  
-        if( entry.timeStampStart )
+        if( entry.timestampStart )
         {
-          dijit.byId("entry-date").set("value",new Date( entry.timeStampStart) );
-          dijit.byId("entry-time-from").set("value",new Date( entry.timeStampStart) );
-          dijit.byId("entry-time-to").set("value",new Date( entry.timeStampEnd) );
+          dijit.byId("entry-date").set("value",new Date( entry.timestampStart ) );
+          dijit.byId("entry-time-from").set("value",new Date( entry.timestampStart ) );
+          dijit.byId("entry-time-to").set("value",new Date( entry.timestampEnd) );
         }
         editorDirty = true;
         dijit.byId("submitEntryButton").set("label","Aktualisieren");
@@ -1019,6 +1072,9 @@ function replyToEntry(id)
   // load messages
   dojo.xhrGet({
     url: "../../services/server.php",
+    headers: {
+      'x-qcl-sessionid': sessionId
+    },    
     content:{
       service: "logbuch.entry",
       method : "read",
@@ -1046,11 +1102,11 @@ function replyToEntry(id)
           
         // @todo quote original
         
-        dojo.query('input[name="categories"]').forEach(function(node){
+        dojo.forEach( dojo.query('input[name="categories"]'), function(node){
           var widget = dijit.getEnclosingWidget(node);
-          widget.set("value", entry.categories.indexOf(node.value) != -1 );
+          widget.set("value", dojo.indexOf( entry.categories, node.value) != -1 );
         });
-        dojo.query('input[name="access"]').forEach(function(node){
+        dojo.forEach( dojo.query('input[name="access"]'), function(node){
           var widget = dijit.getEnclosingWidget(node);
           
           if( node.value == "moreMembers" )
@@ -1072,7 +1128,7 @@ function replyToEntry(id)
         editorDirty = true;
         
         // disable checkboxes
-        dojo.query('input[name="access"]').forEach(function(node){
+        dojo.forEach( dojo.query('input[name="access"]'), function(node){
           var wgt = dijit.getEnclosingWidget(node);
           wgt.set("readOnly",true);
         });        
@@ -1112,6 +1168,9 @@ function deleteEntry(id)
   standby.show();
   dojo.xhrGet({
     url: "../../services/server.php",
+    headers: {
+      'x-qcl-sessionid': sessionId
+    },    
     content:{
       service: "logbuch.entry",
       method : "delete",
@@ -1159,6 +1218,9 @@ function subscribeToServerChannels(callback)
 {
   dojo.xhrGet({
     url: "../../services/server.php",
+    headers: {
+      'x-qcl-sessionid': sessionId
+    },    
     content:{
       service: "logbuch.message",
       method : "subscribe",
@@ -1178,6 +1240,9 @@ function unsubscribeFromServerChannels(callback)
 {
   dojo.xhrGet({
     url: "../../services/server.php",
+    headers: {
+      'x-qcl-sessionid': sessionId
+    },    
     content:{
       service: "logbuch.message",
       method : "unsubscribeAll",
@@ -1195,25 +1260,33 @@ function unsubscribeFromServerChannels(callback)
   });  
 }
 
+/**
+ * Poll every 30s
+ */
 function startPolling()
 {
-  window.__timer = new dojox.timing.Timer( 10000 );
+  window.__timer = new dojox.timing.Timer( 20000 );
   window.__timer.onTick = function(){
+    //var start = new Date().getTime();
     dojo.xhrGet({
-      url: "../../services/server.php",
+      url: "../../services/server.php?QCLSESSID="+sessionId,
       content:{
         service: "logbuch.message",
         method : "broadcast",
         params : "[]"
       },
       failOk : true,
-      timeout : 9000 ,
+      timeout : 15000 ,
       handleAs: "json",
-      load: function(response) {
+      load: function(response){
+        //var elapsed = new Date().getTime() - start;
+        //console.log("Request took " + elapsed/1000 + " seconds.");
         handleMessages(response);
       },
       error: function(message) {
-        console.log( "Error:" + message);
+        //var elapsed = new Date().getTime() - start;
+        //console.log("Request took " + elapsed/1000 + " seconds.");
+        console. log( message );
       }
     });
   };
@@ -1229,7 +1302,7 @@ function resetEditor()
 {
   var ed = dijit.byId("entryEditor");
   ed.setValue("<div class='dummyText entry-headline'>Zum Eingeben der Überschrift hier klicken</div><p class='dummyText entry-body'>Zum Eingeben des Haupttextes hier klicken.</p>");
-  dojo.query('input[id^="c-"]').forEach(function(node){
+  dojo.forEach( dojo.query('input[id^="c-"]'), function(node){
     var widget = dijit.getEnclosingWidget(node);
     if( widget.get("value")) widget.set("value",false);
   });
@@ -1266,7 +1339,7 @@ function resetEditor()
   dijit.byId("editorStandByOverlay").hide();
   
   // enable checkboxes
-  dojo.query('input[name="access"]').forEach(function(node){
+  dojo.forEach( dojo.query('input[name="access"]'), function(node){
     var wgt = dijit.getEnclosingWidget(node);
     wgt.set("readOnly",false);
   });  
@@ -1283,21 +1356,29 @@ function resetEditor()
 
 function logout()
 {
-  dojo.cookie("sessionId","",{expire:-1});
+  
   dojo.query("#appLayout").style({ visibility:"hidden" });
-  dijit.byId("loginDialog").show();
   unsubscribeFromServerChannels(function(){
     stopPolling();
     dojo.xhrGet({
-        url: "../../services/server.php",
+        url: "../../services/server.php?QCLSESSID="+sessionId,
         content:{
           service: "logbuch.access",
           method : "logout",
-          params : "[]"
+          params : "[false]"
+        },
+        load: function(response) {
+          sessionId = null;
+          window.location.hash="";
+          dijit.byId("loginDialog").show();
+        },
+        error: function(message) {
+          sessionId = null;
+          dijit.byId("loginDialog").show();          
+          alert( "Error:" + message);
         }
     });  
-  });
-  
+  });  
 }
 
 
@@ -1312,7 +1393,7 @@ function updateMessageData( widget )
   {
     if( widget.id == "access-all"  )
     {
-      dojo.query('input[name="access"]').forEach(function(node){
+      dojo.forEach( dojo.query('input[name="access"]'), function(node){
         var wgt = dijit.getEnclosingWidget(node);
         if( wgt.id  != "access-all" ) wgt.set("value",false);
       });
@@ -1338,7 +1419,7 @@ function updateMessageData( widget )
   
   
   // clean data
-  if ( data.categories.indexOf("event") == -1 )
+  if ( dojo.indexOf( data.categories, "event") == -1 )
   {
     data.eventTime = null;
   }
@@ -1347,7 +1428,7 @@ function updateMessageData( widget )
   
   // Create informational message from data
   var info = "", categories = [];
-  data.categories.forEach(function(c){
+  dojo.forEach( data.categories, function(c){
     var t = locale[c];
     if (c == "event" )
     {
@@ -1384,7 +1465,7 @@ function updateMessageData( widget )
   });
   
   var groups =[];
-  access.forEach(function(a){
+  dojo.forEach( access, function(a){
     var t = locale[a];
     if ( a == "moreMembers" )
     {
@@ -1453,6 +1534,9 @@ function createEntryOnServer()
   ed.set("disabled",true);
   dojo.xhrPost({
     url: "../../services/server.php",
+    headers: {
+      'x-qcl-sessionid': sessionId
+    },    
     content:{
       service: "logbuch.entry",
       method : "create",
@@ -1511,6 +1595,9 @@ function updateEntryOnServer()
   dijit.byId("editorStandByOverlay").show();
   dojo.xhrPost({
     url: "../../services/server.php",
+    headers: {
+      'x-qcl-sessionid': sessionId
+    },    
     content:{
       service: "logbuch.entry",
       method : "update",
@@ -1691,7 +1778,7 @@ function updateAttachmentList(files)
   var ed = dijit.byId("entryEditor");
   var ids = [];
   var html = '<table class="entry-attachement-list">';
-  files.forEach(function(file){
+  dojo.forEach( files, function(file){
     html+='<tr><td>' +
       ( file.mime.substr(0,6) =="image/"  
         ? '<img src="' + file.icon + '" ' +
@@ -1745,7 +1832,7 @@ function removeAttachment(node,name,id)
 {
   if( !confirm("Sind Sie sicher, dass sie die Datei '" + name + "' löschen möchten?") ) return;
   var ed = dijit.byId("entryEditor");
-  var pos = ed.attachmentIds.indexOf(id);
+  var pos = dojo.indexOf( ed.attachmentIds, id);
   if( pos != -1 )
   {
     ed.attachmentIds.splice(pos,1);
@@ -1760,7 +1847,7 @@ function createEntryAttachmentHtml( entryId, files )
 {
   var html = '<div id="entryAttachment' +  entryId + 
     '" class="entry-attachment-container"><table class="entry-attachment">';
-  files.forEach(function(file){
+  dojo.forEach( files, function(file){
     var url = "../../services/server.php?" +
             "sessionId=" + sessionId +
             "&service=logbuch.file&method=download&params=[" + file.id + "]";
@@ -1825,6 +1912,9 @@ function printEntries()
   var params = dojo.toJson([entryFilter]);
   dojo.xhrGet({
     url: "../../services/server.php",
+    headers: {
+      'x-qcl-sessionid': sessionId
+    },    
     content:{
       service: "logbuch.entry",
       method : "list",

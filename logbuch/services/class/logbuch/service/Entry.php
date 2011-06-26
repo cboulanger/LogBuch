@@ -286,56 +286,61 @@ class logbuch_service_Entry
   		/*
   	   * by categories
   	   */	    
-  	  $filterCategories = array_keys( get_object_vars( $filter->category ) );
-  
-  	  if( count($filterCategories) )
-  	  {    
-  	    if( ! count( array_intersect( $categories, $filterCategories ) ) )
-  	    {
-  	      return null;
-  	    }
-  	  }
-	  
+	    if ( $filter->category )
+	    {
+    	  $filterCategories = array_keys( get_object_vars( $filter->category ) );
+    
+    	  if( count($filterCategories) )
+    	  {    
+    	    if( ! count( array_intersect( $categories, $filterCategories ) ) )
+    	    {
+    	      return null;
+    	    }
+    	  }
+	    }
+	      
   	  /*
   	   * by group
   	   */
-  
-  	  // own company
-  		if ( $filter->group->ownCompany )
-  		{
-  			if ( $personModel->get("organizationId") != $activePerson->get("organizationId") )
-  			{
-  				$display = false;
-  			}
-  		}
-  		
-  		// own consultant
-  		if ( $filter->group->ownConsultant )
-  		{
-  			if ( $personModel->get("organizationId") != $activePerson->get("organizationId") 
-  			     or $personModel->get("position") != "consultant" )
-  			{
-  				$display = false;
-  			}
-  		}
-  		
-  		// all consultants
-  		if ( $filter->group->allConsultants )
-  		{
-  			if ( $personModel->get("position") != "consultant"  ) 
-  			{
-  				$display = false;
-  			}
-  		}
-  		
-  		// analyst
-  		if ( $filter->group->analyst )
-  		{
-  			if ( $personModel->get("position") == "analyst" )
-  			{
-  				$display = false;
-  			}
-  		}
+	    if( $filter->group )
+	    {
+    	  // own company
+    		if ( $filter->group->ownCompany )
+    		{
+    			if ( $personModel->get("organizationId") != $activePerson->get("organizationId") )
+    			{
+    				$display = false;
+    			}
+    		}
+    		
+    		// own consultant
+    		if ( $filter->group->ownConsultant )
+    		{
+    			if ( $personModel->get("organizationId") != $activePerson->get("organizationId") 
+    			     or $personModel->get("position") != "consultant" )
+    			{
+    				$display = false;
+    			}
+    		}
+    		
+    		// all consultants
+    		if ( $filter->group->allConsultants )
+    		{
+    			if ( $personModel->get("position") != "consultant"  ) 
+    			{
+    				$display = false;
+    			}
+    		}
+    		
+    		// analyst
+    		if ( $filter->group->analyst )
+    		{
+    			if ( $personModel->get("position") == "analyst" )
+    			{
+    				$display = false;
+    			}
+    		}
+	    }
 	  }
 		
 		/*
@@ -396,13 +401,16 @@ class logbuch_service_Entry
 		 */
 		$editable = ( $admin || $owner );
 		
+		
 	  /*
 	   * create data
 	   */
+		$timeStamp = $entryModel->getCreated()->getTimestamp();
     $data = array(
       'id'			    => $entryModel->id(),
-      'created'		  => date ("d.m.Y H:i", strtotime( $entryModel->get("created") ) ),
-      'updated'		  => date ("d.m.Y H:i", strtotime( $entryModel->get("modified") ) ),
+      'created'		  => date ("d.m.Y H:i", $timeStamp ), // @todo-localize on client, not here
+      'updated'		  => date ("d.m.Y H:i", $entryModel->getModified()->getTimestamp() ),
+      'timestamp'		=> $timeStamp *1000,
       'subject'     => $entryModel->get("subject"),
       'author'	 	  => $entryModel->authorName(),
       'text'		    => $entryModel->get("text"),
@@ -413,6 +421,7 @@ class logbuch_service_Entry
       'categories'  => $categories,
       'comments'	  => $comments,
       'attachments' => $this->_getAttachmentData($entryModel),
+      'isPrivate'		=> $aclModel->isPrivate()
     );	
     
     /*
@@ -420,9 +429,9 @@ class logbuch_service_Entry
      */
     if( in_array("event", $categories) )
     {
-      $data['timeStampStart']      = strtotime( $entryModel->get('dateStart') )*1000;
-      $data['timeStampEnd']        = strtotime( $entryModel->get('dateEnd') )*1000;
-      $data['dateStart'] 	= date("d.m.Y", strtotime( $entryModel->get('dateStart') ) ); 
+      $data['timestampStart']      = strtotime( $entryModel->get('dateStart') )*1000;
+      $data['timestampEnd']        = strtotime( $entryModel->get('dateEnd') )*1000;
+      $data['dateStart'] 	= date("d.m.Y", strtotime( $entryModel->get('dateStart') ) ); // @todo localize on client
   	  $data['dateEnd'] 		= date("d.m.Y", strtotime( $entryModel->get('dateEnd') ) );		
   		$data['timeStart'] 	= date("H:i", 	strtotime( $entryModel->get('dateStart') ) ); 
   	  $data['timeEnd'] 		= date("H:i", 	strtotime( $entryModel->get('dateEnd') ) );
