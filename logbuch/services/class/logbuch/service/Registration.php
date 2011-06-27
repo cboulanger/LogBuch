@@ -15,13 +15,13 @@
 
 ************************************************************************ */
 
-qcl_import("qcl_data_controller_Controller");
+qcl_import("logbuch_service_Controller");
 
 /**
  *
  */
 class logbuch_service_Registration
-  extends qcl_data_controller_Controller
+  extends logbuch_service_Controller
 {
 	
   public function method_resetPassword( $personId )

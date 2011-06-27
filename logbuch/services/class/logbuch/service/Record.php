@@ -13,13 +13,13 @@
 
 ************************************************************************ */
 
-qcl_import("qcl_data_controller_Controller");
+qcl_import("logbuch_service_Controller");
 
 /**
  * A classical CRUD controller which also features a list item generator 
  */
 class logbuch_service_Record
-  extends qcl_data_controller_Controller
+  extends logbuch_service_Controller
 {
 	
 	/**

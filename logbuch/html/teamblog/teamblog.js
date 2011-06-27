@@ -213,8 +213,6 @@ function init( userData )
 
 function initUploader(sessionId)
 {
-
-    
   dojo.connect(dijit.byId("attachment_uploader"), "onComplete", onUploadComplete );
   dojo.connect(dijit.byId("attachment_uploader"), "onChange", function(){
     dijit.byId("attachment_uploader_sendbutton").set("disabled",false);
@@ -1758,18 +1756,34 @@ function onUploadComplete(result)
 {
   var ed = dijit.byId("entryEditor");
   dijit.byId("attachment_uploader_sendbutton").set("disabled",true);
-  var response = dojo.eval("(" + result + ")" );
   
-  if ( response.error )
+  /*
+   * Flash response
+   */
+  if ( dojo.isArray(result) )
   {
-    dojo.byId("attachment_uploader_error").innerHTML = response.error.message;
+    
+    
   }
+  
+  /*
+   * json reponse
+   */
   else
   {
-    var data = response.result.data;
-    dojo.byId("attachment_uploader_error").innerHTML ="";
-    new dowl.Notification({message: data.message});
-    updateAttachmentList( data.files );
+    var response = dojo.eval("(" + result + ")" );
+    
+    if ( response.error )
+    {
+      dojo.byId("attachment_uploader_error").innerHTML = response.error.message;
+    }
+    else
+    {
+      var data = response.result.data;
+      dojo.byId("attachment_uploader_error").innerHTML ="";
+      new dowl.Notification({message: data.message});
+      updateAttachmentList( data.files );
+    }
   }
 }
 

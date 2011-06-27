@@ -13,14 +13,14 @@
 
 ************************************************************************ */
 
-qcl_import("qcl_data_controller_Controller");
+qcl_import("logbuch_service_Controller");
 qcl_import("logbuch_model_AccessControlList");
 
 /**
  *
  */
 class logbuch_service_File
-  extends qcl_data_controller_Controller
+  extends logbuch_service_Controller
 {
   
 

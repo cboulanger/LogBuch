@@ -3,7 +3,7 @@
 
    logBuch: Software zur online-Dokumentation von Beratungsprozessen
    
-   Copyright: Konzeption:     J�rgen Breiter
+   Copyright: Konzeption:     Jürgen Breiter
               Programmierung: Christian Boulanger 
 
    Lizenz: GPL v.2

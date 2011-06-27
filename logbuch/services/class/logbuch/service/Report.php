@@ -13,28 +13,16 @@
 
 ************************************************************************ */
 
-qcl_import("qcl_data_controller_Controller");
+qcl_import("logbuch_service_Controller");
 qcl_import("logbuch_model_AccessControlList");
 
 /**
  *
  */
 class logbuch_service_Report
-  extends qcl_data_controller_Controller
+  extends logbuch_service_Controller
 {
-	/**
-	 */
-	public function method_create( $data )
-	{
-		$_SESSION['reportData'] = $data;
-		$reportLink = qcl_server_Server::getUrl() .
-      "?service=report"   .
-      "&method=display" .
-			"&params=" .
-			"&sessionId="	. $this->getSessionId();
-		return $reportLink;
-	}
-	
+
 	
 	function method_createTimesheet()
 	{
