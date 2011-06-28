@@ -56,6 +56,9 @@ tableprefix =
 ;; to use the default utf8.
 encoding  = utf8
 
+;; the name of the default datasource 
+default_datasource_name = demo
+
 [service]
 
 ;; service.event_transport
@@ -116,7 +119,7 @@ group_name_attr = description
 
 ;; if the LDAP database only stores the user name part of the users'
 ;; e-mail address, you can provide the domain part here
-ldap.mail_domain = ""
+mail_domain = ""
 
 ;; ================================================================
 ;; Don't touch anything beyond this point

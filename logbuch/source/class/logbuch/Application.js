@@ -115,6 +115,16 @@ qx.Class.define("logbuch.Application",
         };
       }
       
+      /*
+       * parse querystring
+       */
+      window.location.params = {};
+      window.location.search.replace( 
+        new RegExp( "([^?=&]+)(=([^&]*))?", "g" ), 
+        function( $0, $1, $2, $3 ){
+          window.location.params[ $1 ] = $3;
+        }
+      );      
       
       /*
        * application core providing application functionality
@@ -136,7 +146,8 @@ qx.Class.define("logbuch.Application",
       /*
        * initalize server communication, access and config
        */
-      core.setServerUrl("../services/server.php");
+      var ds = window.location.params.ds;
+      core.setServerUrl("../services/server.php" + ( ds ? "?ds="+ds : "" ) );
       core.setAccessService("logbuch.access");
       core.setConfigService("logbuch.config");
       core.setDelayChannelSubscriptionsUntilAuthenticated(true);

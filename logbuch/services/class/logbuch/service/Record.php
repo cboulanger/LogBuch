@@ -33,7 +33,7 @@ class logbuch_service_Record
       /*
        * this ruleset
        */
-      'datasource'  => "demo",
+      'datasource'  => "*", // FIXME only datasource of a given schema
       'modelType'   => array("person","organization","attachment", "entry"),
 
       /*
@@ -52,11 +52,11 @@ class logbuch_service_Record
       /*
        * this ruleset
        */
-      'datasource'  => "demo",
+      'datasource'  => "*", // FIXME only datasource of a given schema
       'modelType'   => array("organization"),
 
       /*
-       * organization data can be accessed by anonymous
+       * organization data can be accessed by anonymous // FIXME why??
        */
       'roles'       => array(QCL_ROLE_ANONYMOUS),
 
@@ -76,39 +76,6 @@ class logbuch_service_Record
     $this->addModelAcl( $this->modelAcl );
   }  
   
-  /**
-   * Convenience function returning the user model
-   * @return qcl_access_model_User
-   */
-  private function getUserModel()
-  {
-  	return $this->getApplication()
-								->getAccessController()
-								->getUserModel();
-  }
-  
-  /**
-   * Convenience function returning the role model
-   * @return qcl_access_model_Role
-   */
-  private function getRoleModel()
-  {
-  	return $this->getApplication()
-								->getAccessController()
-								->getRoleModel();
-  }  
-
-  /**
-   * Convenience function returning the group model
-   * @return qcl_access_model_Group
-   */
-  private function getGroupModel()
-  {
-  	return $this->getApplication()
-								->getAccessController()
-								->getGroupModel();
-  }
-    
 	/**
 	 * Creates a model record on the server and returns the 
 	 * UI element model of it. 
@@ -116,19 +83,18 @@ class logbuch_service_Record
 	 * @param string $modelType
 	 * @return array
 	 */
-	function method_create( $datasource, $modelType )
+	function method_create( $datasource, $modelType ) // FIXME signature
 	{
-		$model = $this->getModel("demo", $modelType);
+		$model = $this->getDatasourceModel()->getInstanceOfType( $modelType );
 		$model->create();
 			
 		switch( $modelType )
 		{
 			case "person":
-				/*
-				 * Create new user
-				 */
+			  // create new user and link person
 				$userModel = $this->getUserModel();
 				$userModel->create( "person/" . $model->id() );
+				// determine role
 				$roleModel = $this->getRoleModel();
 				$roleModel->load( QCL_ROLE_USER );
 				$userModel->linkModel( $roleModel );
@@ -137,10 +103,13 @@ class logbuch_service_Record
 				break;
 				
 			case "organization":
-				$groupModel = $this->getGroupModel();
+				// create new group and link organization
+			  $groupModel = $this->getGroupModel();
 				$groupModel->create( "organization/" . $model->id() );
 				$model->set( "groupId", $groupModel->id() );
 				$model->save();
+				// link to datasource
+				$groupModel->linkModel($this->getDatasourceModel());
 				break;
 		}
 		
@@ -153,9 +122,9 @@ class logbuch_service_Record
 	 * @param string $modelType
 	 * @param int|string $recordId
 	 */
-	function method_read( $datasource, $modelType, $recordId )
+	function method_read( $datasource, $modelType, $recordId )// FIXME signature
 	{
-		$model = $this->getModel("demo", $modelType);
+		$model = $this->getDatasourceModel()->getInstanceOfType( $modelType );
 		$model->load( $recordId );
 		$data = $model->data( array(
 			'exclude'	=> array('created','modified','id','initialPassword','userId')
@@ -178,9 +147,9 @@ class logbuch_service_Record
 	 * @param int|string $recordId
 	 * @return array
 	 */
-	function method_update( $datasource, $modelType, $recordId, $data )
+	function method_update( $datasource, $modelType, $recordId, $data ) // FIXME signature
 	{
-		$model = $this->getModel("demo", $modelType);
+		$model = $this->getDatasourceModel()->getInstanceOfType($modelType);
 		$model->load( $recordId );
 	
 		/*
@@ -188,7 +157,7 @@ class logbuch_service_Record
 		 */
 		if( $data->image )
 		{
-			$attachmentModel = $this->getModel( "demo", "attachment" );
+			$attachmentModel = $this->getAttachmentModel();
 			$oldImage = $model->getImage();
 			$newImage = $data->image;
 			$sizes = array( 16, 64, 80 );
@@ -290,7 +259,7 @@ class logbuch_service_Record
 			}
 			if ( $model->get("organizationId") != $organizationId )
 			{
-				$orgModel = $this->getModel("demo", "organization");
+				$orgModel = $this->getOrganizationModel();
 				$orgModel->load( $organizationId );
 				$groupModel = $this->getGroupModel();
 				
@@ -356,9 +325,9 @@ class logbuch_service_Record
 	 * @return "OK"
 	 * FIXME remove entries
 	 */
-	function method_delete( $datasource, $modelType, $recordId )
+	function method_delete( $datasource, $modelType, $recordId ) // FIXME Signature
 	{
-		$model = $this->getModel("demo", $modelType);
+		$model = $this->getDatasourceModel()->getInstanceOfType( $modelType);
 		$model->load( $recordId );
 		
 		switch( $modelType )
@@ -396,7 +365,7 @@ class logbuch_service_Record
 	 */
 	function method_list( $datasource, $modelType, $where=null, $orderBy=null, $modelKey="value" )
 	{
-		$model = $this->getModel("demo", $modelType );
+		$model = $this->getDatasourceModel()->getInstanceOfType( $modelType );
 		if ( $where ) 
 		{
 			$model->findWhere( $where, $orderBy );
@@ -447,7 +416,7 @@ class logbuch_service_Record
 		}
 		
 		$listModel = array();
-		$model = $this->getModel("demo", "person" );
+		$model = $this->getPersonModel();
 		
 //		$this->getLogger()->setFilterEnabled(QCL_LOG_DB, true);
 		$model->find( $query );
@@ -480,22 +449,14 @@ class logbuch_service_Record
 	
 	/**
 	 * Returns a list of users with their organization and online status
-	 * Enter description here ...
 	 */
 	public function method_getUserItemList()
 	{ 
     $listModel = array();
-		$personModel = $this->getModel("demo", "person" );
-		$orgModel    = $this->getModel("demo", "organization");  
+		$personModel = $this->getPersonModel();
+		$orgModel    = $this->getOrganizationModel();  
 		
-//		$this->getLogger()->setFilterEnabled(QCL_LOG_DB, true);
 		$personModel->findAllOrderBy( "familyName" );
-//		$this->getLogger()->setFilterEnabled(QCL_LOG_DB, false);
-		
-		if( $personModel->foundNothing() )
-		{
-			return $listModel;
-		}
 		while( $personModel->loadNext() )
 		{
 			$listModel[] = array(

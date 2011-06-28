@@ -104,7 +104,7 @@ class logbuch_model_ProjectDatasource
   }
 
   /**
-   * Returns the singleton instance a person model object
+   * Returns the singleton instance of a person model object
    * @return logbuch_model_Person
    */
   function getPersonModel()
@@ -120,5 +120,40 @@ class logbuch_model_ProjectDatasource
   {
     return $this->createInstanceOfType("person");
   }  
+  
+	/**
+   * Returns the singleton instance of the entry model
+   * @return logbuch_model_Entry
+   */
+  protected function getEntryModel()
+  {
+  	return $this->getInstanceOfType("entry");
+  }  
+	/**
+   * Returns the singleton instance of the organization model
+   * @return logbuch_model_Organization
+   */
+  protected function getOrganizationModel()
+  {
+  	return $this->getInstanceOfType("organization");
+  }   
+  
+	/**
+   * Returns the singleton instance of the category model
+   * @return logbuch_model_Category
+   */
+  protected function getCategoryModel()
+  {
+  	return $this->getInstanceOfType("category");
+  } 
+  
+	/**
+   * Returns the singleton instance of the category model
+   * @return logbuch_model_Attachment
+   */
+  protected function getAttachmentModel()
+  {
+  	return $this->getInstanceOfType("attachment");
+  }     
 }
 ?>

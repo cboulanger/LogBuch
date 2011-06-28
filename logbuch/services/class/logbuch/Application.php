@@ -104,7 +104,7 @@ class logbuch_Application
      */
     //$this->getLogger()->setFilterEnabled( QCL_LOG_SETUP, true );
     //$this->getLogger()->setFilterEnabled( LOGBUCH_LOG_APPLICATION, true );
-    //$this->getLogger()->setFilterEnabled( QCL_LOG_ACCESS, true );
+    $this->getLogger()->setFilterEnabled( QCL_LOG_ACCESS, true );
 
     /*
      * log request
@@ -219,12 +219,16 @@ class logbuch_Application
   public function skipAuthentication()
   {
     $request = $this->getServerInstance()->getRequest();
-    switch( $request->getService() . "." . $request->getMethod() )
+    $method = $request->getService() . "." . $request->getMethod();
+    switch( $method )
     {
-      case "logbuch.actool.confirmEmail":
-      case "logbuch.message.testMessages": //FIXME  
+      case "logbuch.access.authenticate":
+      case "logbuch.setup.setup":  
+      case "logbuch.registration.confirmEmail":
+        $this->log( "Authentication for '$method' is not required.", QCL_LOG_ACCESS );
         return true;
       default:
+        $this->log( "Authentication required for '$method'", QCL_LOG_ACCESS );
         return false;
     }
   }

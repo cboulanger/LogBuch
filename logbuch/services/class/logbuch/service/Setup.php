@@ -15,7 +15,7 @@
 
 ************************************************************************ */
 
-qcl_import("qcl_data_controller_Controller");
+qcl_import("logbuch_service_Controller");
 qcl_import( "logbuch_ApplicationCache" );
 qcl_import("qcl_util_system_Lock");
 
@@ -25,12 +25,12 @@ qcl_import("qcl_util_system_Lock");
  *
  */
 class logbuch_service_Setup
-  extends qcl_data_controller_Controller
+  extends logbuch_service_Controller
 {
 
   /**
    * Configuration keys to be created if they do not already
-   * exists.
+   * exist.
    * @var array
    */
   private $configKeys = array(
@@ -154,19 +154,20 @@ class logbuch_service_Setup
     /*
      * create initial logbuch datasource
      */
+    $def_ds_name = $this->getIniValue("database.default_datasource_name");
   	try 
 		{
-			$datasourceModel = $this->getDatasourceModel( "demo" );
+			$datasourceModel = $this->getDatasourceModel( $def_ds_name );
 		}
 		catch( InvalidArgumentException $e )
 		{
 		  try {
-  			$this->getDatasourceManager()->createDatasource("demo", "project", array(
+  			$this->getDatasourceManager()->createDatasource($def_ds_name, "project", array(
   				'database' => "logbuch_devel_user"
   			) );
 		  }
 		  catch( qcl_data_model_RecordExistsException $e ){}
-		  $datasourceModel = $this->getDatasourceModel( "demo" );
+		  $datasourceModel = $this->getDatasourceModel( $def_ds_name );
 		}    
 
     /*

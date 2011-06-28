@@ -24,6 +24,24 @@ qcl_import("qcl_access_Service");
 class logbuch_service_Access
   extends qcl_access_Service
 {
+  
+  /**
+   * Mixin
+   * @see qcl_data_controller_Controller::getDatasourceModel()
+   */
+  public function getDatasourceModel()
+  {
+    return logbuch_service_Controller::getDatasourceModel();
+  }
+  
+  /**
+   * Mixin
+   * @see qcl_data_controller_Controller::getDatasourceName()
+   */
+  public function getDatasourceName()
+  {
+    return logbuch_service_Controller::getDatasourceName();
+  }  
 
   /**
    * Actively authenticate the user with session id or with username and password.
@@ -58,7 +76,7 @@ class logbuch_service_Access
   			/*
   			 * now, try the intials
   			 */	
-  			$personModel 	= $this->getDatasourceModel("demo")->getModelOfType("person");
+  			$personModel 	= $this->getDatasourceModel()->getModelOfType("person");
   		 	try 
 	  		{
 	  			$query = $personModel->loadWhere(array(

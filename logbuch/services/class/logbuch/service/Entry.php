@@ -57,8 +57,7 @@ class logbuch_service_Entry
 	
 	function method_list($filter)
 	{
-	  $datasourceModel = $this->getDatasourceModel( "demo" ); // FIXME 
-		$entryModel      = $datasourceModel->getInstanceOfType( "entry" );
+		$entryModel = $this->getEntryModel();
 		$where = array();
 		$parameters = array();
 		$from = null;
@@ -262,12 +261,12 @@ class logbuch_service_Entry
 	  if( $admin === null )
 	  {
   	  $admin           = $this->getActiveUser()->hasRole( QCL_ROLE_ADMIN );
-  	  $datasourceModel = $this->getDatasourceModel( "demo" ); // FIXME 
-  		$entryModel      = $datasourceModel->getInstanceOfType( "entry" );
+  	  $datasourceModel = $this->getDatasourceModel(); 
+  		$entryModel      = $this->getEntryModel();
   		$parentEntryModel= $datasourceModel->createInstanceOfType("entry");
-  		$categoryModel   = $datasourceModel->getInstanceOfType("category");
-  		$personModel     = $datasourceModel->getInstanceOfType("person");
-  		$activePerson    = $this->getActiveUserPerson("demo");
+  		$categoryModel   = $this->getCategoryModel();
+  		$personModel     = $this->getPersonModel();
+  		$activePerson    = $this->getActiveUserPerson();
   		$aclModel        = new logbuch_model_AccessControlList();	 
   		 
 	  }
@@ -456,7 +455,7 @@ class logbuch_service_Entry
 	  static $attModel= null;
 	  if( $attModel === null )
 	  {
-	    $attModel = $this->getDatasourceModel("demo")->getInstanceOfType("attachment");
+	    $attModel = $this->getAttachmentModel();
 	  }
 	  
 	  try 
@@ -506,7 +505,7 @@ class logbuch_service_Entry
 		/*
 		 * load record
 		 */
-		$entryModel = $this->getDatasourceModel( "demo" )->getModelOfType( "entry" );
+		$entryModel = $this->getEntryModel();
 		try 
 		{
 			$entryModel->load( $id );
@@ -531,10 +530,9 @@ class logbuch_service_Entry
 		//$this->debug($data);
 		
 		$activeUser 	   = $this->getActiveUser();
-		$datasourceModel = $this->getDatasourceModel("demo"); // FIXME 
-		$entryModel      = $datasourceModel->getModelOfType( "entry" );
-		$categoryModel   = $datasourceModel->getModelOfType("category");
-		$personModel 	   = $datasourceModel->getModelOfType("person");
+		$entryModel      = $this->getEntryModel();
+		$categoryModel   = $this->getCategoryModel();
+		$personModel 	   = $this->getPersonModel();
 		$itemData = array();
 
 		/*
@@ -648,7 +646,7 @@ class logbuch_service_Entry
 		 */
 		if( is_array( $data->attachmentIds ) )
 		{
-		  $attModel = $this->getDatasourceModel("demo")->getInstanceOfType("attachment");
+		  $attModel = $this->getAttachmentModel();
 		  $before   = $attModel->linkedModelIds( $entryModel );
 		  $after    = $data->attachmentIds;
 		  $added    = array_diff( $after, $before );
@@ -703,7 +701,7 @@ class logbuch_service_Entry
 	 */
 	function method_delete( $id )
 	{
-		$model = $this->getDatasourceModel( "demo" )->getModelOfType( "entry" );
+		$model = $this->getEntryModel();
 		$model->load( $id );
 		if( $this->getActiveUser()->hasRole( QCL_ROLE_ADMIN ) ) // FIXME permission
 		{
@@ -711,7 +709,7 @@ class logbuch_service_Entry
 		}
 		else
 		{
-			$personModel = $this->getDatasourceModel( "demo" )->getModelOfType( "person" );
+			$personModel = $this->getPersonModel();
 			$personModel->loadWhere( array( "userId" => $this->getActiveUser()->id() ) );
 			if( $model->get("personId") == $personModel->id() )
 			{
@@ -726,54 +724,17 @@ class logbuch_service_Entry
 		return "OK";
 	}		
 	
-	
 	/**
-	 * Returns the time period where this project has entries
-	 * FIXME in report class
+	 * Generates data for the querybox widget
+	 * @param string $fragment
 	 */
-	public function method_getDatePeriod()
-	{
-		$dateStart = time();
-		$dateEnd   = time();
-		
-		$dsModel = $this->getDatasourceModel("demo");
-		foreach( array("event","goal","documentation","diary","inspiration") as $type )
-		{
-			$model = $dsModel->getInstanceOfType($type);
-			$date = $model->getQueryBehavior()->fetchValues("dateStart", new qcl_data_db_Query(array(
-				'orderBy' 			=> "dateStart",
-				'numberOfRows'	=> 5
-			)));
-			if ( count( $date) and strtotime( $date[0] ) < $dateStart )
-			{
-				$dateStart = strtotime( $date[0] );
-			}
-			$date = $model->getQueryBehavior()->fetchValues("dateStart", new qcl_data_db_Query(array(
-				'orderBy' 			=> "dateEnd DESC",
-				'numberOfRows'	=> 1
-			)));
-			if ( count( $date ) and strtotime( $date[0] ) > $dateEnd )
-			{
-				$dateEnd = strtotime( $date[0] );
-			}
-			//$this->debug( $type . ": " . date("Y/m/d",  $dateStart ) . " - " . date("Y/m/d",  $dateEnd ) , __CLASS__, __LINE__ );
-		}
-		$data = array();
-		$data['dateStart'] 	= date("Y/m/d",  $dateStart ); 
-	  $data['dateEnd'] 		= date("Y/m/d",  $dateEnd );		
-		return $data;
-	}
-	
 	function method_querybox($fragment)
 	{
 	  $result = array( 
 	    "query"   => $fragment,
 	    "results"	=> array()
 	  );
-	  
-	  $datasourceModel = $this->getDatasourceModel("demo"); // FIXME 
-		$entryModel      = $datasourceModel->getModelOfType( "entry" );
-		
+		$entryModel      = $this->getEntryModel();
 		$entryModel->find( new qcl_data_db_Query( array(
 		  where       => "subject LIKE :fragment or text like :fragment",
 		  parameters  => array(

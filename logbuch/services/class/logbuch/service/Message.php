@@ -36,7 +36,7 @@ class logbuch_service_Message
 		 */
 		try 
 		{
-      $personModel = $this->getDatasourceModel("demo")->getPersonModel(); // FIXME 
+      $personModel = $this->getPersonModel();
       $personModel->loadByUserId( $this->getActiveUser()->id() );		
 		}
 		catch ( Exception $e )
@@ -206,7 +206,7 @@ class logbuch_service_Message
 		{
 			qcl_import("logbuch_model_AccessControlList");
 			$aclModel  = new logbuch_model_AccessControlList();
-			$dsModel	 = $this->getDatasourceModel("demo");//FIXME
+			$dsModel	 = $this->getDatasourceModel();
 			
 			/*
 			 * sender is the author of the message
@@ -266,15 +266,15 @@ class logbuch_service_Message
 			$access = true;
 		}
 		
-$this->debug( sprintf(
-	"\n%s => user: %s, author: %s, recipient: %s, access: %s",
-	$data['subject'],
-	$activeUserPerson->getFullName(),
-	$sender->getFullName(),
-	$recipient->getFullName(),
-	($access === true ? "yes" : "no" )
-, __CLASS__, __LINE__ ));		
-		return $access;
+//$this->debug( sprintf(
+//	"\n%s => user: %s, author: %s, recipient: %s, access: %s",
+//	$data['subject'],
+//	$activeUserPerson->getFullName(),
+//	$sender->getFullName(),
+//	$recipient->getFullName(),
+//	($access === true ? "yes" : "no" )
+//, __CLASS__, __LINE__ ));		
+//		return $access;
 	}
 }
 ?>

@@ -173,7 +173,8 @@ qx.Class.define("logbuch.module.Footer",
         marginTop   : lc.getFooter().getMarginTop()
       });
       button.addListener("execute",function(){
-        var url="../html/teamblog/#S_" + this.__sandbox.getSessionId();
+        var url="../html/teamblog/?ds=" + ( window.location.params.ds || "" ) + 
+          "#S_" + this.__sandbox.getSessionId();
         window.open(url, "teamblog");
       },this);
       this.add( button );          
@@ -233,7 +234,7 @@ qx.Class.define("logbuch.module.Footer",
       });      
       button.addListener("execute",function(){
         window.open(
-          "../services/server.php?" + 
+          "../services/server.php?ds=" + ( window.location.ds || "" ) +  
           "service=logbuch.report&method=createTimesheet&params=&sessionId=" + this.__sandbox.getSessionId()
         );
       },this);

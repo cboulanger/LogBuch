@@ -23,23 +23,86 @@ class logbuch_service_Controller
 {
   
   /**
-   * overridden.
+   * overridden: the datasource is determined by the "ds"
+   * parameter in the URL or by a default setting in the 
+   * application.ini file
    * @return logbuch_model_ProjectDatasource
    */
-  public function getDatasourceModel( $datasource=null )
+  public function getDatasourceModel()
   {
-    return parent::getDatasourceModel("demo");//FIXME 
+    static $ds_model = null;
+    if( $ds_model === null )
+    {
+      $ds_name = $this->getDatasourceName();
+      $this->checkDatasourceAccess( $datasource );
+      $ds_model = parent::getDatasourceModel($ds_name);
+    }
+    return $ds_model;
   }
   
+  /**
+   * Returns the name of the current datasource, as given in the
+   * request URL or by the ini file
+   * @return string
+   */
+  public function getDatasourceName()
+  {
+    return  either( 
+      $_REQUEST['ds'], 
+      $this->getIniValue("database.default_datasource_name")
+    );
+  }
+  
+  /**
+   * Convenience function returning the user model
+   * @return qcl_access_model_User
+   */
+  protected function getUserModel()
+  {
+  	return $this->getApplication()
+								->getAccessController()
+								->getUserModel();
+  }
+  
+  /**
+   * Convenience function returning the role model
+   * @return qcl_access_model_Role
+   */
+  protected function getRoleModel()
+  {
+  	return $this->getApplication()
+								->getAccessController()
+								->getRoleModel();
+  }  
 
+  /**
+   * Convenience function returning the group model
+   * @return qcl_access_model_Group
+   */
+  protected function getGroupModel()
+  {
+  	return $this->getApplication()
+								->getAccessController()
+								->getGroupModel();
+  }
+ 
+
+	/**
+   * Convenience function returning the entry model
+   * @return logbuch_model_Person
+   */
+  protected function getPersonModel()
+  {
+  	return $this->getDatasourceModel()->getPersonModel();
+  }  
+  
   /**
    * Returns a singleton instance of a person model associated with the active 
    * user. 
-   * @param string $datasource
    * @return logbuch_model_Person    
    * @throws qcl_data_model_RecordNotFoundException
    */
-  public function getActiveUserPerson($datasource=null)
+  public function getActiveUserPerson()
   {
     static $activeUserPerson = null;
     if( $activeUserPerson === null )
@@ -47,7 +110,7 @@ class logbuch_service_Controller
       /*
        * create model
        */
-      $activeUserPerson = $this->getDatasourceModel($datasource)->createPersonModel();
+      $activeUserPerson = $this->getDatasourceModel()->createPersonModel();
       
       /*
        * load active user's person model
@@ -63,6 +126,42 @@ class logbuch_service_Controller
       }           
     }
     return $activeUserPerson;
-  }
+  }  
+
+	/**
+   * Convenience function returning the entry model
+   * @return logbuch_model_Entry
+   */
+  protected function getEntryModel()
+  {
+  	return $this->getDatasourceModel()->getEntryModel();
+  }  
+	/**
+   * Convenience function returning the organization model
+   * @return logbuch_model_Organization
+   */
+  protected function getOrganizationModel()
+  {
+  	return $this->getDatasourceModel()-> getOrganizationModel();
+  }   
+  
+	/**
+   * Convenience function returning the category model
+   * @return logbuch_model_Category
+   */
+  protected function getCategoryModel()
+  {
+  	return $this->getDatasourceModel()->getCategoryModel();
+  } 
+
+  
+	/**
+   * Convenience function returning the category model
+   * @return logbuch_model_Attachment
+   */
+  protected function getAttachmentModel()
+  {
+  	return $this->getDatasourceModel()->getAttachmentModel();
+  }    
   
 }

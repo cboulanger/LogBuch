@@ -26,7 +26,7 @@ class logbuch_service_Registration
 	
   public function method_resetPassword( $personId )
   {
-  	$personModel = $this->getDatasourceModel("demo")->getModelOfType("person");
+  	$personModel = $this->getPersonModel();
   	$personModel->load( $personId );
   	$userModel = $this->getAccessController()->getUserModel();
   	$userModel->load( $personModel->get( "userId" ) );
@@ -47,7 +47,7 @@ class logbuch_service_Registration
   		qcl_import("qcl_ui_dialog_Alert");
   		return new qcl_ui_dialog_Alert( $this->tr("The email address '%s' is invalid.", $email) );
   	}
-  	$personModel = $this->getDatasourceModel("demo")->getModelOfType("person");
+  	$personModel = $this->getPersonModel();
     try
   	{
   		$personModel->loadWhere(array(
@@ -86,9 +86,10 @@ class logbuch_service_Registration
      * mail body
      */
     
-    $confirmationLink = //qcl_server_Server::getUrl() . // FIXME!!!
-      "http://www.logbuch-business-travel.de/logbuch/services/server.php" .
-      "?service="   . "logbuch.registration" .
+    $confirmationLink = 
+      qcl_server_Server::getUrl() . 
+      "?ds="				. $this->getDatasourceName() .
+      "&service="   . "logbuch.registration" .
       "&method="    . "confirmEmail" .
       "&params="    . "$username:$email";
 
@@ -99,14 +100,17 @@ class logbuch_service_Registration
     $body = ( sprintf( "
 Sehr geehrte/r %s,
 
-Sie wurden beim LogBuch 'Sustainable Business Travel' registriert.
+Sie wurden beim LogBuch 'Sustainable Business Travel' registriert oder
+Ihr Passwort wurde zurückgesetzt
 
-Ihr Startpasswort ist: %s
+Ihr (neues) Startpasswort ist: %s
 
 Bitte besuchen Sie den folgenden Link und geben Sie dort das 
 Startpasswort ein:
 
 %s
+
+Mit diesem Startpasswort können Sie Ihr persönliches Passwort neu setzen.
 
 Um das LogBuch aufzurufen, benötigen Sie einen modernen Internetbrowser:
 
@@ -162,7 +166,14 @@ Wir wünschen Ihnen produktives Arbeiten mit dem LogBuch.
         $userModel->save();
       }
 			
-     	header( "location: " . $app->getClientUrl() . "/#view~register" );
+      /*
+       * redirect to registration page
+       */
+     	header( 
+     		"location: " . $app->getClientUrl() .
+     		"?ds="				. $this->getDatasourceName() . 
+     		"#view~register" 
+     	);
       exit;
     }
     catch( qcl_data_model_RecordNotFoundException $e )
@@ -212,7 +223,7 @@ Wir wünschen Ihnen produktives Arbeiten mit dem LogBuch.
 			/*
 			 * find associated person
 			 */
-			$personModel = $this->getDatasourceModel("demo")->getModelOfType("person");
+			$personModel = $this->getPersonModel();
 			try 
 			{
 				$personModel->loadWhere(array(

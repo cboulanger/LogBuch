@@ -82,11 +82,11 @@ class logbuch_service_Notification
    * @param array|object $acl
    *    The acl data
    */
-  public function notifyAll( $project, $subject, $body, $acl )
+  public function notifyAll( $subject, $body, $acl )
   {
-    $recipientModel = $this->getDatasourceModel( $project )->getPersonModel();
+    $recipientModel = $this->getPersonModel();
     $recipientModel->findAll();
-    $activeUserPerson = $this->getActiveUserPerson("demo");
+    $activeUserPerson = $this->getActiveUserPerson();
     while( $recipientModel->loadNext() )
     {
       if( $recipientModel->id() != $activeUserPerson->id() )
@@ -96,13 +96,18 @@ class logbuch_service_Notification
     }    
   }
   
-  
-  public function method_attachment( $category, $itemId, $fileList )
+  /**
+   * Sends email when a new attachment has been created
+   * Enter description here ...
+   * @param unknown_type $itemId
+   * @param unknown_type $fileList
+   */
+  public function method_attachment( $itemId, $fileList )
   {
-    $model = $this->getDatasourceModel("demo")->getInstanceOfType( $category ); // FIXME
+    $model = $this->getEntryModel();
     $model->load( (int) $itemId );
     $aclData = $model->aclData();
-    $user = $this->getActiveUserPerson("demo")->getFullName();
+    $user = $this->getActiveUserPerson()->getFullName();
      
     if ( $model->get("notify")  )
     {
@@ -116,7 +121,7 @@ class logbuch_service_Notification
       $body .= dirname( dirname( qcl_server_Server::getUrl() ) ) . 
             "/build/#showItem~" . urlencode($category . "/" . $itemId); 
       $body .= "\n\n---\n\nBitte antworten Sie nicht auf diese E-Mail.";
-      $this->notifyAll("demo", $subject, $body, $aclData); // FIXME
+      $this->notifyAll( $subject, $body, $aclData); // FIXME
     }    
   }
 }

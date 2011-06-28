@@ -80,6 +80,15 @@ var locale = {
  */
 var sessionId = null;
 
+/**
+ * The name of the datasource of the project passed
+ * in the "ds" querystring parameter.
+ * @type String
+ */
+var datasource = "";
+
+var editorDirty = false;
+
 dojo.ready(function()
 { 
   var hash = window.location.hash;
@@ -110,8 +119,9 @@ function authenticate(token)
   }
   
   dojo.xhrGet({
-    url: "../../services/server.php?QCLSESSID="+sessionId,
+    url: "../../services/server.php",
     content:{
+      QCLSESSID : sessionId,
       service: "logbuch.access",
       method : "authenticate",
       params : (token || sessionId)
@@ -150,11 +160,9 @@ function authenticate(token)
   });
 }
 
-var editorDirty = false;
-
 function init( userData )
 {
-  console.log("init!");
+  console.log("Initializing application...");
     
   // handle userdata
   sessionId = userData.sessionId;
@@ -169,6 +177,15 @@ function init( userData )
       window.location.params[ $1 ] = $3;
     }
   );
+
+  // or use this?
+  //var query = uri.substring(uri.indexOf("?") + 1, uri.length);
+  //var queryObject = dojo.queryToObject(query);
+  
+  /*
+   * datasource
+   */
+  datasource = window.location.params.ds || "";
   
   if ( ! window.console )
   {
@@ -478,10 +495,9 @@ function loadEntries(forceReload)
   // load messages
   window.__activeRequest = dojo.xhrGet({
     url: "../../services/server.php",
-    headers: {
-      'x-qcl-sessionid': sessionId
-    },
     content:{
+      QCLSESSID : sessionId,
+      ds : datasource,
       service: "logbuch.entry",
       method : "list",
       params : params
@@ -524,11 +540,10 @@ function loadNextEntries(offset,limit)
   var params = dojo.toJson([entryFilter]);  
   dijit.byId("centerColStandByOverlay").show();
   window.__activeRequest = dojo.xhrGet({
-    url: "../../services/server.php",
-    headers: {
-      'x-qcl-sessionid': sessionId
-    },    
+    url: "../../services/server.php",    
     content:{
+      QCLSESSID : sessionId,
+      ds : datasource,
       service: "logbuch.entry",
       method : "list",
       params : params
@@ -978,10 +993,9 @@ function editEntry(id)
   // load messages
   dojo.xhrGet({
     url: "../../services/server.php",
-    headers: {
-      'x-qcl-sessionid': sessionId
-    },    
     content:{
+      QCLSESSID : sessionId,
+      ds : datasource,
       service: "logbuch.entry",
       method : "read",
       params : dojo.toJson([id])
@@ -1070,10 +1084,9 @@ function replyToEntry(id)
   // load messages
   dojo.xhrGet({
     url: "../../services/server.php",
-    headers: {
-      'x-qcl-sessionid': sessionId
-    },    
     content:{
+      QCLSESSID : sessionId,
+      ds : datasource,
       service: "logbuch.entry",
       method : "read",
       params : dojo.toJson([id])
@@ -1165,12 +1178,11 @@ function deleteEntry(id)
   standby.startup();
   standby.show();
   dojo.xhrGet({
-    url: "../../services/server.php",
-    headers: {
-      'x-qcl-sessionid': sessionId
-    },    
+    url: "../../services/server.php", 
     content:{
+      QCLSESSID : sessionId,
       service: "logbuch.entry",
+      ds : datasource,
       method : "delete",
       params : dojo.toJson([id])
     },
@@ -1216,10 +1228,9 @@ function subscribeToServerChannels(callback)
 {
   dojo.xhrGet({
     url: "../../services/server.php",
-    headers: {
-      'x-qcl-sessionid': sessionId
-    },    
     content:{
+      QCLSESSID : sessionId,
+      ds : datasource,
       service: "logbuch.message",
       method : "subscribe",
       params : '[["entry.updated","entry.created","entry.deleted","entry.reply","user.login","user.logout"]]'
@@ -1238,10 +1249,9 @@ function unsubscribeFromServerChannels(callback)
 {
   dojo.xhrGet({
     url: "../../services/server.php",
-    headers: {
-      'x-qcl-sessionid': sessionId
-    },    
     content:{
+      QCLSESSID : sessionId,
+      ds : datasource,
       service: "logbuch.message",
       method : "unsubscribeAll",
       params : '[]'
@@ -1267,8 +1277,10 @@ function startPolling()
   window.__timer.onTick = function(){
     //var start = new Date().getTime();
     dojo.xhrGet({
-      url: "../../services/server.php?QCLSESSID="+sessionId,
+      url: "../../services/server.php",
       content:{
+        QCLSESSID : sessionId,
+        ds : datasource,
         service: "logbuch.message",
         method : "broadcast",
         params : "[]"
@@ -1359,8 +1371,9 @@ function logout()
   unsubscribeFromServerChannels(function(){
     stopPolling();
     dojo.xhrGet({
-        url: "../../services/server.php?QCLSESSID="+sessionId,
+        url: "../../services/server.php",
         content:{
+          QCLSESSID : sessionId,
           service: "logbuch.access",
           method : "logout",
           params : "[false]"
@@ -1531,11 +1544,10 @@ function createEntryOnServer()
   var ed = dijit.byId("entryEditor");
   ed.set("disabled",true);
   dojo.xhrPost({
-    url: "../../services/server.php",
-    headers: {
-      'x-qcl-sessionid': sessionId
-    },    
+    url: "../../services/server.php",  
     content:{
+      QCLSESSID : sessionId,
+      ds : datasource,
       service: "logbuch.entry",
       method : "create",
       params : dojo.toJson( [ updateMessageData() ] )
@@ -1592,12 +1604,11 @@ function updateEntryOnServer()
   var ed = dijit.byId("entryEditor");
   dijit.byId("editorStandByOverlay").show();
   dojo.xhrPost({
-    url: "../../services/server.php",
-    headers: {
-      'x-qcl-sessionid': sessionId
-    },    
+    url: "../../services/server.php",  
     content:{
+      QCLSESSID : sessionId,
       service: "logbuch.entry",
+      ds : datasource,
       method : "update",
       params : dojo.toJson( [ ed.entryId, updateMessageData() ] )
     },
@@ -1926,10 +1937,9 @@ function printEntries()
   var params = dojo.toJson([entryFilter]);
   dojo.xhrGet({
     url: "../../services/server.php",
-    headers: {
-      'x-qcl-sessionid': sessionId
-    },    
     content:{
+      QCLSESSID : sessionId,
+      ds : datasource,
       service: "logbuch.entry",
       method : "list",
       params : params

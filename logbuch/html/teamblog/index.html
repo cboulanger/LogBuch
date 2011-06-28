@@ -6,7 +6,7 @@
 	<title>LogBuch TeamBlog</title>
 	
   <style type="text/css"> 
-    @import "lib/dojo/dijit/themes/claro/claro.css";
+    @import "dojo/dijit/themes/claro/claro.css";
     @import "dojo/dojox/editor/plugins/resources/css/PasteFromWord.css";
     @import "dojo/dojox/grid/resources/Grid.css";
     @import "dojo/dojox/grid/resources/claroGrid.css";
@@ -19,7 +19,7 @@
   </style>  
 
 	<!-- dojo -->
-	<script src="lib/dojo/dojo.js" data-dojo-config="isDebug: false, parseOnLoad: true"></script>
+	<script src="dojo/dojo/dojo.js" data-dojo-config="isDebug: false, parseOnLoad: true"></script>
 
   <!-- libraries -->
   <script src="lib/rangy/rangy-core.js"></script>
@@ -613,10 +613,10 @@
         onClick="printEntries();">Einträge drucken</button>      
       <button id="calenderButton" 
         dojoType="dijit.form.Button" 
-        onClick="window.open('../../build#sessionId~S_' + sessionId,'logbuch');">Kalender</button>
+        onClick="window.open('../../build?ds=' + (window.location.params.ds||'') + '#sessionId~S_' + sessionId,'logbuch');">Kalender</button>
       <button id="addressBookButton" 
         dojoType="dijit.form.Button" 
-        onClick="window.open('../../build#view~users^sessionId~S_' + sessionId,'logbuch');">Teilnehmer/innen</button>         
+        onClick="window.open('../../build?ds=' + (window.location.params.ds||'') + '#view~users^sessionId~S_' + sessionId,'logbuch');">Teilnehmer/innen</button>         
     </div> 	
 	</div>
 	
