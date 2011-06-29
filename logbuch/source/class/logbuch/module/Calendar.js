@@ -603,8 +603,13 @@ qx.Class.define("logbuch.module.Calendar",
      */
     _onEntryMessage : function( e )
     {
-       var data    = e.getData(); 
-       var channel = e.getName();
+      var data    = e.getData(); 
+      var channel = e.getName();
+       
+      /*
+       * entry is not an event
+       */
+      if( data.categories.indexOf("event") == -1 ) return;
       
        
       /*
