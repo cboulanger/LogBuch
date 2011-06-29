@@ -19,7 +19,7 @@
   </style>  
 
 	<!-- dojo -->
-	<script src="dojo/dojo/dojo.js" data-dojo-config="isDebug: false, parseOnLoad: true"></script>
+	<script src="lib/dojo/dojo.js" data-dojo-config="isDebug: false, parseOnLoad: true"></script>
 
   <!-- libraries -->
   <script src="lib/rangy/rangy-core.js"></script>
@@ -555,23 +555,25 @@
 				            <fieldset >
 				                <legend>Dateien hochladen</legend>
 				                <div class="infoTextSmall">
-				                  Sie können mehrere Anänge gleichzeitig auswählen (1) und danach 
-				                  gesammelt hochladen (2).
+				                  Bitte wählen Sie einen Anhang aus (1.) und laden Sie ihn dann hoch (2.).
 				                  Wenn Sie zusätzliche Dateien anhängen oder Dateien löschen, denken 
 				                  Sie daran, den Beitrag danach abzuspeichern. 
 				                </div>
 				                <input 
 				                  id="attachment_uploader"
-				                  name="uploadedfile" multiple="true" type="file" 
+				                  name="uploadedfile" 
+				                  type="file" 
+				                  force="iframe"
 				                  dojoType="dojox.form.Uploader" 
-				                  label="(1) Dateien auswählen" />
+				                  label="1. Datei auswählen" />
 				                <div id="attachment_uploader_files" 
 				                  dojoType="dojox.form.uploader.FileList"
 				                  uploaderId="attachment_uploader"></div>
 				                <input 
 				                  id="attachment_uploader_sendbutton"
 				                  dojoType="dijit.form.Button"
-				                  type="submit" label="(2) Dateien hochladen" 
+				                  type="submit" label="2. Datei hochladen"
+				                  onClick="beginUpload(this)"
 				                  disabled />
 				                <div id="attachment_uploader_error"></div>
 				            </fieldset>

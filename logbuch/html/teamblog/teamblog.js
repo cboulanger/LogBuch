@@ -33,8 +33,8 @@ dojo.require("dojo.data.ItemFileWriteStore");
 dojo.require("dojox.form.Uploader");  
 dojo.require("dojox.form.uploader.FileList");
 dojo.require("dojox.form.uploader.plugins.HTML5"); 
-//dojo.require("dojox.form.uploader.plugins.IFrame"); 
-dojo.require("dojox.form.uploader.plugins.Flash");
+dojo.require("dojox.form.uploader.plugins.IFrame");
+
 
 // Misc
 dojo.require("dojox.timing");
@@ -91,6 +91,7 @@ var editorDirty = false;
 
 dojo.ready(function()
 { 
+  dojo.cookie("QCLSESSID","",{expire:-1});
   var hash = window.location.hash;
   if ( hash=="" )
   {
@@ -151,11 +152,14 @@ function authenticate(token)
           error = "Unbekannter Fehler.";
         }
         alert(error);
+        sessionId="";
+        window.location.hash ="";
         dijit.byId("loginDialog").show();
       }
     },
     error: function(message) {
-      //alert("Error during authentication: " + message );
+      alert("Error during authentication: " + message );
+      window.location.hash ="";
     }
   });
 }
@@ -230,6 +234,10 @@ function init( userData )
 
 function initUploader(sessionId)
 {
+  dojo.connect(dijit.byId("attachment_uploader"), "onBegin", function(){
+    dijit.byId("attachment_uploader_sendbutton").set("disabled",false);
+    dojo.byId("attachment_uploader_error").innerHTML = "Dokument wird hochgeladen";
+  });    
   dojo.connect(dijit.byId("attachment_uploader"), "onComplete", onUploadComplete );
   dojo.connect(dijit.byId("attachment_uploader"), "onChange", function(){
     dijit.byId("attachment_uploader_sendbutton").set("disabled",false);
@@ -1685,6 +1693,9 @@ function toggleSelectUserTableOnRowClick(e)
 
 function handleEditorEnterKey(e)
 {
+  
+  if( ! dojo.isFF ) return;
+  
   //console.log(e);
   var editor = dijit.byId("entryEditor");
   var text = editor.get("value");
@@ -1758,12 +1769,25 @@ function handleEditorEnterKey(e)
 function setEntryId( id )
 {
   dijit.byId("entryEditor").entryId = id;
-  dojo.byId("attachment_uploader_form").action = 
-    "../../services/server.php?sessionId=" + sessionId +
-    "&application=logbuch&service=logbuch.file&method=upload&params=[" + id + "]";  
+  updateUploaderUrl( id );
 }
 
-function onUploadComplete(result)
+
+function updateUploaderUrl(entryId)
+{
+  var url =  "../../services/server.php?QCLSESSID=" + sessionId +
+    "&application=logbuch&service=logbuch.file&method=dojoUploader&params=[" + entryId + "]";
+  dojo.byId("attachment_uploader_form").action = url;
+  dijit.byId("attachment_uploader").set("url", url );    
+}
+
+function beginUpload( button )
+{
+  dojo.byId("attachment_uploader_error").innerHTML = "Dokument wird hochgeladen...";
+  window.setTimeout(function(){button.setDisabled(true),0});
+}
+
+function onUploadComplete(data)
 {
   var ed = dijit.byId("entryEditor");
   dijit.byId("attachment_uploader_sendbutton").set("disabled",true);
@@ -1771,10 +1795,9 @@ function onUploadComplete(result)
   /*
    * Flash response
    */
-  if ( dojo.isArray(result) )
+  if ( false )
   {
-    
-    
+    // todo
   }
   
   /*
@@ -1782,15 +1805,13 @@ function onUploadComplete(result)
    */
   else
   {
-    var response = dojo.eval("(" + result + ")" );
     
-    if ( response.error )
+    if ( data.error )
     {
-      dojo.byId("attachment_uploader_error").innerHTML = response.error.message;
+      dojo.byId("attachment_uploader_error").innerHTML = data.error;
     }
     else
     {
-      var data = response.result.data;
       dojo.byId("attachment_uploader_error").innerHTML ="";
       new dowl.Notification({message: data.message});
       updateAttachmentList( data.files );
@@ -1804,8 +1825,9 @@ function updateAttachmentList(files)
   var ids = [];
   var html = '<table class="entry-attachement-list">';
   dojo.forEach( files, function(file){
+    var type = file.type ? file.type : file.mime;
     html+='<tr><td>' +
-      ( file.mime.substr(0,6) =="image/"  
+      ( type.substr(0,6) =="image/"  
         ? '<img src="' + file.icon + '" ' +
             'onmouseover="explain(this)" ' +
             'alt="Klicken, um Bild anzuzeigen" ' +
