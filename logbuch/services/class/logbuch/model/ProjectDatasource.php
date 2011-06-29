@@ -125,7 +125,7 @@ class logbuch_model_ProjectDatasource
    * Returns the singleton instance of the entry model
    * @return logbuch_model_Entry
    */
-  protected function getEntryModel()
+  function getEntryModel()
   {
   	return $this->getInstanceOfType("entry");
   }  
@@ -133,7 +133,7 @@ class logbuch_model_ProjectDatasource
    * Returns the singleton instance of the organization model
    * @return logbuch_model_Organization
    */
-  protected function getOrganizationModel()
+  function getOrganizationModel()
   {
   	return $this->getInstanceOfType("organization");
   }   
@@ -142,7 +142,7 @@ class logbuch_model_ProjectDatasource
    * Returns the singleton instance of the category model
    * @return logbuch_model_Category
    */
-  protected function getCategoryModel()
+  function getCategoryModel()
   {
   	return $this->getInstanceOfType("category");
   } 
@@ -151,7 +151,7 @@ class logbuch_model_ProjectDatasource
    * Returns the singleton instance of the category model
    * @return logbuch_model_Attachment
    */
-  protected function getAttachmentModel()
+  function getAttachmentModel()
   {
   	return $this->getInstanceOfType("attachment");
   }     

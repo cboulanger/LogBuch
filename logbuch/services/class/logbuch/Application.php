@@ -100,7 +100,7 @@ class logbuch_Application
   public function main()
   {
     /*
-     * log filters
+     * debugging
      */
     //$this->getLogger()->setFilterEnabled( QCL_LOG_SETUP, true );
     //$this->getLogger()->setFilterEnabled( LOGBUCH_LOG_APPLICATION, true );

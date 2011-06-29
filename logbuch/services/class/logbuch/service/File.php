@@ -73,7 +73,7 @@ class logbuch_service_File
     exit;
   }
   
-  function method_upload($entryId, $paths, $names)
+  protected function upload($entryId, $paths, $names)
   {
     $entryModel = $this->getDatasourceModel("demo")->getInstanceOfType("entry");
     $attModel   = $this->getDatasourceModel("demo")->getInstanceOfType("attachment");
@@ -130,10 +130,65 @@ class logbuch_service_File
          "name"	=> $file,
          "icon"	=> $iconpath,
          "id"   => $attId,
-         "mime"	=> $attModel->get("mime")
+         "type"	=> $attModel->get("mime"),
+         "size"	=> $attModel->get("size")
        );
     }
     return $result;
-      
+  }
+    
+  
+  public function method_dojoUploader($entryId, $paths, $names, $error )
+  {
+    if( $error )
+    {
+      $uploadData = array( "error" => $error );
+    }
+    else 
+    {
+      $uploadData = $this->upload($entryId, $paths, $names);
+    }
+    
+    /*
+     * Flash
+     */
+    if( isset($_FILES["flashUploadFiles"]) || isset($_FILES['uploadedfileFlash']))
+    {
+    	//
+    	// If the data passed has $fieldName, then it's Flash.
+    	// NOTE: "Filedata" is the default fieldname, but we're using a custom fieldname.
+    	// The SWF passes one file at a time to the server, so the files come across looking
+    	// very much like a single HTML file. The SWF remembers the data and returns it to
+    	// Dojo as an array when all are complete.
+    	//
+    	$parts = array();
+    	foreach( $uploadData as $key => $value )
+    	{
+    	  $parts[] = "$key=$value";
+    	}
+    	$htmldata = implode(",",$parts);
+    	$this->debug( "$htmldata", __CLASS__, __LINE__ );   
+    }
+    
+    /*
+     * HTML5-Upload
+     */
+    elseif( isset($_FILES['uploadedfiles']) )
+    {
+    	$htmldata = json_encode($uploadData);
+    }
+    
+    /*
+     * Iframe-Upload
+     */
+    else
+    {
+    	$htmldata = 
+    		"<textarea style='width:600px; height:150px;'>" .
+    	  json_encode($uploadData) . "</textarea>";
+    }
+    echo $htmldata;
+    exit;
   }
 }
+?>

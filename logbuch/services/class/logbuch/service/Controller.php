@@ -34,7 +34,7 @@ class logbuch_service_Controller
     if( $ds_model === null )
     {
       $ds_name = $this->getDatasourceName();
-      $this->checkDatasourceAccess( $datasource );
+      $this->checkDatasourceAccess( $ds_name );
       $ds_model = parent::getDatasourceModel($ds_name);
     }
     return $ds_model;
@@ -57,7 +57,7 @@ class logbuch_service_Controller
    * Convenience function returning the user model
    * @return qcl_access_model_User
    */
-  protected function getUserModel()
+  function getUserModel()
   {
   	return $this->getApplication()
 								->getAccessController()
@@ -68,7 +68,7 @@ class logbuch_service_Controller
    * Convenience function returning the role model
    * @return qcl_access_model_Role
    */
-  protected function getRoleModel()
+  function getRoleModel()
   {
   	return $this->getApplication()
 								->getAccessController()
@@ -79,7 +79,7 @@ class logbuch_service_Controller
    * Convenience function returning the group model
    * @return qcl_access_model_Group
    */
-  protected function getGroupModel()
+  function getGroupModel()
   {
   	return $this->getApplication()
 								->getAccessController()
@@ -91,7 +91,7 @@ class logbuch_service_Controller
    * Convenience function returning the entry model
    * @return logbuch_model_Person
    */
-  protected function getPersonModel()
+  function getPersonModel()
   {
   	return $this->getDatasourceModel()->getPersonModel();
   }  
@@ -132,7 +132,7 @@ class logbuch_service_Controller
    * Convenience function returning the entry model
    * @return logbuch_model_Entry
    */
-  protected function getEntryModel()
+  function getEntryModel()
   {
   	return $this->getDatasourceModel()->getEntryModel();
   }  
@@ -140,7 +140,7 @@ class logbuch_service_Controller
    * Convenience function returning the organization model
    * @return logbuch_model_Organization
    */
-  protected function getOrganizationModel()
+  function getOrganizationModel()
   {
   	return $this->getDatasourceModel()-> getOrganizationModel();
   }   
@@ -149,7 +149,7 @@ class logbuch_service_Controller
    * Convenience function returning the category model
    * @return logbuch_model_Category
    */
-  protected function getCategoryModel()
+  function getCategoryModel()
   {
   	return $this->getDatasourceModel()->getCategoryModel();
   } 
@@ -159,7 +159,7 @@ class logbuch_service_Controller
    * Convenience function returning the category model
    * @return logbuch_model_Attachment
    */
-  protected function getAttachmentModel()
+  function getAttachmentModel()
   {
   	return $this->getDatasourceModel()->getAttachmentModel();
   }    
