@@ -29,6 +29,19 @@ body.claro {
 	font-weight:bold;
 }
 
+#titleBar{
+	background-color: #bfe7ff;
+  background-image: url(img/bar-top.png);
+  background-repeat: no-repeat;
+}
+
+#footer{
+  background-color: #f6fafd;
+  background-image: url(img/bar-bottom.png);
+  background-repeat: no-repeat;
+  padding: 15px;
+}
+
 #leftCol {
 	width: 14em;
 }

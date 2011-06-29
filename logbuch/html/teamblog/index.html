@@ -50,7 +50,9 @@
 		<div id="centerColStandByOverlay" dojoType="dojox.widget.Standby" target="centerCol" text="Bitte warten..."></div>
 		
 		<!----------------------- title bar ----------------------->
-		<div class="edgePanel" data-dojo-type="dijit.layout.ContentPane"
+		<div id="titleBar" 
+		  class="edgePanel" 
+		  data-dojo-type="dijit.layout.ContentPane"
 			data-dojo-props="region: 'top'">
 			<table width="100%">
 			 <tr heigth="0px">
@@ -616,7 +618,7 @@
         onClick="window.open('../../build?ds=' + (window.location.params.ds||'') + '#sessionId~S_' + sessionId,'logbuch');">Kalender</button>
       <button id="addressBookButton" 
         dojoType="dijit.form.Button" 
-        onClick="window.open('../../build?ds=' + (window.location.params.ds||'') + '#view~users^sessionId~S_' + sessionId,'logbuch');">Teilnehmer/innen</button>         
+        onClick="window.open('../../build?ds=' + (window.location.params.ds||'') + '#view~users^sessionId~S_' + sessionId,'logbuch');">Teilnehmer/innen</button>
     </div> 	
 	</div>
 	
