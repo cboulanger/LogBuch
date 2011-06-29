@@ -104,7 +104,7 @@ class logbuch_Application
      */
     //$this->getLogger()->setFilterEnabled( QCL_LOG_SETUP, true );
     //$this->getLogger()->setFilterEnabled( LOGBUCH_LOG_APPLICATION, true );
-    $this->getLogger()->setFilterEnabled( QCL_LOG_ACCESS, true );
+    //$this->getLogger()->setFilterEnabled( QCL_LOG_ACCESS, true );
 
     /*
      * log request
@@ -223,6 +223,7 @@ class logbuch_Application
     switch( $method )
     {
       case "logbuch.access.authenticate":
+        session_regenerate_id(); // to avoid to loose the last session used.
       case "logbuch.setup.setup":  
       case "logbuch.registration.confirmEmail":
         $this->log( "Authentication for '$method' is not required.", QCL_LOG_ACCESS );
