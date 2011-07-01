@@ -166,12 +166,24 @@ class logbuch_model_Person
    * Relations
    */
  	private $relations = array(
+ 	
+ 	  /*
+ 	   * the attachments belonging to this person
+ 	   */
     'Attachment_Person' => array(
       'type'        => QCL_RELATIONS_HAS_MANY,
       'target'      => array( 
       	'class'    		=> "logbuch_model_Attachment",
  				'dependent'		=> true 
  			)
+    ),
+    
+    /*
+     * the surveys this person has answered
+     */
+    'EmailSurvey_Person' => array(
+      'type'        => QCL_RELATIONS_HAS_AND_BELONGS_TO_MANY,
+      'target'      => array( 'class' => "logbuch_model_EmailSurvey" )
     )
   );
 

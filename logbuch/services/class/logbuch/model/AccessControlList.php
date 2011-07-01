@@ -47,7 +47,7 @@ extends qcl_core_Object
 	public function setAcl( $acl )
 	{
 		$acl = (array) $acl;
-		qcl_assert_array_keys( $acl, $this->properties() );
+		//qcl_assert_array_keys( $acl, $this->properties() );
 		$this->set( $acl );		
 	}
 	

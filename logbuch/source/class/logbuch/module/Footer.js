@@ -268,11 +268,17 @@ qx.Class.define("logbuch.module.Footer",
       menu.add( button );      
       
       
-      
-//      
-//      this.add( new qx.ui.core.Spacer(), {flex: 1} );
-//      
-//      this.add( new qx.ui.basic.Image("logbuch/image/tuev_logo.png"), {flex: 1} );
+      /*
+       * survey management
+       */
+      var button = new qx.ui.menu.Button( "Verwaltung der E-Mail-Fragebogen" );
+      this.__sandbox.bindPermissionState("logbuch.members.manage", button, "visibility", {
+        converter : function( v ){ return v ? "visible" : "excluded"; }
+      }); 
+      button.addListener("execute",function(){
+        this.__sandbox.rpcRequest("logbuch.survey","startDialog");
+      },this);
+      menu.add( button ); 
       
     },
       

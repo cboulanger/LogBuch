@@ -98,6 +98,16 @@ class logbuch_model_ProjectDatasource
           'model'    => array(
             'class'    => "logbuch_model_Category"
           )
+        ),
+        'emailTemplate'  => array(
+          'model'    => array(
+            'class'    => "logbuch_model_EmailTemplate"
+          )
+        ),
+        'emailSurvey'  => array(
+          'model'    => array(
+            'class'    => "logbuch_model_EmailSurvey"
+          )
         )
       ) );
     }

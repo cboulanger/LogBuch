@@ -182,8 +182,9 @@ class logbuch_Application
     	"logbuch.report"	   		=> "logbuch_service_Report",
       "logbuch.file"          => "logbuch_service_File",
       "logbuch.notify"        => "logbuch_service_Notification",
+      "logbuch.survey"        => "logbuch_service_Survey",
     	"logbuch.config"     		=> "qcl_config_Service",
-     	"logbuch.acltool"     	=> "qcl_access_ACLTool"    
+     	"logbuch.acltool"     	=> "qcl_access_ACLTool"   
     ) );
     
     /*

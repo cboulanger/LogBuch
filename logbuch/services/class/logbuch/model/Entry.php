@@ -91,7 +91,7 @@ extends logbuch_model_Model
     'Attachment_Entry' => array(
       'type'        => QCL_RELATIONS_HAS_MANY,
       'target'      => array( 'class'    => "logbuch_model_Attachment" )
-    ) 
+    )    
   );    
 
 

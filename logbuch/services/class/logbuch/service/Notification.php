@@ -57,7 +57,7 @@ class logbuch_service_Notification
           'recipient'       => $recipient->getFullName(),
           'recipientEmail'  => $recipient->get("email")
         ) );
-        //$this->debug( $mailer->data(), __CLASS__, __LINE__ );        
+        $this->debug( $mailer->data(), __CLASS__, __LINE__ );        
         $mailer->send();
         return true;
       }
@@ -66,7 +66,7 @@ class logbuch_service_Notification
         $this->warn( "Could not send email: " . $e->getMessage() );
       }
     }
-    //$this->debug( $recipient->getFullName() .  ": No...", __CLASS__, __LINE__ );
+    $this->debug( $recipient->getFullName() .  ": No...", __CLASS__, __LINE__ );
     return false;
   }
   
