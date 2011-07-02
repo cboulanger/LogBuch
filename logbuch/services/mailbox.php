@@ -1,49 +1,47 @@
 <?php
-/* ************************************************************************
 
-   qcl - the qooxdoo component library
+  /*
+   * configure environment
+   */
+  chdir( dirname(__FILE__) );
+  require "config.php";
+  ini_set('display_errors', 0);
+  ini_set('display_startup_errors', 0);
+  ini_set('html_errors', 0);
+  ini_set('log_errors', 1);
 
-   http://qooxdoo.org/contrib/project/qcl/
+  /*
+   * get mail content
+   */
+  log_debug("Received Email");
+  $mail = file_get_contents("php://stdin");
+  log_debug( str_repeat("-", 30 ) . " " . date("d.m.Y H:i:s", time() ) . " " . str_repeat("-", 30 ) );
 
-   Copyright:
-     2007-2009 Christian Boulanger
+  /*
+   * pass mail text to logbuch controller
+   */
+  log_debug("Setting up qcl");
+  require "qcl/bootstrap.php";
+  qcl_import("logbuch_Application");
+  qcl_import("logbuch_service_Survey");
 
-   License:
-     LGPL: http://www.gnu.org/licenses/lgpl.html
-     EPL: http://www.eclipse.org/org/documents/epl-v10.php
-     See the LICENSE file in the project's top-level directory for details.
+  log_debug("setting application instance");
+  qcl_application_Application::setInstance( new logbuch_Application() );
 
-   Authors:
-   *  Christian Boulanger (cboulanger)
+  log_debug("handling email");
+  $surveyController = new logbuch_service_Survey();
+  $surveyController->handleReceivedEmail($mail);
 
-************************************************************************ */
+  log_debug("done!");
+  exit; // successful exit;
 
-/*
- * Configure constants & runtime settings
- */
-require "config.php";
-require "qcl/log/Logger.php";
-
-$data = file_get_contents("php://stdin");
-qcl_log_Logger::getInstance()->log( "hello world", QCL_LOG_INFO );
-return;
-
-
-/*
- * Load classes
- */
-require_once "qcl/server/Server.php";
-
-
-
-
-
-/*
- * Start server with paths to the service classes, i.e.
- * qcl and application classes
- */
-qcl_server_Server::run( array(
-  QCL_CLASS_PATH,
-  APPLICATION_CLASS_PATH
-) );
+  /*
+   * debug function
+   */
+  function log_debug($msg)
+  {
+    return;
+    $dir = dirname(__FILE__);
+    error_log( "\n" . $msg, 3, "$dir/log/email.log" );
+  }
 ?>

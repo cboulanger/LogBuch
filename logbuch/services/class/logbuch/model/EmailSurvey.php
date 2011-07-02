@@ -2,9 +2,9 @@
 /* ************************************************************************
 
    logBuch: Software zur online-Dokumentation von Beratungsprozessen
-   
+
    Copyright: Konzeption:     JŸrgen Breiter/Christian Boulanger
-              Programmierung: Christian Boulanger 
+              Programmierung: Christian Boulanger
 
    Lizenz: GPL v.2
 
@@ -16,7 +16,7 @@
 qcl_import( "logbuch_model_Model" );
 
 /**
- * The model of an email survey 
+ * The model of an email survey
  */
 class logbuch_model_EmailSurvey
 extends logbuch_model_Model
@@ -32,11 +32,11 @@ extends logbuch_model_Model
    * The name of the table of this model
    */
   protected $tableName = "data_EmailSurvey";
-  
+
   /**
    * The foreign key of this model
    */
-  protected $foreignKey = "SurveyId";  
+  protected $foreignKey = "SurveyId";
 
   /**
    * The properties of the category model
@@ -49,9 +49,18 @@ extends logbuch_model_Model
       'check' => 'integer',
       'sqltype' => 'int(11)',
       'nullable' => true,
-    )   
+    ),
+
+    /**
+     * A random 5-character hash to identify the survey
+     */
+    'hash' => array (
+      'check' => 'string',
+      'sqltype' => 'varchar(5)',
+      'nullable' => true,
+    )
   );
-  
+
   /**
    * Relations
    */
@@ -59,12 +68,8 @@ extends logbuch_model_Model
     'EmailSurvey_EmailTemplate' => array(
       'type'        => QCL_RELATIONS_HAS_ONE,
       'target'      => array( 'class' => "logbuch_model_EmailTemplate" )
-    ),
-    'EmailSurvey_Person' => array(
-      'type'        => QCL_RELATIONS_HAS_AND_BELONGS_TO_MANY,
-      'target'      => array( 'class' => "logbuch_model_Person" )
     )
-  );  
+  );
 
 
   /*
@@ -79,13 +84,13 @@ extends logbuch_model_Model
     $this->addProperties( $this->properties );
     $this->addRelations( $this->relations, __CLASS__ );
   }
-  
+
   /*
   *****************************************************************************
      API
   *****************************************************************************
   */
-  
+
 
 }
 ?>

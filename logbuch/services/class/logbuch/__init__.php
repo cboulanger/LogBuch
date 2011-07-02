@@ -4,7 +4,7 @@
    logBuch: Die Online-Plattform fŸr Unternehmenszusammenarbeit
 
    Copyright:
-     2010 JŸrgen Breiter (Konzeption) Christian Boulanger (Programmierung) 
+     2010 JŸrgen Breiter (Konzeption) Christian Boulanger (Programmierung)
 
    License:
      GPL: http://www.gnu.org/licenses/gpl.html
@@ -22,12 +22,17 @@ define( "LOGBUCH_ROLE_USER",    "user" );
 define( "LOGBUCH_ROLE_MANAGER", "manager" );
 define( "LOGBUCH_ROLE_ADMIN",   "admin" );
 
-
-
 /*
  * log filters
  */
-define( "LOGBUCH_LOG_APPLICATION", "logbuch" );
-qcl_log_Logger::getInstance()->registerFilter( LOGBUCH_LOG_APPLICATION, "", false );
+$logger = qcl_log_Logger::getInstance();
+define( "LOGBUCH_LOG_APPLICATION", "logbuch_log_application" );
+$logger->registerFilter( LOGBUCH_LOG_APPLICATION, "", false );
+
+define( "LOGBUCH_LOG_SURVEY", "logbuch_log_survey");
+$logger->registerFilter( LOGBUCH_LOG_SURVEY, "", false);
+
+//$logger->setFilterEnabled( QCL_LOG_SETUP, true );
+//$logger->setFilterEnabled( QCL_LOG_ACCESS, true );
 
 ?>

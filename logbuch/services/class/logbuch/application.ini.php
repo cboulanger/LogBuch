@@ -56,7 +56,7 @@ tableprefix =
 ;; to use the default utf8.
 encoding  = utf8
 
-;; the name of the default datasource 
+;; the name of the default datasource
 default_datasource_name = demo
 
 [service]
@@ -88,6 +88,10 @@ admin = "info@bibliograph.org"
 
 ;; The email address of the developer of the application
 developer = "info@bibliograph.org"
+
+;; The email address of the logbuch for autoprocesing of
+;; response messages
+logbuch = "logbuch@logbuch-business-travel.de"
 
 [ldap]
 ;; whether ldap authentication is enabled, values: yes/no

@@ -235,7 +235,8 @@ qx.Class.define("logbuch.module.Footer",
       button.addListener("execute",function(){
         window.open(
           "../services/server.php?ds=" + ( window.location.ds || "" ) +  
-          "service=logbuch.report&method=createTimesheet&params=&sessionId=" + this.__sandbox.getSessionId()
+          "&service=logbuch.report&method=createTimesheet&params=[]" + 
+          "&QCLSESSID=" + this.__sandbox.getSessionId()
         );
       },this);
       menu.add( button );        

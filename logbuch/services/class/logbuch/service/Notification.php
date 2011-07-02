@@ -2,9 +2,9 @@
 /* ************************************************************************
 
    logBuch: Software zur online-Dokumentation von Beratungsprozessen
-   
+
    Copyright: Konzeption:     Jürgen Breiter
-              Programmierung: Christian Boulanger 
+              Programmierung: Christian Boulanger
 
    Lizenz: GPL v.2
 
@@ -18,17 +18,20 @@ qcl_import("logbuch_model_AccessControlList");
 qcl_import("qcl_util_system_Mail");
 
 /**
- * 
+ *
  */
 class logbuch_service_Notification
   extends logbuch_service_Controller
 {
-  
+
+  var $sender = null;
+  var $senderEmail = null;
+
   /**
    * Sends an email to a user based on the acl list. If the user doesn't belong
    * to the list of legitimate recipients, do not send the message and return false.
    * Emits a warning on the source of the error.
-   * 
+   *
    * @param string $subject
    *    The subject of the message
    * @param string $body
@@ -45,19 +48,18 @@ class logbuch_service_Notification
     $aclModel = new logbuch_model_AccessControlList( $acl );
     if( $aclModel->checkAccess( $activeUserPerson, $recipient ) )
     {
-      $mailer = qcl_util_system_Mail::getInstance();  
+      $mailer = qcl_util_system_Mail::getInstance();
       $mailer->reset();
-      try 
+      try
       {
         $mailer->set( array(
-          'subject'         => $subject,  
+          'subject'         => $subject,
           'body'            => $body,
-          'sender'          => "LogBuch",
-          'senderEmail'     => "nicht_antworten@logbuch-business-travel.de", // FIXME
+          'sender'          => $this->sender,
+          'senderEmail'     => $this->senderEmail,
           'recipient'       => $recipient->getFullName(),
           'recipientEmail'  => $recipient->get("email")
         ) );
-        $this->debug( $mailer->data(), __CLASS__, __LINE__ );        
         $mailer->send();
         return true;
       }
@@ -66,10 +68,9 @@ class logbuch_service_Notification
         $this->warn( "Could not send email: " . $e->getMessage() );
       }
     }
-    $this->debug( $recipient->getFullName() .  ": No...", __CLASS__, __LINE__ );
     return false;
   }
-  
+
   /**
    * Sends a notification to all project members except the currently
    * logged in user (who is sending the message).
@@ -93,9 +94,9 @@ class logbuch_service_Notification
       {
         $this->notify($subject, $body, $recipientModel, $acl);
       }
-    }    
+    }
   }
-  
+
   /**
    * Sends email when a new attachment has been created
    * Enter description here ...
@@ -108,21 +109,21 @@ class logbuch_service_Notification
     $model->load( (int) $itemId );
     $aclData = $model->aclData();
     $user = $this->getActiveUserPerson()->getFullName();
-     
+
     if ( $model->get("notify")  )
     {
       $subject = "Neuer Logbuch-Anhang";
       $body = "Sehr geehrte/r LogBuch-Teilnehmer/in,\n\n";
-      $body .= ( count( $fileList) > 1 ? 
+      $body .= ( count( $fileList) > 1 ?
         "$user hat neue Dokumente hochgeladen" :
         "$user hat ein neues Dokument hochgeladen" ) . ":\n\n";
-      $body .=  implode( "\n", $fileList ) . "\n\n";         
+      $body .=  implode( "\n", $fileList ) . "\n\n";
       $body .= "\nSie können den Eintrag unter dem folgenden Link abrufen: \n\n";
-      $body .= dirname( dirname( qcl_server_Server::getUrl() ) ) . 
-            "/build/#showItem~" . urlencode($category . "/" . $itemId); 
+      $body .= dirname( dirname( qcl_server_Server::getUrl() ) ) .
+            "/build/#showItem~" . urlencode($category . "/" . $itemId);
       $body .= "\n\n---\n\nBitte antworten Sie nicht auf diese E-Mail.";
       $this->notifyAll( $subject, $body, $aclData); // FIXME
-    }    
+    }
   }
 }
 ?>

@@ -2,9 +2,9 @@
 /* ************************************************************************
 
    logBuch: Software zur online-Dokumentation von Beratungsprozessen
-   
+
    Copyright: Konzeption:     JŸrgen Breiter/Christian Boulanger
-              Programmierung: Christian Boulanger 
+              Programmierung: Christian Boulanger
 
    Lizenz: GPL v.2
 
@@ -16,10 +16,10 @@
 qcl_import( "qcl_data_model_db_ActiveRecord" );
 
 /**
- * The model of a template for an email/survey 
+ * The model of a template for an email/survey
  */
 class logbuch_model_EmailTemplate
-extends qcl_data_model_db_ActiveRecord
+extends logbuch_model_Model
 {
 
   /*
@@ -32,11 +32,11 @@ extends qcl_data_model_db_ActiveRecord
    * The name of the table of this model
    */
   protected $tableName = "data_EmailTemplate";
-  
+
   /**
    * The foreign key of this model
    */
-  protected $foreignKey = "TemplateId";  
+  protected $foreignKey = "TemplateId";
 
   /**
    * The properties of the category model
@@ -50,7 +50,7 @@ extends qcl_data_model_db_ActiveRecord
       'sqltype' => 'varchar(255)',
       'nullable' => true,
     ),
-    
+
     /**
      * The text of the body of the email
      */
@@ -73,12 +73,21 @@ extends qcl_data_model_db_ActiveRecord
      * The day within the interval
      */
     'day' => array (
-      'check' => 'string',
+      'check' => 'integer',
       'sqltype' => 'int(11)',
       'nullable' => true,
-    )    
+    ),
+
+    /**
+     * Enter description here ...
+     */
+    'dateLastSent' => array (
+      "check"    => "qcl_data_db_Timestamp",
+      "sqltype"  => "timestamp",
+      'nullable' => true,
+    )
   );
-  
+
   /**
    * Relations
    */
@@ -87,7 +96,7 @@ extends qcl_data_model_db_ActiveRecord
       'type'        => QCL_RELATIONS_HAS_MANY,
       'target'      => array( 'class' => "logbuch_model_EmailSurvey" )
     )
-  );  
+  );
 
 
   /*
@@ -102,13 +111,13 @@ extends qcl_data_model_db_ActiveRecord
     $this->addProperties( $this->properties );
     $this->addRelations( $this->relations, __CLASS__ );
   }
-  
+
   /*
   *****************************************************************************
      API
   *****************************************************************************
   */
-  
+
 
 }
 ?>

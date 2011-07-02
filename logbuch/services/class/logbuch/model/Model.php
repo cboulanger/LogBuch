@@ -1,10 +1,10 @@
-<?php 
+<?php
 /* ************************************************************************
 
    logBuch: Die Online-Plattform fŸr Unternehmenszusammenarbeit
 
    Copyright:
-     2010 JŸrgen Breiter (Konzeption) Christian Boulanger (Programmierung) 
+     2010 JŸrgen Breiter (Konzeption) Christian Boulanger (Programmierung)
 
    License:
      GPL: http://www.gnu.org/licenses/gpl.html
@@ -44,16 +44,16 @@ extends qcl_data_model_db_ActiveRecord
       'sqltype'   => 'tinyint(1)',
       'nullable'  => false,
       'init'      => false
-    ),     
-  
+    ),
+
     /**
      * Enter description here ...
      */
     'personId' => array (
       'check' => 'integer',
-      'sqltype' => 'int(11)'
-    ),  
-  	
+      'sqltype' => 'int(11) NOT NULL'
+    ),
+
 
     /**
      * Enter description here ...
@@ -64,7 +64,7 @@ extends qcl_data_model_db_ActiveRecord
       'nullable' 	=> false,
     	'init'			=> false
     ),
-    
+
     /**
      * Enter description here ...
      */
@@ -74,7 +74,7 @@ extends qcl_data_model_db_ActiveRecord
       'nullable' 	=> false,
     	'init'			=> false
     ),
-    
+
     /**
      * Enter description here ...
      */
@@ -83,8 +83,8 @@ extends qcl_data_model_db_ActiveRecord
       'sqltype' 	=> 'tinyint(1)',
       'nullable' 	=> false,
     	'init'			=> false
-    ),    
-    
+    ),
+
     /**
      * Enter description here ...
      */
@@ -93,8 +93,8 @@ extends qcl_data_model_db_ActiveRecord
       'sqltype' 	=> 'tinyint(1)',
       'nullable' 	=> false,
     	'init'			=> false
-    ),    
-    
+    ),
+
     /**
      * Enter description here ...
      */
@@ -104,7 +104,7 @@ extends qcl_data_model_db_ActiveRecord
       'nullable' 	=> false,
     	'init'			=> false
     ),
-    
+
     /**
      * Enter description here ...
      */
@@ -115,7 +115,7 @@ extends qcl_data_model_db_ActiveRecord
       'nullable'  => false,
     	'init'			=> array()
     ),
-    
+
     /**
      * Enter description here ...
      */
@@ -124,8 +124,8 @@ extends qcl_data_model_db_ActiveRecord
       'sqltype'   => 'tinyint(1) NOT NULL DEFAULT 1',
       'nullable'  => false,
       'init'      => true
-    ),      
-    
+    ),
+
     /**
      * Enter description here ...
      */
@@ -134,7 +134,7 @@ extends qcl_data_model_db_ActiveRecord
       'sqltype' => 'datetime',
       'nullable' => true,
     ),
-    
+
     /**
      * Enter description here ...
      */
@@ -142,7 +142,7 @@ extends qcl_data_model_db_ActiveRecord
       'check' => 'string',
       'sqltype' => 'datetime',
       'nullable' => true,
-    ),        
+    ),
   );
 
   /*
@@ -156,7 +156,7 @@ extends qcl_data_model_db_ActiveRecord
     parent::__construct( $datasourceModel );
     $this->addProperties( $this->properties );
   }
-  
+
   /**
    * Returns the names of the properties defined in this class only.
    * @return array
@@ -164,14 +164,14 @@ extends qcl_data_model_db_ActiveRecord
   public function ownProperties()
   {
   	return array_keys( $this->properties );
-  }  
+  }
 
   /*
   *****************************************************************************
      API
   *****************************************************************************
   */
-  
+
   /**
    * Returns the acl data contained in the model record
    * @return array
@@ -188,7 +188,7 @@ extends qcl_data_model_db_ActiveRecord
   		'include'	=> $aclNames
   	));
   }
-  
+
   /**
    * Returns true if the record is only accessible by the creator
    * of the record
@@ -205,15 +205,15 @@ extends qcl_data_model_db_ActiveRecord
   	foreach( $aclNames as $key )
   	{
   		$value = $this->get( $key );
-  		if (  ( is_bool($value) and $value === true ) or 
-  					( is_array($value) and count( $value ) > 0 ) ) 
+  		if (  ( is_bool($value) and $value === true ) or
+  					( is_array($value) and count( $value ) > 0 ) )
   		{
   			return false;
   		}
   	}
   	return true;
-  }  
-  
+  }
+
   /**
    * @return logbuch_model_Person
    */
@@ -225,21 +225,21 @@ extends qcl_data_model_db_ActiveRecord
 	  	$personModel = $this->datasourceModel()->getInstanceOfType("person");
   	}
   	$personId = $this->get("personId");
-  	$personModel->load( $personId );  	
-  	return $personModel; 
+  	$personModel->load( $personId );
+  	return $personModel;
   }
-  
+
   public function authorInitials()
   {
   	return $this->personModel()->get("initials");
   }
-  
+
 	public function authorName()
   {
   	$p = $this->personModel();
   	return $p->get("givenName") . " " . $p->get("familyName");
   }
-  
+
   public function authorId()
   {
   	return $this->get("personId");

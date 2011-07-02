@@ -87,10 +87,12 @@ define( "QCL_LOG_FILE", "log/logbuch.log" );
  */
 define( "QCL_UPLOAD_PATH", "attachments" );
 
-//-------------------------------------------------------------
-// Application-related configuration
-//-------------------------------------------------------------
-
+/*
+ * whether debug messages should be shown - this is independent of the
+ * log level and can turn off all debugging independent of the filters
+ * used
+ */
+define( "QCL_DEBUG", true );
 
 /*
  * the mail server. if not configured, localhost is used

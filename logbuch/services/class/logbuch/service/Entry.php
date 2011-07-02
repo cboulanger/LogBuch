@@ -2,9 +2,9 @@
 /* ************************************************************************
 
    logBuch: Software zur online-Dokumentation von Beratungsprozessen
-   
+
    Copyright: Konzeption:     JŸrgen Breiter
-              Programmierung: Christian Boulanger 
+              Programmierung: Christian Boulanger
 
    Lizenz: GPL v.2
 
@@ -25,8 +25,8 @@ qcl_import("logbuch_model_Attachment");
 class logbuch_service_Entry
   extends logbuch_service_Controller
 {
- 
-  private $locale = array(
+
+  public $locale = array(
     "event"           => "Termin",
     "consult"         => "Beratungsprozess",
     "stumble"         => "Stolperstein",
@@ -38,14 +38,15 @@ class logbuch_service_Entry
     "hint"            => "Tipps",
     "photo"           => "Photo",
     "misc"            => "Sonstiges",
+    "question"				=> "Frage",
     "ownCompany"      => "Eigenes Unternehmen",
     "ownConsultant"   => "Berater (Eigenes Unternehmen)",
     "allConsultants"  => "Alle Berater/innen",
     "analyst"         => "Wissenschaftliche Begleitung",
     "allMembers"      => "Alle",
-    "moreMembers"     => "Einzelne Teilnehmer/innen"  
+    "moreMembers"     => "Einzelne Teilnehmer/innen"
   );
-  
+
 	/**
 	 * Creates an entry
 	 * @param $data
@@ -53,8 +54,8 @@ class logbuch_service_Entry
 	function method_create( $data )
 	{
 		return $this->method_update(null, $data);
-	}	
-	
+	}
+
 	function method_list($filter)
 	{
 		$entryModel = $this->getEntryModel();
@@ -62,7 +63,7 @@ class logbuch_service_Entry
 		$parameters = array();
 		$from = null;
     $to   = null;
-    
+
 		/*
 		 * a specific entry and its comment?
 		 */
@@ -74,9 +75,9 @@ class logbuch_service_Entry
   		    ':id'	=> $filter->id
   		  ),
   			'orderBy'		  => "created"
-  		) );				  
+  		) );
 		}
-		
+
 		elseif ( is_string( $filter->search ) )
 		{
   		$query = new qcl_data_db_Query( array(
@@ -84,37 +85,37 @@ class logbuch_service_Entry
   		  'parameters'  => array(
   		    ":fragment"	=> "%{$filter->search}%"
   		  )
-  		) );		  
+  		) );
 		}
-		
-		else 
+
+		else
 		{
   		/*
   		 * date
   		 */
-		  
+
   		if( $filter->from || $filter->to )
   		{
   		  $from = strtotime( $filter->from );
   		  $to   = strtotime( $filter->to );
-  
+
     		if ( $filter->from && $filter->to )
     		{
     		  if( $from > $to )
     		  {
     		    throw new InvalidArgumentException("Das Enddatum muss nach dem Startdatum liegen!");
-    		  }  		  
-    		  //$where['created'] = array( 
-    		  //	"BETWEEN", 
-    		  //  date("Y-m-d 00:00:00", $from ), 
-    		  //  date("Y-m-d 23:59:59", $to  ) 
+    		  }
+    		  //$where['created'] = array(
+    		  //	"BETWEEN",
+    		  //  date("Y-m-d 00:00:00", $from ),
+    		  //  date("Y-m-d 23:59:59", $to  )
     		  //);
     		  $where = "created between :from and :to or dateStart between :from and :to";
     		  $parameters = array(
     		    ":from" => date("Y-m-d 00:00:00", $from ),
     		    ":to"		=> date("Y-m-d 23:59:59", $to  )
     		  );
-    		  
+
     		}
     		elseif ($filter->from)
     		{
@@ -122,7 +123,7 @@ class logbuch_service_Entry
     		  $where = "created >= :from or dateStart >= :from";
     		  $parameters = array(
     		    ":from" => date("Y-m-d 00:00:00", $from )
-    		  );    		  
+    		  );
     		}
     		elseif ($filter->to)
     		{
@@ -130,10 +131,10 @@ class logbuch_service_Entry
     		  $where = "created <= :to or dateStart <= :to";
     		  $parameters = array(
     		    ":to"		=> date("Y-m-d 23:59:59", $to )
-    		  );      		  
+    		  );
     		}
   		}
-  				
+
   		/*
   		 * author
   		 */
@@ -141,15 +142,15 @@ class logbuch_service_Entry
   		{
   		  $where['personId'] = array("IN",$filter->personId);
   		}
-  
-  		
+
+
   		$query = new qcl_data_db_Query(array(
   		  'where'			  => $where,
   			'orderBy'		  => either($filter->orderBy, "created DESC"),
   		  'parameters'	=> $parameters
-  		));		
+  		));
 		}
-		
+
 		/*
 		 * paging
 		 */
@@ -158,7 +159,7 @@ class logbuch_service_Entry
 		{
   		$paging = true;
 		}
-				
+
 		/*
 		 * execute query
 		 */
@@ -169,11 +170,11 @@ class logbuch_service_Entry
 		$denied = 0;
 		$skipped = 0;
 		while( $entryModel->loadNext($query) )
-		{ 
+		{
 		  $data = $this->_getEntryData($entryModel, $filter);
 		  if ( is_array($data) )
 		  {
-		    // update from/to 
+		    // update from/to
 		    $timestampFrom = either( $data['timeStampStart']/1000, strtotime( $data['created'] ) );
 		    if ( ! $from or $timestampFrom < $from )
 		    {
@@ -184,10 +185,10 @@ class logbuch_service_Entry
 		    {
 		      $to = $timestampTo;
 		    }
-		    
+
 		    // paging
-		    if( $paging ) 
-		    {   
+		    if( $paging )
+		    {
 		      if( $counter2 >= $filter->offset and count($result) < $filter->limit )
 		      {
 		        $result[] = $data;
@@ -209,7 +210,7 @@ class logbuch_service_Entry
 	    }
 	    $counter1++;
 		}
-	  
+
 		if( $paging )
 		{
 		  $available = $counter2;
@@ -227,7 +228,7 @@ class logbuch_service_Entry
 		    'remaining'	=> $remaining,
 		    'nextOffset'=> $nextOffset
 		  ), __CLASS__, __LINE__ );*/
-		  
+
   		if( $remaining )
   		{
   		  $limit  = min(array( 10, $remaining ) );
@@ -238,13 +239,13 @@ class logbuch_service_Entry
   		  );
   		}
 		}
-		return array( 
+		return array(
 		  "data" => $result,
 		  "from" => $from*1000,
 		  "to"   => $to*1000
 		);
 	}
-	
+
 	function _getEntryData( $entryModel, $filter=null )
 	{
 	  /*
@@ -261,43 +262,43 @@ class logbuch_service_Entry
 	  if( $admin === null )
 	  {
   	  $admin           = $this->getActiveUser()->hasRole( QCL_ROLE_ADMIN );
-  	  $datasourceModel = $this->getDatasourceModel(); 
+  	  $datasourceModel = $this->getDatasourceModel();
   		$entryModel      = $this->getEntryModel();
   		$parentEntryModel= $datasourceModel->createInstanceOfType("entry");
   		$categoryModel   = $this->getCategoryModel();
   		$personModel     = $this->getPersonModel();
   		$activePerson    = $this->getActiveUserPerson();
-  		$aclModel        = new logbuch_model_AccessControlList();	 
-  		 
+  		$aclModel        = new logbuch_model_AccessControlList();
+
 	  }
-	  
+
     $personModel->load($entryModel->get("personId"));
-    	  
+
     $categories = $entryModel->categories();
     $display = true;
-    
+
     /*
      * filter
      */
 	  if ( $filter )
 	  {
-	    
+
   		/*
   	   * by categories
-  	   */	    
+  	   */
 	    if ( $filter->category )
 	    {
     	  $filterCategories = array_keys( get_object_vars( $filter->category ) );
-    
+
     	  if( count($filterCategories) )
-    	  {    
+    	  {
     	    if( ! count( array_intersect( $categories, $filterCategories ) ) )
     	    {
     	      return null;
     	    }
     	  }
 	    }
-	      
+
   	  /*
   	   * by group
   	   */
@@ -311,26 +312,26 @@ class logbuch_service_Entry
     				$display = false;
     			}
     		}
-    		
+
     		// own consultant
     		if ( $filter->group->ownConsultant )
     		{
-    			if ( $personModel->get("organizationId") != $activePerson->get("organizationId") 
+    			if ( $personModel->get("organizationId") != $activePerson->get("organizationId")
     			     or $personModel->get("position") != "consultant" )
     			{
     				$display = false;
     			}
     		}
-    		
+
     		// all consultants
     		if ( $filter->group->allConsultants )
     		{
-    			if ( $personModel->get("position") != "consultant"  ) 
+    			if ( $personModel->get("position") != "consultant"  )
     			{
     				$display = false;
     			}
     		}
-    		
+
     		// analyst
     		if ( $filter->group->analyst )
     		{
@@ -341,7 +342,7 @@ class logbuch_service_Entry
     		}
 	    }
 	  }
-		
+
 		/*
 		 * ACL
 		 */
@@ -349,58 +350,58 @@ class logbuch_service_Entry
 		// administrators can see everything
 		if ( ! $admin )
 		{
-  		$aclModel->setAcl( $entryModel->aclData() ); 		
+  		$aclModel->setAcl( $entryModel->aclData() );
   		// check access only if the entry doesn't belong to the current user
   		if ( $activePerson->id()	!= $personModel->id() )
   		{
   			$access = $aclModel->checkAccess( $personModel, $activePerson );
-  		}  		
-  		else 
+  		}
+  		else
   		{
   		  $owner = true;
   		}
     }
-		
+
 		/*
 		 * continue if no access
 		 */
 		if ( ! $access or !$display ) return null;
-		
+
 		/*
-		 * access for particular users? 
+		 * access for particular users?
 		 */
 		$members = null;
 		if( count( $aclModel->get("moreMembers") ) )
 		{
-		  $personModel->findWhere( array( 
-		  	"id" => array( "IN", $aclModel->get("moreMembers") ) 
+		  $personModel->findWhere( array(
+		  	"id" => array( "IN", $aclModel->get("moreMembers") )
 		  ) );
 		  while( $personModel->loadNext() )
 		  {
 		    $members[] = $personModel->getFullName();
 		  }
 		}
-		
-		
+
+
 		/*
 		 * retrieve number of comments of this entry
 		 */
 		$ids = $parentEntryModel->linkedModelIds($entryModel);
 		$comments = count($ids);
-		
-		
+
+
 		/*
 		 * number of attachments
 		 */
 		$attModel = $datasourceModel->getInstanceOfType("attachment");
 		$attachments = $entryModel->countLinksWithModel($attModel);
-		
+
 		/*
 		 * is it editable?
 		 */
 		$editable = ( $admin || $owner );
-		
-		
+
+
 	  /*
 	   * create data
 	   */
@@ -421,8 +422,8 @@ class logbuch_service_Entry
       'comments'	  => $comments,
       'attachments' => $this->_getAttachmentData($entryModel),
       'isPrivate'		=> $aclModel->isPrivate()
-    );	
-    
+    );
+
     /*
      * events
      */
@@ -431,11 +432,11 @@ class logbuch_service_Entry
       $data['timestampStart']      = strtotime( $entryModel->get('dateStart') )*1000;
       $data['timestampEnd']        = strtotime( $entryModel->get('dateEnd') )*1000;
       $data['dateStart'] 	= date("d.m.Y", strtotime( $entryModel->get('dateStart') ) ); // @todo localize on client
-  	  $data['dateEnd'] 		= date("d.m.Y", strtotime( $entryModel->get('dateEnd') ) );		
-  		$data['timeStart'] 	= date("H:i", 	strtotime( $entryModel->get('dateStart') ) ); 
+  	  $data['dateEnd'] 		= date("d.m.Y", strtotime( $entryModel->get('dateEnd') ) );
+  		$data['timeStart'] 	= date("H:i", 	strtotime( $entryModel->get('dateStart') ) );
   	  $data['timeEnd'] 		= date("H:i", 	strtotime( $entryModel->get('dateEnd') ) );
     }
-    
+
 		/*
 		 * replies
 		 */
@@ -445,10 +446,10 @@ class logbuch_service_Entry
 		  $data['replyToId'] = $parentEntryModel->id();
       $data['replyToSubject'] = $parentEntryModel->get("subject") ;
       $data['replyToAuthor'] =  $parentEntryModel->authorName();
-		}    
+		}
     return $data;
 	}
-	
+
 	function _getAttachmentData( $entryModel )
 	{
 	  $data = array();
@@ -457,14 +458,14 @@ class logbuch_service_Entry
 	  {
 	    $attModel = $this->getAttachmentModel();
 	  }
-	  
-	  try 
+
+	  try
 	  {
   	  $attModel->findLinked($entryModel);
   	  while( $attModel->loadNext() )
   	  {
   	    $filename = $attModel->get("filename");
-  	    
+
          /*
           * get icon for file
           */
@@ -473,8 +474,8 @@ class logbuch_service_Entry
          if( ! file_exists("../html/teamblog/" . $iconpath ) )
          {
            $iconpath = "img/page_error.png";
-         }   	    
-  	    
+         }
+
   	    $data[] = array(
   	      'id'    => $attModel->id(),
   	      'name'  => $filename,
@@ -487,11 +488,11 @@ class logbuch_service_Entry
 	  catch( qcl_data_model_RecordNotFoundException $e ){}
 	  return $data;
 	}
-	
+
 	/**
 	 * Reads a category entry
 	 * @param string $category The category type
-	 * @param string|int $id Numeric id or id in the form of "<string type>/<numeric id>" FIXME 
+	 * @param string|int $id Numeric id or id in the form of "<string type>/<numeric id>" FIXME
 	 */
 	function method_read($id )
 	{
@@ -499,25 +500,25 @@ class logbuch_service_Entry
 		{
 			throw new InvalidJsonRpcArgumentException("Invalid id");
 		}
-		
+
 		$data = array();
 
 		/*
 		 * load record
 		 */
 		$entryModel = $this->getEntryModel();
-		try 
+		try
 		{
 			$entryModel->load( $id );
 		}
 		catch( qcl_data_model_RecordNotFoundException $e )
 		{
 			throw new InvalidJsonRpcArgumentException("Der Datensatz existiert nicht (mehr).");
-		}		
-		
+		}
+
 		return $this->_getEntryData($entryModel);
 	}
-	
+
 	/**
 	 * Updates a category entry
 	 * @param $category
@@ -528,7 +529,7 @@ class logbuch_service_Entry
 	function method_update( $id, $data )
 	{
 		//$this->debug($data);
-		
+
 		$activeUser 	   = $this->getActiveUser();
 		$entryModel      = $this->getEntryModel();
 		$categoryModel   = $this->getCategoryModel();
@@ -543,25 +544,25 @@ class logbuch_service_Entry
   		$itemData['dateStart'] = date ("Y-m-d H:i:s", strtotime( $data->eventTime[0] ) );
   		$itemData['dateEnd'] 	 = date ("Y-m-d H:i:s", strtotime( $data->eventTime[1] ) );
 		}
-		
+
 		/*
 		 * set author
 		 */
 		if( ! $id )
 		{
-  		try 
+  		try
   		{
   			$personModel->loadByUserId( $activeUser->id() );
   		}
   		catch ( qcl_data_model_RecordNotFoundException $e )
   		{
-  			throw new InvalidJsonRpcArgumentException( 
+  			throw new InvalidJsonRpcArgumentException(
   				$this->tr("Kein Zugriff.")
   			);
   		}
   		$itemData["personId"] = $personModel->id();
 		}
-		
+
 		/*
 		 * subject and text
 		 */
@@ -578,25 +579,25 @@ class logbuch_service_Entry
 	    {
 	      $itemData['subject'] =  trim( strip_tags( $node->asXML() ) ) ;
 	    }
-	    else 
+	    else
 	    {
 	      $itemData['text'] .= trim( $node->asXML() );
 	    }
-	    
+
 		}
-		
+
 		/*
 		 * acl
 		 */
 		$aclModel = new logbuch_model_AccessControlList();
 		$aclData  = $aclModel->set($data->acl);
-		
-		
+
+
 		/*
-		 * merge item and acl data 
+		 * merge item and acl data
 		 */
 		$itemData = array_merge( $itemData, $aclData->data() );
-						
+
 		/*
 		 * create or update record
 		 */
@@ -608,8 +609,8 @@ class logbuch_service_Entry
   		if ( is_numeric( $data->replyToId ) )
   		{
   		  $itemData['parentEntryId'] = $data->replyToId;
-  		}		  
-		  $newId = $entryModel->create( $itemData );  
+  		}
+		  $newId = $entryModel->create( $itemData );
 		}
 		elseif ( $id and is_numeric( $id ) )
 		{
@@ -627,7 +628,7 @@ class logbuch_service_Entry
     {
       throw new InvalidArgumentException("Invalid id");
     }
-		
+
 		/*
 		 * link categories
 		 */
@@ -635,12 +636,12 @@ class logbuch_service_Entry
 		{
 		  $categoryModel->namedIdExists($category) ?
 		    $categoryModel->load( $category ) :
-		    $categoryModel->create( $category ); 
-		  try {  
+		    $categoryModel->create( $category );
+		  try {
 		    $categoryModel->linkModel( $entryModel );
 		  } catch( qcl_data_model_RecordExistsException $e) {}
 		}
-		
+
 		/*
 		 * attachments
 		 */
@@ -657,7 +658,7 @@ class logbuch_service_Entry
 		    $attModel->load($attId);
 		    $attModel->linkModel($entryModel);
 		  }
-		  
+
 		  foreach( $deleted as $attId )
 		  {
 		    $attModel->load($attId);
@@ -665,7 +666,7 @@ class logbuch_service_Entry
 		    $attModel->delete();
 		  }
 		}
-		
+
 		/*
 		 * notify other clients
 		 */
@@ -676,24 +677,24 @@ class logbuch_service_Entry
 		{
 		  $this->broadcastClientMessage("entry.updated",$data, true );
 		}
-		else 
+		else
 		{
 		  $this->broadcastClientMessage("entry.created", $data, true );
 		}
-		
+
 		// replies
 		if ( $data['replyToId'] )
 		{
 		  unset($data['text']);
 		  $this->broadcastClientMessage("entry.reply", $data, true );
 		}
-		
+
 		/*
 		 * done
 		 */
 		return $this->_getEntryData($entryModel);
 	}
-	
+
 	/**
 	 * Deletes a category entry
 	 * @param $category
@@ -713,24 +714,24 @@ class logbuch_service_Entry
 			$personModel->loadWhere( array( "userId" => $this->getActiveUser()->id() ) );
 			if( $model->get("personId") == $personModel->id() )
 			{
-				$model->delete();	
+				$model->delete();
 			}
 			else
 			{
-				throw new JsonRpcError( $this->tr( "Sie dŸrfen diesen Eintrag nicht lšschen.") );	
+				throw new JsonRpcError( $this->tr( "Sie dŸrfen diesen Eintrag nicht lšschen.") );
 			}
 		}
 		$this->broadcastClientMessage("entry.deleted",$id,true);
 		return "OK";
-	}		
-	
+	}
+
 	/**
 	 * Generates data for the querybox widget
 	 * @param string $fragment
 	 */
 	function method_querybox($fragment)
 	{
-	  $result = array( 
+	  $result = array(
 	    "query"   => $fragment,
 	    "results"	=> array()
 	  );
@@ -741,7 +742,7 @@ class logbuch_service_Entry
 		    ":fragment"	=> "%$fragment%"
 		  )
 		) ) );
-		
+
 	  while ( $entryModel->loadNext() )
 	  {
 	    if( $this->_getEntryData($entryModel))
@@ -759,7 +760,7 @@ class logbuch_service_Entry
   	    }
 	    }
 	  }
-		
+
 		return $result;
 	}
 }

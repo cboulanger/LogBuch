@@ -4,7 +4,7 @@
    logBuch: Die Online-Plattform fŸr Unternehmenszusammenarbeit
 
    Copyright:
-     2010 JŸrgen Breiter (Konzeption) Christian Boulanger (Programmierung) 
+     2010 JŸrgen Breiter (Konzeption) Christian Boulanger (Programmierung)
 
    License:
      GPL: http://www.gnu.org/licenses/gpl.html
@@ -17,7 +17,7 @@
 qcl_import( "qcl_data_model_db_ActiveRecord" );
 
 /**
- * 
+ *
  */
 class logbuch_model_Person
   extends qcl_data_model_db_ActiveRecord
@@ -34,11 +34,11 @@ class logbuch_model_Person
 	 * @var string
 	 */
   protected $tableName = "data_Person";
-  
+
   /**
    * The foreign key of this model
    */
-  protected $foreignKey = "PersonId";  
+  protected $foreignKey = "PersonId";
 
   /**
    * model properties
@@ -51,8 +51,8 @@ class logbuch_model_Person
     'userId' => array (
       'check' => 'integer',
       'sqltype' => 'int(11)'
-    ),  	
-  
+    ),
+
     /**
      * Enter description here ...
      */
@@ -60,7 +60,7 @@ class logbuch_model_Person
       'check' => 'string',
       'sqltype' => 'varchar(100)'
     ),
-    
+
     /**
      * Enter description here ...
      */
@@ -68,31 +68,31 @@ class logbuch_model_Person
       'check' => 'string',
       'sqltype' => 'varchar(100)'
     ),
-    
+
 		/**
      * Enter description here ...
      */
     'image' => array (
       'check' => 'string',
       'sqltype' => 'varchar(200)'
-    ),           
-    
+    ),
+
     /**
      * Enter description here ...
      */
     'academicTitle' => array (
       'check' => 'string',
       'sqltype' => 'varchar(50)'
-    ),    
-   
+    ),
+
     /**
      * Enter description here ...
      */
     'initials' => array (
       'check' => 'string',
       'sqltype' => 'varchar(10)'
-    ),    
-  
+    ),
+
     /**
      * Enter description here ...
      */
@@ -107,7 +107,7 @@ class logbuch_model_Person
     'position' => array (
       'check' => 'string',
       'sqltype' => 'varchar(50)'
-    ),        
+    ),
 
 		/**
      * Enter description here ...
@@ -115,7 +115,7 @@ class logbuch_model_Person
     'email' => array (
       'check' 	=> 'string',
       'sqltype' => 'varchar(255)'
-    ),  
+    ),
 
 		/**
      * Enter description here ...
@@ -123,7 +123,7 @@ class logbuch_model_Person
     'telephone' => array (
       'check' 	=> 'string',
       'sqltype' => 'varchar(50)'
-    ),  
+    ),
 
 		/**
      * Enter description here ...
@@ -131,7 +131,7 @@ class logbuch_model_Person
     'mobile' => array (
       'check' 	=> 'string',
       'sqltype' => 'varchar(50)'
-    ),  
+    ),
 
 		/**
      * Enter description here ...
@@ -142,7 +142,7 @@ class logbuch_model_Person
     	'nullable'	=> false,
     	'init'			=> false
     ),
-    
+
     /**
      * Enter description here ...
      */
@@ -150,8 +150,8 @@ class logbuch_model_Person
       'check'     => 'integer',
       'sqltype'   => 'int(11)',
       'init'      => 0
-    ),    
-    
+    ),
+
     /**
      * Enter description here ...
      */
@@ -159,31 +159,23 @@ class logbuch_model_Person
       'check'     => 'integer',
       'sqltype'   => 'int(11)',
       'init'      => 0
-    ),      
+    ),
  );
 
   /**
    * Relations
    */
  	private $relations = array(
- 	
+
  	  /*
  	   * the attachments belonging to this person
  	   */
     'Attachment_Person' => array(
       'type'        => QCL_RELATIONS_HAS_MANY,
-      'target'      => array( 
+      'target'      => array(
       	'class'    		=> "logbuch_model_Attachment",
- 				'dependent'		=> true 
+ 				'dependent'		=> true
  			)
-    ),
-    
-    /*
-     * the surveys this person has answered
-     */
-    'EmailSurvey_Person' => array(
-      'type'        => QCL_RELATIONS_HAS_AND_BELONGS_TO_MANY,
-      'target'      => array( 'class' => "logbuch_model_EmailSurvey" )
     )
   );
 
@@ -206,7 +198,7 @@ class logbuch_model_Person
      API
   *****************************************************************************
   */
-  
+
   /**
    * Returns the user id of this person
    */
@@ -214,7 +206,7 @@ class logbuch_model_Person
   {
     return $this->_get("userId");
   }
-  
+
   /**
    * Returns the text for a 'label' that is used in a visual widget
    * to represent the model record.
@@ -227,7 +219,7 @@ class logbuch_model_Person
   	$orgName 		= $this->getOrganizationName();
   	$roleMap 		= $this->getRoleMap();
   	$role 			= $roleMap[ $this->get("position") ];
-  	
+
   	if ( $familyName )
   	{
   		return "<b>$familyName, $givenName</b><br />$orgName<br />$role";
@@ -243,9 +235,9 @@ class logbuch_model_Person
    * to represent the model record. Defaults to returning
    * a NULL value
    * @param int|null $iconSize
-   * 		The pixel size of the icon, if any. Defaults to null (= no icon) 
+   * 		The pixel size of the icon, if any. Defaults to null (= no icon)
    * @return string
-   */  
+   */
   public function icon( $iconSize=null )
   {
   	if ( $iconSize )
@@ -261,14 +253,14 @@ class logbuch_model_Person
   		return null;
   	}
   }
-  
+
   public function getFullName()
   {
   	$familyName = $this->get("familyName");
   	$givenName  = $this->get("givenName");
   	return "$givenName $familyName";
   }
-  
+
   public function getOrganizationName()
   {
   	$orgId = $this->get("organizationId");
@@ -283,7 +275,7 @@ class logbuch_model_Person
   		return "";
   	}
   }
-  
+
   /**
    * Loads a person model with a given user id.
    * Enter description here ...
@@ -293,7 +285,7 @@ class logbuch_model_Person
    */
   public function loadByUserId( $userId )
   {
-  	try 
+  	try
   	{
 	  	$this->loadWhere(array(
 				'userId'	=> $userId
@@ -304,16 +296,30 @@ class logbuch_model_Person
   		throw new qcl_data_model_RecordNotFoundException("User #$userId has no associated person.");
   	}
   	return $this;
-  }  
-  
+  }
+
+  /**
+   * Returns the user model associated with the current person model record
+   * @return qcl_access_model_User
+   */
+  public function userModel()
+  {
+    $userModel = $this->getApplication()->getAccessController()->getUserModel();
+    if ( ! $userModel->isLoaded() or $userModel->id() !== $this->getUserId() )
+    {
+      $userModel->load( $this->getUserId() );
+    }
+    return $userModel;
+  }
+
 	public function getRoleMap()
 	{
 		return array(
-			"employee" 		=> "Mitarbeiter/in", // 'label' => $this->tr("Employee") ), // 
-			"external" 		=> "Dienstleister/in", // 'label' => $this->tr("External employee") ), // 
+			"employee" 		=> "Mitarbeiter/in", // 'label' => $this->tr("Employee") ), //
+			"external" 		=> "Dienstleister/in", // 'label' => $this->tr("External employee") ), //
 			"consultant" 	=> "Berater/in", // 'label' => $this->tr("Consultant") ),
 			"scientist" 	=> "Wissenschaftliche Begleitung"  // 'label' => $this->tr("Scientific expert") )
 		);
-	}  
+	}
 }
 ?>

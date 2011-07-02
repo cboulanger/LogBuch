@@ -4,7 +4,7 @@
    logBuch: Die Online-Plattform fŸr Unternehmenszusammenarbeit
 
    Copyright:
-     2010 JŸrgen Breiter (Konzeption) Christian Boulanger (Programmierung) 
+     2010 JŸrgen Breiter (Konzeption) Christian Boulanger (Programmierung)
 
    License:
      GPL: http://www.gnu.org/licenses/gpl.html
@@ -19,8 +19,10 @@ qcl_import( "qcl_application_Application" );
 qcl_import( "qcl_locale_Manager" );
 qcl_import("logbuch_ApplicationCache");
 qcl_import("qcl_util_system_Lock");
+qcl_import("logbuch_service_Survey");
 
-define( 'LOGBUCH_UPLOADS_PATH', "../html/fancyupload/uploads/" );
+define( 'LOGBUCH_UPLOADS_PATH', "../html/fancyupload/uploads/" ); // @todo streamline this with QCL_UPLOAD_PATH, we don't need two
+
 
 /**
  * Main application class
@@ -74,6 +76,26 @@ class logbuch_Application
    );
 
   /**
+   * The RPC services of this application
+   * @var array
+   */
+  private $services = array(
+    "logbuch.setup"      		=> "logbuch_service_Setup",
+  	"logbuch.registration" 	=> "logbuch_service_Registration",
+  	"logbuch.access"     		=> "logbuch_service_Access",
+  	"logbuch.data"     			=> "logbuch_service_Data",
+  	"logbuch.message"  			=> "logbuch_service_Message",
+  	"logbuch.entry"   		  => "logbuch_service_Entry",
+  	"logbuch.record"	   		=> "logbuch_service_Record",
+  	"logbuch.report"	   		=> "logbuch_service_Report",
+    "logbuch.file"          => "logbuch_service_File",
+    "logbuch.notify"        => "logbuch_service_Notification",
+    "logbuch.survey"        => "logbuch_service_Survey",
+  	"logbuch.config"     		=> "qcl_config_Service",
+   	"logbuch.acltool"     	=> "qcl_access_ACLTool"
+  );
+
+  /**
    * Returns the singelton instance of this class. Note that
    * qcl_application_Application::getInstance() stores the
    * singleton instance for global access
@@ -93,18 +115,19 @@ class logbuch_Application
     return $this->initialDataMap;
   }
 
+
   /**
    * Starts the application, does on-the-fly database setup
    * objects
    */
   public function main()
   {
+
     /*
      * debugging
+     * set filters in __init__.php
      */
-    //$this->getLogger()->setFilterEnabled( QCL_LOG_SETUP, true );
-    //$this->getLogger()->setFilterEnabled( LOGBUCH_LOG_APPLICATION, true );
-    //$this->getLogger()->setFilterEnabled( QCL_LOG_ACCESS, true );
+    $this->getLogger()->divider(true);
 
     /*
      * log request
@@ -114,8 +137,8 @@ class logbuch_Application
       $request = qcl_server_Request::getInstance();
       $this->log( sprintf(
         "Starting LogBuch service: %s.%s( %s )",
-        $request->getService(), 
-        $request->getMethod(), 
+        $request->getService(),
+        $request->getMethod(),
         json_encode($request->getParams())
       ), LOGBUCH_LOG_APPLICATION );
     }
@@ -126,6 +149,42 @@ class logbuch_Application
      */
     //qcl_data_model_db_ActiveRecord::resetBehaviors();
 
+    /*
+     * check whether the application is setup
+     */
+    $this->checkSetup();
+
+    /*
+     * initialize locale manager
+     */
+    qcl_locale_Manager::getInstance();
+
+    /**
+     * Register the services provided by this application
+     */
+    $this->registerServices( $this->services );
+
+    /*
+     * register callback to filter messages by ACLs
+     */
+    qcl_import("logbuch_service_Message");
+    $this->getMessageBus()->registerOnBeforeBroadcastCallback(array(
+    	new logbuch_service_Message(), "filterMessage"
+    ));
+
+    /*
+     * check whether a survey has to be sent out
+     */
+    $surveyController = new logbuch_service_Survey();
+    $surveyController->checkAutosend();
+
+  }
+
+  /**
+   * Check whether the application has been set up
+   */
+  protected function checkSetup()
+  {
     /*
      * check whether the application has been set up
      */
@@ -162,38 +221,6 @@ class logbuch_Application
       }
       $cache->set( "initial_data_imported", true );
     }
-
-    /*
-     * initialize locale manager
-     */
-    qcl_locale_Manager::getInstance();
-
-    /**
-     * Register the services provided by this application
-     */
-    $this->registerServices( array(
-      "logbuch.setup"      		=> "logbuch_service_Setup",
-    	"logbuch.registration" 	=> "logbuch_service_Registration",
-    	"logbuch.access"     		=> "logbuch_service_Access",
-    	"logbuch.data"     			=> "logbuch_service_Data",
-    	"logbuch.message"  			=> "logbuch_service_Message",
-    	"logbuch.entry"   		  => "logbuch_service_Entry",
-    	"logbuch.record"	   		=> "logbuch_service_Record",
-    	"logbuch.report"	   		=> "logbuch_service_Report",
-      "logbuch.file"          => "logbuch_service_File",
-      "logbuch.notify"        => "logbuch_service_Notification",
-      "logbuch.survey"        => "logbuch_service_Survey",
-    	"logbuch.config"     		=> "qcl_config_Service",
-     	"logbuch.acltool"     	=> "qcl_access_ACLTool"   
-    ) );
-    
-    /*
-     * register callback to filter messages by ACLs
-     */
-    qcl_import("logbuch_service_Message");
-    $this->getMessageBus()->registerOnBeforeBroadcastCallback(array(
-    	new logbuch_service_Message(), "filterMessage"
-    ));
   }
 
   /**
@@ -225,7 +252,7 @@ class logbuch_Application
     {
       case "logbuch.access.authenticate":
         session_regenerate_id(); // to avoid to loose the last session used.
-      case "logbuch.setup.setup":  
+      case "logbuch.setup.setup":
       case "logbuch.registration.confirmEmail":
         $this->log( "Authentication for '$method' is not required.", QCL_LOG_ACCESS );
         return true;
@@ -234,11 +261,11 @@ class logbuch_Application
         return false;
     }
   }
-  
+
   public function getCategoryLabels()
   {
   	return array(
-      event => array( 
+      event => array(
         label   => $this->tr("Event"),
         fields  => array(
           subject      => $this->tr("Subject"),
