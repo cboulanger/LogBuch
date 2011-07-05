@@ -43,6 +43,25 @@ extends qcl_data_model_db_NamedActiveRecord
    * The properties of the category model
    */
   private $properties = array(
+  
+    /**
+     * The full name of the category
+     */
+    'name' => array (
+      'check'     => 'string',
+      'sqltype'   => 'varchar(30)',
+      'nullable'	=> true
+    ),
+    
+    /**
+     * The description  of the category
+     */
+    'description' => array (
+      'check'     => 'string',
+      'sqltype'   => 'varchar(200)',
+      'nullable'	=> true
+    ),    
+      
     /**
      * Whether this is a custom, user-created category (true) 
      * or a category supplied by the application (false)

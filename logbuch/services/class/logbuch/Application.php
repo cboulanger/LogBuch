@@ -91,6 +91,7 @@ class logbuch_Application
     "logbuch.file"          => "logbuch_service_File",
     "logbuch.notify"        => "logbuch_service_Notification",
     "logbuch.survey"        => "logbuch_service_Survey",
+  	"logbuch.category"      => "logbuch_service_Category",
   	"logbuch.config"     		=> "qcl_config_Service",
    	"logbuch.acltool"     	=> "qcl_access_ACLTool"
   );

@@ -1428,7 +1428,8 @@ function updateMessageData( widget )
   var attCount    = new Number(dojo.byId("attachment_count").innerHTML);
   var access      = dijit.byId("entryAccess").get("value").access;
   var data = {
-    'categories'    : dijit.byId("entryCategories").get("value").categories,
+    'categories'    : dijit.byId("entryCategories").get("value").categories
+                      .concat(dijit.byId("entryTopics").get("value").categories),
     'eventTime'     : dijit.byId("entryEventTime").get("value"),
     'text'          : ed.get("value"),
     'acl'           : {},

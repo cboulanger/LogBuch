@@ -273,13 +273,25 @@ qx.Class.define("logbuch.module.Footer",
        * survey management
        */
       var button = new qx.ui.menu.Button( "Verwaltung der E-Mail-Fragebogen" );
-      this.__sandbox.bindPermissionState("logbuch.members.manage", button, "visibility", {
+      this.__sandbox.bindPermissionState("logbuch.members.manage", button, "visibility", { // FIXME permission
         converter : function( v ){ return v ? "visible" : "excluded"; }
       }); 
       button.addListener("execute",function(){
         this.__sandbox.rpcRequest("logbuch.survey","startDialog");
       },this);
       menu.add( button ); 
+      
+      /*
+       * category management
+       */
+      var button = new qx.ui.menu.Button( "Verwaltung der Kategorien" );
+      this.__sandbox.bindPermissionState("logbuch.members.manage", button, "visibility", { // FIXME permission
+        converter : function( v ){ return v ? "visible" : "excluded"; }
+      }); 
+      button.addListener("execute",function(){
+        this.__sandbox.rpcRequest("logbuch.category","startDialog");
+      },this);
+      menu.add( button );       
       
     },
       

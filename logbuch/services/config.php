@@ -38,7 +38,7 @@ ini_set("display_errors",1);
  * The server document root
  * @var string
  */
-define( "DOCUMENT_ROOT", "/Users/panyasan/Sites/" );
+define( "DOCUMENT_ROOT", "../../../../" );
 //define( "DOCUMENT_ROOT", $_SERVER["DOCUMENT_ROOT"] );
 
 /**

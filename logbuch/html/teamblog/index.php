@@ -1,3 +1,4 @@
+<?php require "category.php"; ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
@@ -27,6 +28,11 @@
   	
 	<!-- application code including dependency declaration -->
 	<script src="teamblog.js"></script>
+	
+	<script type="text/javascript"><?php foreach($categoryData as $c):?>
+		locale['<?php echo $c['namedId']?>']="<?php echo $c['name']?>";
+<?php endforeach;?>
+	</script>
 	
 
 </head>
@@ -234,6 +240,25 @@
           
         </table>
 		  </div>
+		  
+		  <!-- Categories (Topics) -->
+       <div dojoType="dijit.TitlePane" title="Themen" open="false">
+        <table>
+        	<?php foreach( $categoryData as $c ):?>
+          <tr><td>
+            <input dojoType="dijit.form.CheckBox" 
+               id="filter-<?php echo $c['namedId']; ?>" name="filter_category" value="<?php echo $c['namedId']; ?>"
+               onChange="updateFilter(this);"/>
+          </td><td>
+            <label for="filter-<?php echo $c['namedId']; ?>" id="l-<?php echo $c['namedId']; ?>"><?php echo $c['name']; ?></label><br/>
+            <div dojoType="dijit.Tooltip" connectId="l-<?php echo $c['namedId']; ?>" position="above">
+              <?php echo $c['description']; ?>
+            </div>            
+          </td></tr>
+          <?php endforeach; ?>
+        </table>
+        </div>          
+          
 		  
 		  <!-- group -->
       <div dojoType="dijit.TitlePane" title="Gruppe" open="false">
@@ -463,7 +488,29 @@
             </table>
           </div>
         </span>   
-        </span>        
+       </span>        
+				
+  			<!-- categories --> 
+        <div dojoType="dijit.form.DropDownButton">
+          <span>Themen</span>
+          <div dojoType="dijit.TooltipDialog" id="entryTopics" 
+            title="Themen:" >
+            <table>
+            	<?php foreach( $categoryData as $c ):?>
+              <tr><td>
+                <input dojoType="dijit.form.CheckBox" 
+                   id="c-<?php echo $c['namedId']; ?>" name="categories" value="<?php echo $c['namedId']; ?>"
+                   onChange="updateMessageData(this);"/>
+              </td><td>
+                <label for="c-<?php echo $c['namedId']; ?>" id="l-<?php echo $c['namedId']; ?>"><?php echo $c['name']; ?></label><br/>
+                <div dojoType="dijit.Tooltip" connectId="l-<?php echo $c['namedId']; ?>" position="above">
+                  <?php echo $c['description']; ?>
+                </div>            
+              </td></tr>
+              <?php endforeach; ?>            	
+              </table>
+            </div>
+          </div>				
 				
 				<!-- Access -->
 	        <div dojoType="dijit.form.DropDownButton">
@@ -530,58 +577,59 @@
 	          </div>
 	        </div>
 	          
-	        <!-- uploader -->
-	        <div
-	           id="entryAttachmentUploader" 
-	           dojoType="dijit.form.DropDownButton">
-	            <span><span id="attachment_count">0</span>&nbsp;<img src="img/attach.png"/></span>
-	            <div 
-	             id="attachment_uploader_dialog"
-	              dojoType="dijit.TooltipDialog"  
-	              title="Anhänge"
-	              style="width:300px">
-	              
-               <fieldset >
-                   <legend>Anhänge</legend>
-                   <div id="attachment_filelist">
-                   </div>
-               </fieldset>	              
-	              
-				        <form 
-				          id="attachment_uploader_form"
-				          method="post" 
-				          action="" 
-				          enctype="multipart/form-data" >
-				            <fieldset >
-				                <legend>Dateien hochladen</legend>
-				                <div class="infoTextSmall">
-				                  Bitte wählen Sie einen Anhang aus (1.) und laden Sie ihn dann hoch (2.).
-				                  Wenn Sie zusätzliche Dateien anhängen oder Dateien löschen, denken 
-				                  Sie daran, den Beitrag danach abzuspeichern. 
-				                </div>
-				                <input 
-				                  id="attachment_uploader"
-				                  name="uploadedfile" 
-				                  type="file" 
-				                  force="iframe"
-				                  dojoType="dojox.form.Uploader" 
-				                  label="1. Datei auswählen" />
-				                <div id="attachment_uploader_files" 
-				                  dojoType="dojox.form.uploader.FileList"
-				                  uploaderId="attachment_uploader"></div>
-				                <input 
-				                  id="attachment_uploader_sendbutton"
-				                  dojoType="dijit.form.Button"
-				                  type="submit" label="2. Datei hochladen"
-				                  onClick="beginUpload(this)"
-				                  disabled />
-				                <div id="attachment_uploader_error"></div>
-				            </fieldset>
-				        </form> 
+		<!-- uploader -->
+        <div
+           id="entryAttachmentUploader" 
+           dojoType="dijit.form.DropDownButton">
+            <span><span id="attachment_count">0</span>&nbsp;<img src="img/attach.png"/></span>
+            <div 
+             id="attachment_uploader_dialog"
+              dojoType="dijit.TooltipDialog"  
+              title="Anhänge"
+              style="width:300px">
+              
+             <fieldset >
+                 <legend>Anhänge</legend>
+                 <div id="attachment_filelist">
+                 </div>
+             </fieldset>	              
+              
+			        <form 
+			          id="attachment_uploader_form"
+			          method="post" 
+			          action="" 
+			          enctype="multipart/form-data" >
+			            <fieldset >
+			                <legend>Dateien hochladen</legend>
+			                <div class="infoTextSmall">
+			                  Bitte wählen Sie einen Anhang aus (1.) und laden Sie ihn dann hoch (2.).
+			                  Wenn Sie zusätzliche Dateien anhängen oder Dateien löschen, denken 
+			                  Sie daran, den Beitrag danach abzuspeichern. 
+			                </div>
+			                <input 
+			                  id="attachment_uploader"
+			                  name="uploadedfile" 
+			                  type="file" 
+			                  force="iframe"
+			                  dojoType="dojox.form.Uploader" 
+			                  label="1. Datei auswählen" />
+			                <div id="attachment_uploader_files" 
+			                  dojoType="dojox.form.uploader.FileList"
+			                  uploaderId="attachment_uploader"></div>
+			                <input 
+			                  id="attachment_uploader_sendbutton"
+			                  dojoType="dijit.form.Button"
+			                  type="submit" label="2. Datei hochladen"
+			                  onClick="beginUpload(this)"
+			                  disabled />
+			                <div id="attachment_uploader_error"></div>
+			            </fieldset>
+			        </form> 
 
 				    </div>        
 					</div>  
-				</div>    
+				</div>            
+        
 
         <!-- Message Editor -->
         <div 
@@ -591,6 +639,7 @@
         </div>
         <div id="editorStandByOverlay" dojoType="dojox.widget.Standby" target="entryEditor"></div>
         
+ 		
         <!-- send button -->
         <div id="submitEntryContainer">
           <button id="submitEntryButton" 
