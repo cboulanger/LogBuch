@@ -80,6 +80,7 @@ class logbuch_service_Entry
 
 		elseif ( is_string( $filter->search ) )
 		{
+		  $filter->search = trim( $filter->search );
   		$query = new qcl_data_db_Query( array(
   		  'where'       => "subject LIKE :fragment or text LIKE :fragment",
   		  'parameters'  => array(
@@ -732,7 +733,7 @@ class logbuch_service_Entry
 	function method_querybox($fragment)
 	{
 	  $result = array(
-	    "query"   => $fragment,
+	    "query"   => trim($fragment),
 	    "results"	=> array()
 	  );
 		$entryModel      = $this->getEntryModel();

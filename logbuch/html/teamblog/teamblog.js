@@ -1787,8 +1787,14 @@ function beginUpload( button )
   window.setTimeout(function(){button.setDisabled(true),0});
 }
 
+var previous_upload_data;
 function onUploadComplete(data)
 {
+  // temporary hack to work around a bug that causes this
+  // function to be called twice 
+  if ( dojo.toJson(data) == previous_upload_data ) return;
+  previous_upload_data = dojo.toJson(data);
+   
   var ed = dijit.byId("entryEditor");
   dijit.byId("attachment_uploader_sendbutton").set("disabled",true);
   
@@ -1836,9 +1842,9 @@ function updateAttachmentList(files)
             'onmouseover="explain(this)" ' +
             'alt="Datei laden" ' +
             'onDblClick="downloadAttachment(' + file.id + ');">' ) +
-      '</td><td>' + file.name + 
       '</td><td>' +
       '<img src="img/cross.png" onmouseover="explain(this)" alt="Anhang löschen" onClick="removeAttachment(this,' + "\'"+  file.name + "\',"+ file.id + ');">' +
+      '</td><td>' + file.name + 
       '</td></tr>';
       ids.push( file.id );
   });  
