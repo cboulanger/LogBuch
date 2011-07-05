@@ -43,7 +43,16 @@ extends qcl_data_model_db_NamedActiveRecord
    * The properties of the category model
    */
   private $properties = array(
-    
+    /**
+     * Whether this is a custom, user-created category (true) 
+     * or a category supplied by the application (false)
+     */
+    'custom' => array (
+      'check'     => 'boolean',
+      'sqltype'   => 'tinyint(1) NOT NULL DEFAULT 0',
+      'nullable'  => false,
+      'init'      => false
+    )    
   );
   
   /**
@@ -66,7 +75,7 @@ extends qcl_data_model_db_NamedActiveRecord
   function __construct( $datasourceModel=null )
   {
     parent::__construct( $datasourceModel );
-    //$this->addProperties( $this->properties );
+    $this->addProperties( $this->properties );
     $this->addRelations( $this->relations, __CLASS__ );
   }
   
