@@ -162,7 +162,10 @@ class logbuch_service_Category
     $categoryModel = $this->getCategoryModel();
     $categoryModel->load($id);
     $categoryModel->set( $result );
-    $categoryModel->set("namedId", strtolower(str_replace(" ","-", qcl_asciize($result->name))));
+    $categoryModel->set(
+    	"namedId", 
+      strtolower(str_replace(" ","-", qcl_asciize($result->name)))
+    );
     $categoryModel->save();
     return $this->alert("Die Kategorie wurde gespeichert.", true);
   }

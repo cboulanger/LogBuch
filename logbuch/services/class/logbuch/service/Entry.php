@@ -270,10 +270,10 @@ class logbuch_service_Entry
   		$personModel     = $this->getPersonModel();
   		$activePerson    = $this->getActiveUserPerson();
   		$aclModel        = new logbuch_model_AccessControlList();
-
 	  }
 
     $personModel->load($entryModel->get("personId"));
+
 
     $categories = $entryModel->categories();
     $display = true;
@@ -293,7 +293,33 @@ class logbuch_service_Entry
 
     	  if( count($filterCategories) )
     	  {
-    	    if( ! count( array_intersect( $categories, $filterCategories ) ) )
+    	    /*
+    	     * require that both custom and non-custom 
+    	     * categories have to be in the category list
+    	     * (boolean AND)
+    	     */
+    	    static $cat = null;
+    	    if( $cat === null )
+    	    {
+    	      $cat = array(array(),array());
+      	    foreach( $filterCategories as $category )
+      	    {
+      	      $categoryModel->load($category);
+      	      if( $categoryModel->get("custom") )
+      	      {
+      	        $cat[0][] = $category;
+      	      }
+      	      else 
+      	      {
+      	        $cat[1][] = $category;
+      	      }
+      	    }
+    	    }
+    	    if( count( $cat[0] ) and ! count( array_intersect( $categories,  $cat[0] ) ) )
+    	    {
+    	      return null;
+    	    }    	    
+    	    if( count( $cat[1] ) and ! count( array_intersect( $categories,  $cat[1] ) ) )
     	    {
     	      return null;
     	    }
