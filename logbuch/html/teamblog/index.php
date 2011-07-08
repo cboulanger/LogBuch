@@ -346,7 +346,7 @@
       <!-- Toolbar -->
       <div>
 				
-        <!-- categories --> 
+        <!-- core categories --> 
         <div dojoType="dijit.form.DropDownButton">
           <span>Kategorien</span>
           <div dojoType="dijit.TooltipDialog" id="entryCategories" 
@@ -490,7 +490,7 @@
         </span>   
        </span>        
 				
-  			<!-- categories --> 
+  			<!-- custom categories --> 
         <div dojoType="dijit.form.DropDownButton">
           <span>Themen</span>
           <div dojoType="dijit.TooltipDialog" id="entryTopics" 
@@ -510,7 +510,7 @@
               <?php endforeach; ?>            	
               </table>
             </div>
-          </div>				
+        </div>				
 				
 				<!-- Access -->
 	        <div dojoType="dijit.form.DropDownButton">
@@ -627,8 +627,39 @@
 			        </form> 
 
 				    </div>        
-					</div>  
-				</div>            
+					</div> 
+					
+        <!-- core categories --> 
+        <div dojoType="dijit.form.DropDownButton">
+          <span>Email</span>
+          <div dojoType="dijit.TooltipDialog" id="entryNotifications" 
+            title="Email">
+            <table>
+            
+              <tr><td>
+                <input 
+                  dojoType="dijit.form.CheckBox" 
+                  id="notify-recipients" name="notify" value="recipients"
+                  onChange="updateMessageData(this);"/>    
+             	</td><td>
+                <label for="notify-recipients">Empfänger per E-Mail benachrichtigen</label><br/>
+              </td></tr>
+
+              <tr><td>
+                <input 
+                  dojoType="dijit.form.CheckBox" 
+                  id="notify-reply" name="notify" value="responses"
+                  onChange="updateMessageData(this);"/>    
+             	</td><td>
+                <label for="notify-reply">Über Antworten per E-Mail benachrichtigen</label><br/>
+              </td></tr>
+              
+            </table>
+          </div>	
+        </div>				
+					
+					 
+			</div>            
         
 
         <!-- Message Editor -->

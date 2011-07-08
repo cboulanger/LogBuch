@@ -116,15 +116,6 @@ extends qcl_data_model_db_ActiveRecord
     	'init'			=> array()
     ),
 
-    /**
-     * Enter description here ...
-     */
-    'notify' => array (
-      'check'     => 'boolean',
-      'sqltype'   => 'tinyint(1) NOT NULL DEFAULT 1',
-      'nullable'  => false,
-      'init'      => true
-    ),
 
     /**
      * Enter description here ...

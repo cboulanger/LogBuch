@@ -1369,7 +1369,11 @@ function resetEditor()
   dojo.byId("attachment_filelist").innerHTML = "<div class='infoText'>Keine Anhänge vorhanden.<div>";
   dojo.byId("attachment_uploader_error").innerHTML = "";
   
-  
+  // email
+  dojo.forEach( dojo.query('input[name="notify"]'), function(node){
+    var wgt = dijit.getEnclosingWidget(node);
+    wgt.set("value",false);
+  });  
 }
 
 function logout()
@@ -1427,6 +1431,7 @@ function updateMessageData( widget )
   var attUploader = dijit.byId("entryAttachmentUploader");
   var attCount    = new Number(dojo.byId("attachment_count").innerHTML);
   var access      = dijit.byId("entryAccess").get("value").access;
+  var notify      = dijit.byId("entryNotifications").get("value").notify;
   var data = {
     'categories'    : dijit.byId("entryCategories").get("value").categories
                       .concat(dijit.byId("entryTopics").get("value").categories),
@@ -1535,11 +1540,33 @@ function updateMessageData( widget )
   
   if ( groups.length )
   {
-     info += " und ist für folgende Personengruppen sichtbar: <b>" + groups.join(", ") + "</b>.";   
+     info += " und ist für folgende Personengruppen sichtbar: <b>" + groups.join(", ") + "</b>. ";   
   }
   else
   {
-    info += " und ist zur Zeit <b>nur für Sie sichtbar</b>.";
+    info += " und ist zur Zeit <b>nur für Sie sichtbar</b>. ";
+  }
+  
+  if( notify.length )
+  {
+    if ( dojo.indexOf( notify, "recipients") != -1 )
+    {
+      data.notify_recipients = true;
+      if ( dojo.indexOf( notify, "responses") != -1  )
+      {
+        info += " Leseberechtige Benutzer/innen werden per E-Mail über den Eintrag und Antworten auf den Eintrag benachrichtigt";
+        data.notify_reply = true;
+      }
+      else
+      {
+        info += "Leseberechtige Benutzer/innen werden per E-Mail über den Eintrag benachrichtigt.";
+      }
+    }
+    else if ( dojo.indexOf( notify, "responses") != -1  )
+    {
+      info += " Leseberechtige Benutzer/innen werden per E-Mail über Antworten auf diesen Eintrag benachrichtigt";
+      data.notify_reply = true;
+    }
   }
   
   dojo.byId("entryInformationMessage").innerHTML = info;

@@ -61,12 +61,17 @@ class logbuch_service_Notification
           'recipientEmail'  => $recipient->get("email")
         ) );
         $mailer->send();
+        //$this->debug( "Gesendet an ". $recipient->get("email"), __CLASS__, __LINE__ );
         return true;
       }
       catch( LogicException $e)
       {
         $this->warn( "Could not send email: " . $e->getMessage() );
       }
+    }
+    else 
+    {
+       //$this->debug( "NICHT gesendet an ". $recipient->get("email"), __CLASS__, __LINE__ ); 
     }
     return false;
   }
@@ -83,46 +88,22 @@ class logbuch_service_Notification
    * @param array|object $acl
    *    The acl data
    */
-  public function notifyAll( $subject, $body, $acl )
+  public function notifyAll( $subject, $body, $acl, $selfAlso=false )
   {
     $recipientModel = $this->getPersonModel();
     $recipientModel->findAll();
     $activeUserPerson = $this->getActiveUserPerson();
+    $this->debug( "Email $subject", __CLASS__, __LINE__ );
     while( $recipientModel->loadNext() )
     {
       if( $recipientModel->id() != $activeUserPerson->id() )
       {
         $this->notify($subject, $body, $recipientModel, $acl);
       }
-    }
-  }
-
-  /**
-   * Sends email when a new attachment has been created
-   * Enter description here ...
-   * @param unknown_type $itemId
-   * @param unknown_type $fileList
-   */
-  public function method_attachment( $itemId, $fileList )
-  {
-    $model = $this->getEntryModel();
-    $model->load( (int) $itemId );
-    $aclData = $model->aclData();
-    $user = $this->getActiveUserPerson()->getFullName();
-
-    if ( $model->get("notify")  )
-    {
-      $subject = "Neuer Logbuch-Anhang";
-      $body = "Sehr geehrte/r LogBuch-Teilnehmer/in,\n\n";
-      $body .= ( count( $fileList) > 1 ?
-        "$user hat neue Dokumente hochgeladen" :
-        "$user hat ein neues Dokument hochgeladen" ) . ":\n\n";
-      $body .=  implode( "\n", $fileList ) . "\n\n";
-      $body .= "\nSie können den Eintrag unter dem folgenden Link abrufen: \n\n";
-      $body .= dirname( dirname( qcl_server_Server::getUrl() ) ) .
-            "/build/#showItem~" . urlencode($category . "/" . $itemId);
-      $body .= "\n\n---\n\nBitte antworten Sie nicht auf diese E-Mail.";
-      $this->notifyAll( $subject, $body, $aclData); // FIXME
+      else
+      {
+        $this->debug( "- nicht an den Absender selbst.", __CLASS__, __LINE__ );
+      }
     }
   }
 }

@@ -58,7 +58,19 @@ extends logbuch_model_Model
       'check' => 'string',
       'sqltype' => 'varchar(5)',
       'nullable' => true,
-    )
+    ),
+    
+    /**
+     * Whether the author should be notified when there
+     * are responses to the survey.
+     * Currently not implemented
+     */
+    'notify' => array (
+      'check'     => 'boolean',
+      'sqltype'   => 'tinyint(1) NOT NULL DEFAULT 1',
+      'nullable'  => false,
+      'init'      => true
+    )    
   );
 
   /**

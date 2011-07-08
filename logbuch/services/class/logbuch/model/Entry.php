@@ -60,7 +60,41 @@ extends logbuch_model_Model
       'check' => 'string',
       'sqltype' => 'text',
       'nullable' => true,
-    )
+    ),
+    
+    /**
+     * Whether recipients should be notified when the entry
+     * has been created
+     * @deprecated Column will be removed
+     */
+    'notify' => array (
+      'check'     => 'boolean',
+      'sqltype'   => 'tinyint(1) NOT NULL DEFAULT 1',
+      'nullable'  => false,
+      'init'      => true
+    ),
+    
+    /**
+     * Whether recipients should be notified when the entry
+     * has been created
+     */
+    'notify_recipients' => array (
+      'check'     => 'boolean',
+      'sqltype'   => 'tinyint(1) NOT NULL DEFAULT 0',
+      'nullable'  => false,
+      'init'      => false
+    ),    
+    
+    /**
+     * Whether recipients should be notified when the entry
+     * has been created
+     */
+    'notify_reply' => array (
+      'check'     => 'boolean',
+      'sqltype'   => 'tinyint(1) NOT NULL DEFAULT 0',
+      'nullable'  => false,
+      'init'      => false
+    )    
   );
 
   /**

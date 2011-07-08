@@ -85,7 +85,19 @@ extends logbuch_model_Model
       "check"    => "qcl_data_db_Timestamp",
       "sqltype"  => "timestamp",
       'nullable' => true,
-    )
+    ),
+    
+    /**
+     * Whether recipients should be notified when the entry
+     * has been created
+     * @deprecated Column will be removed
+     */
+    'notify' => array (
+      'check'     => 'boolean',
+      'sqltype'   => 'tinyint(1) NOT NULL DEFAULT 1',
+      'nullable'  => false,
+      'init'      => true
+    )    
   );
 
   /**

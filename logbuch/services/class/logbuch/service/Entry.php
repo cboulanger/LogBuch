@@ -47,6 +47,7 @@ class logbuch_service_Entry
     "moreMembers"     => "Einzelne Teilnehmer/innen"
   );
 
+  
 	/**
 	 * Creates an entry
 	 * @param $data
@@ -293,11 +294,9 @@ class logbuch_service_Entry
 
     	  if( count($filterCategories) )
     	  {
-    	    /*
-    	     * require that both custom and non-custom 
-    	     * categories have to be in the category list
-    	     * (boolean AND)
-    	     */
+          /*
+           * create a list of custom and non-custom categories
+           */
     	    static $cat = null;
     	    if( $cat === null )
     	    {
@@ -315,6 +314,11 @@ class logbuch_service_Entry
       	      }
       	    }
     	    }
+    	    /*
+    	     * require that both custom and non-custom 
+    	     * categories have to be in the category list
+    	     * (boolean AND)
+    	     */    	    
     	    if( count( $cat[0] ) and ! count( array_intersect( $categories,  $cat[0] ) ) )
     	    {
     	      return null;
@@ -618,7 +622,14 @@ class logbuch_service_Entry
 		 */
 		$aclModel = new logbuch_model_AccessControlList();
 		$aclData  = $aclModel->set($data->acl);
-
+		
+		/*
+		 * notifications
+		 */
+    foreach( array("notify_recipients","notify_reply") as $key )
+    {
+      if( isset( $data->$key ) ) $itemData[$key] = $data->$key;
+    }
 
 		/*
 		 * merge item and acl data
@@ -636,6 +647,12 @@ class logbuch_service_Entry
   		if ( is_numeric( $data->replyToId ) )
   		{
   		  $itemData['parentEntryId'] = $data->replyToId;
+  		  // reply must be visible at least for the author of the entry
+  		  $entryModel->load( $data->replyToId );
+  		  $itemData['moreMembers'] = array_unique( array_merge(
+  		    $itemData['moreMembers'],
+  		    array( $entryModel->get("personId") )
+  		  ));
   		}
 		  $newId = $entryModel->create( $itemData );
 		}
@@ -703,10 +720,12 @@ class logbuch_service_Entry
 		if( $id )
 		{
 		  $this->broadcastClientMessage("entry.updated",$data, true );
+		  $this->sendEmail("update", $entryModel );
 		}
 		else
 		{
 		  $this->broadcastClientMessage("entry.created", $data, true );
+		  $this->sendEmail("create", $entryModel );
 		}
 
 		// replies
@@ -714,12 +733,68 @@ class logbuch_service_Entry
 		{
 		  unset($data['text']);
 		  $this->broadcastClientMessage("entry.reply", $data, true );
+		  $this->sendEmail("reply", $entryModel );
 		}
 
 		/*
 		 * done
 		 */
 		return $this->_getEntryData($entryModel);
+	}
+	
+	
+	/**
+	 * Sends an email 
+	 * @param string $action
+	 * @param logbuch_model_Entry $entryModel
+	 */
+	function sendEmail( $action, $entryModel )
+	{
+	  
+	  qcl_import("logbuch_service_Notification");
+	  $notificationController = new logbuch_service_Notification;
+	  $notificationController->sender = "LogBuch";
+	  $notificationController->senderEmail = "nicht_antworten@logbuch-business-travel.de";
+	  
+    $aclData       = $entryModel->aclData();
+    $userName      = $this->getActiveUserPerson()->getFullName();
+    $entrySubject  = $entryModel->get("subject");
+    $entryId       = $entryModel->id();
+    switch( $action )
+    {
+      case "create":
+        if( ! $entryModel->get("notify_recipients") ) return false;
+        $subject = "Neuer Logbuch-Eintrag: $entrySubject";
+        $body = "Sehr geehrte/r LogBuch-Teilnehmer/in,\n\n";
+        $body .= "$userName hat einen neuen Eintrag mit dem Betreff '$entrySubject' erstellt.\n\n";
+        break;
+        
+      case "update":
+        if( ! $entryModel->get("notify_recipients") ) return false;
+        $subject = "Logbuch-Eintrag aktualisiert: $entrySubject";
+        $body = "Sehr geehrte/r LogBuch-Teilnehmer/in,\n\n";
+        $body .= "$userName hat den Eintrag mit dem Betreff '$entrySubject' aktualisiert.\n\n";
+        break;
+        
+      case "reply":
+        $entryModel->load( $entryModel->get("parentEntryId") );
+        $entrySubject  = $entryModel->get("subject");
+        $subject = "Antwort auf Logbuch-Eintrag: $entrySubject";
+        $body = "Sehr geehrte/r LogBuch-Teilnehmer/in,\n\n";
+        $body .= "$userName hat auf Ihren Eintrag mit dem Betreff '$entrySubject' geantwortet.\n\n";
+        $entryModel->load( $entryId );
+        if( ! $entryModel->get("notify_reply") ) return false;
+        break;
+                
+      default:
+        throw new InvalidArgumentException( "Invalid action '$action'" );
+    }
+    $body .= "\nSie kšnnen den Eintrag unter dem folgenden Link abrufen: \n\n";
+    $body .= dirname( dirname( qcl_server_Server::getUrl() ) ) .
+          		"/html/teamblog/?showEntry=$entryId";
+    $body .= "\n\n---\n\nBitte antworten Sie nicht auf diese E-Mail.";
+    $notificationController->notifyAll( $subject, $body, $aclData);
+    return true;
 	}
 
 	/**
