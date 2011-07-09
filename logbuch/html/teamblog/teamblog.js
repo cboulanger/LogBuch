@@ -1133,6 +1133,11 @@ function replyToEntry(id)
             widget.set("value", entry.acl[node.value].length > 0 );
             var store = dijit.byId("chooseUsersGrid").store;
             var memberIds = entry.acl.moreMembers;
+            // add author to acl
+            if( memberIds.indexOf(entry.authorId) == -1 )
+            {
+              memberIds.push(entry.authorId); 
+            }
             store.fetch({
               onItem: function(item){
                 store.setValue( item, "selected", memberIds.indexOf( store.getValue( item, "id") ) != -1 );    
@@ -1372,7 +1377,7 @@ function resetEditor()
   // email
   dojo.forEach( dojo.query('input[name="notify"]'), function(node){
     var wgt = dijit.getEnclosingWidget(node);
-    wgt.set("value",false);
+    wgt.set("value",true);
   });  
 }
 
@@ -1880,10 +1885,12 @@ function updateAttachmentList(files)
   if( ed.attachmentIds.length == 0 )
   {
     dojo.byId("attachment_filelist").innerHTML = html;
+    dijit.getEnclosingWidget( dojo.byId("c-document") ).set("value",false);
   }
   else
   {
     dojo.byId("attachment_filelist").innerHTML = dojo.byId("attachment_filelist").innerHTML + html;
+    dijit.getEnclosingWidget( dojo.byId("c-document") ).set("value",true); // @todo doesn't work, why?
   }
   ed.attachmentIds = ed.attachmentIds.concat( ids );
   dojo.byId("attachment_count").innerHTML= ( ed.attachmentIds.length );

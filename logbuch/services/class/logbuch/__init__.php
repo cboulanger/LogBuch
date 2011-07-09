@@ -32,6 +32,9 @@ $logger->registerFilter( LOGBUCH_LOG_APPLICATION, "", false );
 define( "LOGBUCH_LOG_SURVEY", "logbuch_log_survey");
 $logger->registerFilter( LOGBUCH_LOG_SURVEY, "", false);
 
+define( "LOGBUCH_LOG_MESSAGE", "logbuch_log_message");
+$logger->registerFilter( LOGBUCH_LOG_MESSAGE, "", false);
+
 //$logger->setFilterEnabled( QCL_LOG_SETUP, true );
 //$logger->setFilterEnabled( QCL_LOG_ACCESS, true );
 

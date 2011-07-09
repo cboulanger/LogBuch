@@ -3,7 +3,7 @@
 
    logBuch: Software zur online-Dokumentation von Beratungsprozessen
 
-   Copyright: Konzeption:     JŸrgen Breiter
+   Copyright: Konzeption:     Jï¿½rgen Breiter
               Programmierung: Christian Boulanger
 
    Lizenz: GPL v.2
@@ -443,6 +443,7 @@ class logbuch_service_Entry
       'updated'		  => date ("d.m.Y H:i", $entryModel->getModified()->getTimestamp() ),
       'timestamp'		=> $timeStamp *1000,
       'subject'     => $entryModel->get("subject"),
+      'authorId'		=> $entryModel->get("personId"),
       'author'	 	  => $entryModel->authorName(),
       'text'		    => $entryModel->get("text"),
       'acl'					=> $entryModel->aclData(),
@@ -634,7 +635,8 @@ class logbuch_service_Entry
 		/*
 		 * merge item and acl data
 		 */
-		$itemData = array_merge( $itemData, $aclData->data() );
+    $aclData = $aclData->data();
+		$itemData = array_merge( $itemData, $aclData );
 
 		/*
 		 * create or update record
@@ -648,6 +650,7 @@ class logbuch_service_Entry
   		{
   		  $itemData['parentEntryId'] = $data->replyToId;
   		  // reply must be visible at least for the author of the entry
+  		  // @todo done on client-remove?
   		  $entryModel->load( $data->replyToId );
   		  $itemData['moreMembers'] = array_unique( array_merge(
   		    $itemData['moreMembers'],
@@ -719,20 +722,20 @@ class logbuch_service_Entry
 		$data['deletable'] = false;
 		if( $id )
 		{
-		  $this->broadcastClientMessage("entry.updated",$data, true );
-		  $this->sendEmail("update", $entryModel );
+		  $this->broadcastEntry("entry.updated", $data, $aclData );
+		  if ( ! $data['replyToId'] ) $this->sendEmail("update", $entryModel );
 		}
 		else
 		{
-		  $this->broadcastClientMessage("entry.created", $data, true );
-		  $this->sendEmail("create", $entryModel );
+		  $this->broadcastEntry("entry.created", $data, $aclData );
+		  if ( ! $data['replyToId'] ) $this->sendEmail("create", $entryModel );
 		}
 
 		// replies
 		if ( $data['replyToId'] )
 		{
 		  unset($data['text']);
-		  $this->broadcastClientMessage("entry.reply", $data, true );
+		  $this->broadcastEntry("entry.reply", $data, $aclData );
 		  $this->sendEmail("reply", $entryModel );
 		}
 
@@ -742,6 +745,17 @@ class logbuch_service_Entry
 		return $this->_getEntryData($entryModel);
 	}
 	
+	/**
+	 * Broadcast new entry to other clients
+	 * @param string $message
+	 * @param array $data
+	 * @param array $aclData
+	 */
+	protected function broadcastEntry( $message, $data, $aclData )
+	{
+	  $data['senderId'] = $this->getActiveUserPerson()->id();
+	  $this->getMessageBus()->broadcast( $message, $data, $aclData, true );
+	}
 	
 	/**
 	 * Sends an email 
@@ -782,14 +796,14 @@ class logbuch_service_Entry
         $subject = "Antwort auf Logbuch-Eintrag: $entrySubject";
         $body = "Sehr geehrte/r LogBuch-Teilnehmer/in,\n\n";
         $body .= "$userName hat auf Ihren Eintrag mit dem Betreff '$entrySubject' geantwortet.\n\n";
-        $entryModel->load( $entryId );
         if( ! $entryModel->get("notify_reply") ) return false;
+        $entryModel->load( $entryId );
         break;
                 
       default:
         throw new InvalidArgumentException( "Invalid action '$action'" );
     }
-    $body .= "\nSie kšnnen den Eintrag unter dem folgenden Link abrufen: \n\n";
+    $body .= "\nSie kÃ¶nnen den Eintrag unter dem folgenden Link abrufen: \n\n";
     $body .= dirname( dirname( qcl_server_Server::getUrl() ) ) .
           		"/html/teamblog/?showEntry=$entryId";
     $body .= "\n\n---\n\nBitte antworten Sie nicht auf diese E-Mail.";
@@ -820,7 +834,7 @@ class logbuch_service_Entry
 			}
 			else
 			{
-				throw new JsonRpcError( $this->tr( "Sie dŸrfen diesen Eintrag nicht lšschen.") );
+				throw new JsonRpcError( $this->tr( "Sie dï¿½rfen diesen Eintrag nicht lï¿½schen.") );
 			}
 		}
 		$this->broadcastClientMessage("entry.deleted",$id,true);

@@ -24,6 +24,15 @@ class logbuch_service_Message
   extends logbuch_service_Controller
 {
 
+  /**
+   * shorthand method
+   * @see qcl_core_Object::log()
+   */
+  function log( $msg )
+  {
+    parent::log( $msg, LOGBUCH_LOG_MESSAGE );  
+  }
+  
 	/**
 	 * Broadcasts the messages from one client to all others
 	 * @param $msgQueue
@@ -266,15 +275,16 @@ class logbuch_service_Message
 			$access = true;
 		}
 		
-//$this->debug( sprintf(
-//	"\n%s => user: %s, author: %s, recipient: %s, access: %s",
-//	$data['subject'],
-//	$activeUserPerson->getFullName(),
-//	$sender->getFullName(),
-//	$recipient->getFullName(),
-//	($access === true ? "yes" : "no" )
-//, __CLASS__, __LINE__ ));		
-//		return $access;
-	}
+		$this->log( $this->debug( sprintf(
+    	"\n%s => user: %s, author: %s, recipient: %s, access: %s",
+    	$data['subject'],
+    	$activeUserPerson->getFullName(),
+    	$sender->getFullName(),
+    	$recipient->getFullName(),
+    	($access === true ? "yes" : "no" )
+    , __CLASS__, __LINE__ ) ) );
+    		
+  	return $access;
+  }
 }
 ?>
