@@ -1375,9 +1375,10 @@ function resetEditor()
   dojo.byId("attachment_uploader_error").innerHTML = "";
   
   // email
+  var notifyValues = [false,true], c=0;
   dojo.forEach( dojo.query('input[name="notify"]'), function(node){
     var wgt = dijit.getEnclosingWidget(node);
-    wgt.set("value",true);
+    wgt.set("value",notifyValues[c++]);
   });  
 }
 

@@ -3,7 +3,7 @@
 
    logBuch: Software zur online-Dokumentation von Beratungsprozessen
 
-   Copyright: Konzeption:     J�rgen Breiter
+   Copyright: Konzeption:     Jürgen Breiter
               Programmierung: Christian Boulanger
 
    Lizenz: GPL v.2
@@ -47,7 +47,7 @@ class logbuch_service_Entry
     "moreMembers"     => "Einzelne Teilnehmer/innen"
   );
 
-  
+
 	/**
 	 * Creates an entry
 	 * @param $data
@@ -308,21 +308,21 @@ class logbuch_service_Entry
       	      {
       	        $cat[0][] = $category;
       	      }
-      	      else 
+      	      else
       	      {
       	        $cat[1][] = $category;
       	      }
       	    }
     	    }
     	    /*
-    	     * require that both custom and non-custom 
+    	     * require that both custom and non-custom
     	     * categories have to be in the category list
     	     * (boolean AND)
-    	     */    	    
+    	     */
     	    if( count( $cat[0] ) and ! count( array_intersect( $categories,  $cat[0] ) ) )
     	    {
     	      return null;
-    	    }    	    
+    	    }
     	    if( count( $cat[1] ) and ! count( array_intersect( $categories,  $cat[1] ) ) )
     	    {
     	      return null;
@@ -623,7 +623,7 @@ class logbuch_service_Entry
 		 */
 		$aclModel = new logbuch_model_AccessControlList();
 		$aclData  = $aclModel->set($data->acl);
-		
+
 		/*
 		 * notifications
 		 */
@@ -681,6 +681,7 @@ class logbuch_service_Entry
 		 */
 		foreach( $data->categories as $category )
 		{
+		  if( ! $category ) continue;
 		  $categoryModel->namedIdExists($category) ?
 		    $categoryModel->load( $category ) :
 		    $categoryModel->create( $category );
@@ -744,7 +745,7 @@ class logbuch_service_Entry
 		 */
 		return $this->_getEntryData($entryModel);
 	}
-	
+
 	/**
 	 * Broadcast new entry to other clients
 	 * @param string $message
@@ -756,20 +757,20 @@ class logbuch_service_Entry
 	  $data['senderId'] = $this->getActiveUserPerson()->id();
 	  $this->getMessageBus()->broadcast( $message, $data, $aclData, true );
 	}
-	
+
 	/**
-	 * Sends an email 
+	 * Sends an email
 	 * @param string $action
 	 * @param logbuch_model_Entry $entryModel
 	 */
 	function sendEmail( $action, $entryModel )
 	{
-	  
+
 	  qcl_import("logbuch_service_Notification");
 	  $notificationController = new logbuch_service_Notification;
 	  $notificationController->sender = "LogBuch";
 	  $notificationController->senderEmail = "nicht_antworten@logbuch-business-travel.de";
-	  
+
     $aclData       = $entryModel->aclData();
     $userName      = $this->getActiveUserPerson()->getFullName();
     $entrySubject  = $entryModel->get("subject");
@@ -782,24 +783,24 @@ class logbuch_service_Entry
         $body = "Sehr geehrte/r LogBuch-Teilnehmer/in,\n\n";
         $body .= "$userName hat einen neuen Eintrag mit dem Betreff '$entrySubject' erstellt.\n\n";
         break;
-        
+
       case "update":
         if( ! $entryModel->get("notify_recipients") ) return false;
         $subject = "Logbuch-Eintrag aktualisiert: $entrySubject";
         $body = "Sehr geehrte/r LogBuch-Teilnehmer/in,\n\n";
         $body .= "$userName hat den Eintrag mit dem Betreff '$entrySubject' aktualisiert.\n\n";
         break;
-        
+
       case "reply":
         $entryModel->load( $entryModel->get("parentEntryId") );
         $entrySubject  = $entryModel->get("subject");
         $subject = "Antwort auf Logbuch-Eintrag: $entrySubject";
         $body = "Sehr geehrte/r LogBuch-Teilnehmer/in,\n\n";
         $body .= "$userName hat auf Ihren Eintrag mit dem Betreff '$entrySubject' geantwortet.\n\n";
-        if( ! $entryModel->get("notify_reply") ) return false;
         $entryModel->load( $entryId );
+        if( ! $entryModel->get("notify_reply") ) return false;
         break;
-                
+
       default:
         throw new InvalidArgumentException( "Invalid action '$action'" );
     }
