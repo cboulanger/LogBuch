@@ -775,38 +775,80 @@ class logbuch_service_Entry
     $userName      = $this->getActiveUserPerson()->getFullName();
     $entrySubject  = $entryModel->get("subject");
     $entryId       = $entryModel->id();
+    
+    $body = "Sehr geehrte/r LogBuch-Teilnehmer/in,\n\n";
+    
     switch( $action )
     {
       case "create":
         if( ! $entryModel->get("notify_recipients") ) return false;
         $subject = "Neuer Logbuch-Eintrag: $entrySubject";
-        $body = "Sehr geehrte/r LogBuch-Teilnehmer/in,\n\n";
         $body .= "$userName hat einen neuen Eintrag mit dem Betreff '$entrySubject' erstellt.\n\n";
         break;
 
       case "update":
         if( ! $entryModel->get("notify_recipients") ) return false;
         $subject = "Logbuch-Eintrag aktualisiert: $entrySubject";
-        $body = "Sehr geehrte/r LogBuch-Teilnehmer/in,\n\n";
         $body .= "$userName hat den Eintrag mit dem Betreff '$entrySubject' aktualisiert.\n\n";
         break;
-
+  
       case "reply":
+        /*
+         * load the original entry
+         */
         $entryModel->load( $entryModel->get("parentEntryId") );
         $entrySubject  = $entryModel->get("subject");
         $subject = "Antwort auf Logbuch-Eintrag: $entrySubject";
-        $body = "Sehr geehrte/r LogBuch-Teilnehmer/in,\n\n";
-        $body .= "$userName hat auf Ihren Eintrag mit dem Betreff '$entrySubject' geantwortet.\n\n";
-        $entryModel->load( $entryId );
-        if( ! $entryModel->get("notify_reply") ) return false;
-        break;
 
+        /*
+         * if the original author is the same as the replying author,
+         * no email notification is neccessary
+         */
+        if( $this->getActiveUserPerson()->id() == $entryModel->get("personId") )
+        {
+          $entryModel->load( $entryId );
+          return false;
+        }
+        
+        /*
+         * if only the author should be notified,
+         * overwrite acl data
+         */
+        if( $entryModel->get("notify_reply") )
+        {
+          $body .= "$userName hat auf Ihren Eintrag '$entrySubject' geantwortet.\n\n";          
+          $aclData= array( 'moreMembers' => array( $entryModel->get("personId") ) );
+          $entryModel->load( $entryId );
+          break; 
+        }
+        
+        /*
+         * notify all recipients
+         */
+        elseif ( $entryModel->get("notify_reply_all") )
+        {
+          $originalAuthor = $entryModel->authorName();
+          $body .= "$userName hat auf den Eintrag '$entrySubject' von $originalAuthor geantwortet.\n\n";          
+          $entryModel->load( $entryId );
+          break;
+        }
+        
+        /*
+         * no notification
+         */
+        else
+        {
+          $entryModel->load( $entryId );
+          return false;
+        }
+                
       default:
         throw new InvalidArgumentException( "Invalid action '$action'" );
     }
     $body .= "\nSie können den Eintrag unter dem folgenden Link abrufen: \n\n";
     $body .= dirname( dirname( qcl_server_Server::getUrl() ) ) .
-          		"/html/teamblog/?showEntry=$entryId";
+          		"/html/teamblog/?showEntry=$entryId" .
+              "&ds=" . $this->getDatasourceName();
     $body .= "\n\n---\n\nBitte antworten Sie nicht auf diese E-Mail.";
     $notificationController->notifyAll( $subject, $body, $aclData);
     return true;

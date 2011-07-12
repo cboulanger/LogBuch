@@ -1,10 +1,10 @@
 <?php
 /* ************************************************************************
 
-   logBuch: Die Online-Plattform fŸr Unternehmenszusammenarbeit
+   logBuch: Die Online-Plattform fÃ¼r Unternehmenszusammenarbeit
 
    Copyright:
-     2010 JŸrgen Breiter (Konzeption) Christian Boulanger (Programmierung)
+     2010 Jprgen Breiter (Konzeption) Christian Boulanger (Programmierung)
 
    License:
      GPL: http://www.gnu.org/licenses/gpl.html

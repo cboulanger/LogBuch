@@ -394,10 +394,17 @@ var showAll = true;
 
 function onResetFilterButtonClick()
 {
-  if ( window.location.search )
+  var params = window.location.params;
+  if ( params.showEntry )
   {
     // this reloads the page //FIXME
-    window.location.search="";
+    delete params.showEntry;
+    var q = [];
+    for( var key in params )
+    {
+      q.push( key + "=" + params[key] );
+    }
+    window.location.search="?"+q.join("&");
   }
   previousParams="";
   resetEntryFilter();
@@ -939,6 +946,10 @@ function createEntryLink( entryId )
 {
   var l = window.location;
   var url = l.protocol + "//" + l.host + l.pathname + "?showEntry=" + entryId;
+  if ( window.location.params.ds )
+  {
+    url += "&ds=" + window.location.params.ds;
+  }
   return url;
 }
 
@@ -1375,7 +1386,7 @@ function resetEditor()
   dojo.byId("attachment_uploader_error").innerHTML = "";
   
   // email
-  var notifyValues = [false,true], c=0;
+  var notifyValues = [false,true,false], c=0;
   dojo.forEach( dojo.query('input[name="notify"]'), function(node){
     var wgt = dijit.getEnclosingWidget(node);
     wgt.set("value",notifyValues[c++]);
@@ -1555,24 +1566,24 @@ function updateMessageData( widget )
   
   if( notify.length )
   {
+    info += " E-Mail-Benachrichtigung ";
+    var notifications = [];
     if ( dojo.indexOf( notify, "recipients") != -1 )
     {
-      data.notify_recipients = true;
-      if ( dojo.indexOf( notify, "responses") != -1  )
-      {
-        info += " Leseberechtige Benutzer/innen werden per E-Mail über den Eintrag und Antworten auf den Eintrag benachrichtigt";
-        data.notify_reply = true;
-      }
-      else
-      {
-        info += "Leseberechtige Benutzer/innen werden per E-Mail über den Eintrag benachrichtigt.";
-      }
+      data.notify_recipients = true;  
+      notifications.push("für Empfänger");
     }
-    else if ( dojo.indexOf( notify, "responses") != -1  )
+    if ( dojo.indexOf( notify, "reply-all") != -1 )
     {
-      info += " Leseberechtige Benutzer/innen werden per E-Mail über Antworten auf diesen Eintrag benachrichtigt";
+      data.notify_reply_all = true;
+      notifications.push("für alle bei Antwort auf diesen Beitrag");
+    }  
+    if ( dojo.indexOf( notify, "reply") != -1  )
+    {
       data.notify_reply = true;
+      notifications.push("für mich bei Antwort auf diesen Beitrag");
     }
+    info += notifications.join(", ") + ".";
   }
   
   dojo.byId("entryInformationMessage").innerHTML = info;

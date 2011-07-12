@@ -75,8 +75,7 @@ extends logbuch_model_Model
     ),
     
     /**
-     * Whether recipients should be notified when the entry
-     * has been created
+     * Whether the recipients of this entry should should be notified 
      */
     'notify_recipients' => array (
       'check'     => 'boolean',
@@ -86,10 +85,21 @@ extends logbuch_model_Model
     ),    
     
     /**
-     * Whether recipients should be notified when the entry
-     * has been created
+     * Whether the author of this entry should should be notified 
+     * someone replies to this entry
      */
     'notify_reply' => array (
+      'check'     => 'boolean',
+      'sqltype'   => 'tinyint(1) NOT NULL DEFAULT 0',
+      'nullable'  => false,
+      'init'      => false
+    ),
+    
+    /**
+     * Whether all recipients of this entry should should be notified 
+     * someone replies to this entry
+     */
+    'notify_reply_all' => array (
       'check'     => 'boolean',
       'sqltype'   => 'tinyint(1) NOT NULL DEFAULT 0',
       'nullable'  => false,

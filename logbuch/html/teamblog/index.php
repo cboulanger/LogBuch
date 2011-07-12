@@ -642,17 +642,26 @@
                   id="notify-recipients" name="notify" value="recipients"
                   onChange="updateMessageData(this);"/>    
              	</td><td>
-                <label for="notify-recipients">Empfänger per E-Mail benachrichtigen</label><br/>
+                <label for="notify-recipients">Empfänger/innen per E-Mail benachrichtigen</label><br/>
               </td></tr>
 
               <tr><td>
                 <input 
                   dojoType="dijit.form.CheckBox" 
-                  id="notify-reply" name="notify" value="responses"
+                  id="notify-reply" name="notify" value="reply"
                   onChange="updateMessageData(this);"/>    
              	</td><td>
-                <label for="notify-reply">Über Antworten per E-Mail benachrichtigen</label><br/>
+                <label for="notify-reply">Mich über Antworten per E-Mail benachrichtigen</label><br/>
               </td></tr>
+              
+              <tr><td>
+                <input 
+                  dojoType="dijit.form.CheckBox" 
+                  id="notify-reply-all" name="notify" value="reply-all"
+                  onChange="updateMessageData(this);"/>    
+             	</td><td>
+                <label for="notify-reply-all">Alle Empfänger/innen über Antworten per E-Mail benachrichtigen</label><br/>
+              </td></tr>  	              
               
             </table>
           </div>	
