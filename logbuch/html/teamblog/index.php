@@ -242,7 +242,7 @@
 		  </div>
 		  
 		  <!-- Categories (Topics) -->
-       <div dojoType="dijit.TitlePane" title="Themen" open="false">
+       <div dojoType="dijit.TitlePane" title="Zukunftswelten" open="true">
         <table>
         	<?php foreach( $categoryData as $c ):?>
           <tr><td>
@@ -492,9 +492,9 @@
 				
   			<!-- custom categories --> 
         <div dojoType="dijit.form.DropDownButton">
-          <span>Themen</span>
+          <span>Zukunftswelten</span>
           <div dojoType="dijit.TooltipDialog" id="entryTopics" 
-            title="Themen:" >
+            title="Zukunftswelten:" >
             <table>
             	<?php foreach( $categoryData as $c ):?>
               <tr><td>
