@@ -3,7 +3,7 @@
 
    logBuch: Software zur online-Dokumentation von Beratungsprozessen
    
-   Copyright: Konzeption:     JŸrgen Breiter
+   Copyright: Konzeption:     Jï¿½rgen Breiter
               Programmierung: Christian Boulanger 
 
    Lizenz: GPL v.2
@@ -49,7 +49,7 @@ extends qcl_data_model_db_NamedActiveRecord
      */
     'name' => array (
       'check'     => 'string',
-      'sqltype'   => 'varchar(30)',
+      'sqltype'   => 'varchar(100)',
       'nullable'	=> true
     ),
     

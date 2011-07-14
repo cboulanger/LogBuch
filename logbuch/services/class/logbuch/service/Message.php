@@ -86,8 +86,8 @@ class logbuch_service_Message
   		qcl_access_model_Session::getInstance()->cleanup();
   		qcl_event_message_db_Message::getInstance()->cleanup();
 
-  		// broadcast login @todo move into access controller
-  		$this->broadcastClientMessage("user.login",$personModel->getFullName(),true);
+  		// broadcast login @todo move into access controller, doesn't work currently
+  		//$this->broadcastClientMessage("user.login",$personModel->getFullName(),true);
 		}
 		qcl_util_registry_Session::set( "lastPing", $time );
 		

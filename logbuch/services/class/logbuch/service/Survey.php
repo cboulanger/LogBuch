@@ -97,6 +97,7 @@ class logbuch_service_Survey
       return "ABORTED";
     }
     $templateModel = $this->getDatasourceModel()->getInstanceOfType("emailTemplate");
+    $personModel	 = $this->getPersonModel();
 
     /*
      * template id
@@ -135,12 +136,20 @@ class logbuch_service_Survey
 
       case "new":
         $id = $templateModel->create(array(
-          'subject' => $this->defaultSubject,
-          'body'		=> $this->defaultBody,
-          'frequency'	=> null
+          'subject' 	=> $this->defaultSubject,
+          'body'			=> $this->defaultBody,
+          'frequency'	=> null,
+          'personId'  => $this->getActiveUserPerson()->id()
         ));
+        // fallthrough
 
       case "edit":
+ 		    $names = array();
+      	foreach( $templateModel->get("moreMembers") as $personId )
+      	{
+      		$personModel->load($personId);
+      		$names[] = $personModel->get("familyName");
+      	}
         $formData = array(
           'frequencylabel'  => array(
             'label'   => "Wie oft soll der Fragebogen ausgesendet werden?",
@@ -167,7 +176,12 @@ class logbuch_service_Survey
             'lines'		=> 20,
             'width' 	=> 800,
             'value'	=> $templateModel->get("body")
-          )
+          ),
+          'names'  => array(
+            'label'   => "Leseberechtigte<br>(Nachnamen,<br>kommagetrennt)",
+            'type'    => "textfield",
+             'value'	=> implode(",", $names)
+          ),          
         );
         return new qcl_ui_dialog_Form(
           "<h3>Fragebogen bearbeiten</h3>",
@@ -199,12 +213,38 @@ class logbuch_service_Survey
       return "ABORTED";
     }
     $templateModel = $this->getDatasourceModel()->getInstanceOfType("emailTemplate");
+    $personModel	 = $this->getPersonModel();
+    $warning = "";
+    
     $templateModel->load($id);
+    
+    if ( trim($result->names) )
+    {
+    	$moreMembers = array();
+    	$names 			 = explode(",", $result->names);
+    	foreach( $names as $name )
+    	{
+    		$name = trim( $name );
+    		try
+    		{
+    			$personModel->loadWhere(array("familyName" => $name ));
+          $moreMembers[] = $personModel->id();
+    		}
+    		catch( qcl_data_model_RecordNotFoundException $e )
+    		{		 
+    			$warning .= ( empty($warning) ? "Die folgenden Nachnamen konnten nicht zugeordnet werden:" : ", ") . $name;
+    		}
+    	}
+    	$templateModel->set( "moreMembers", $moreMembers );
+    }
+    
+    unset($result->names);
     unset($result->frequencylabel);
+    
     $templateModel->set( $result );
-    $templateModel->set("personId", $this->getActiveUserPerson()->id() );
+    //$templateModel->set("personId", $this->getActiveUserPerson()->id() );
     $templateModel->save();
-    return $this->alert("Der Fragebogen wurde gespeichert.", true);
+    return $this->alert("Der Fragebogen wurde gespeichert. $warning", true);
   }
 
   public function method_sendTemplate($result, $id )
@@ -260,11 +300,16 @@ class logbuch_service_Survey
      * create new entry based on the template
      */
     $entryId = $entryModel->create(array(
-      'personId'		=> $this->getActiveUserPerson()->id(),
-      'allMembers'	=> true,
-      'subject'     => $subject,
-      'text'		    => nl2br($text)
+      'personId'			=> $this->getActiveUserPerson()->id(),
+      'subject'     	=> $subject,
+      'text'		    	=> nl2br($text),
+      'notify_reply'	=> true
     ));
+    
+    /*
+     * the entry has the same acl as the template
+     */
+    $entryModel->set( $templateModel->aclData() )->save();
 
     $data = $entryController->_getEntryData($entryModel);
 		$data['editable'] = false;
@@ -428,6 +473,7 @@ class logbuch_service_Survey
        */
       $text = "";
       $parts = $mail[$i]->fetchParts();
+      $attachments = array();
       foreach ( $parts as $part )
       {
         if ( $part instanceof ezcMailText )
@@ -444,8 +490,16 @@ class logbuch_service_Survey
         elseif ( $part instanceof ezcMailFile )
         {
           $path   = $part->fileName;
-          $target = QCL_UPLOAD_PATH . "/" . basename( $part->contentDisposition->displayFileName );
+          $fileName = basename( $part->contentDisposition->displayFileName );
+          $hash = md5( $filename . microtime_float() );
+          $target = QCL_UPLOAD_PATH . "/$hash";
           $this->log( "Saving $path to $target" );
+          rename( $path, $target);
+          chmod( $target, 0644 );
+          $attachments[] = array(
+          	'filename' => $fileName,
+          	'hash'		=> $hash
+          );
         }
       }
 
@@ -482,7 +536,9 @@ class logbuch_service_Survey
         'personId' 			=> $personModel->id(),
         'parentEntryId' => $parentEntryId,
         'subject'       => substr( $subject, 0, strlen($subject)-16 ),
-        'text'		      => $html
+        'text'		      => $html,
+        'notify_reply'  => true
+        
       ));
 
       /*
@@ -500,9 +556,26 @@ class logbuch_service_Survey
           }
         }
       }
+      
+      /*
+       * add attachments
+       */
+      if( count( $attachments ) )
+      {
+        $this->log( "Linking attachment to entry" );           	
+        $attachmentModel = $this->getAttachmentModel();       
+        foreach( $attachments as $att )
+        {
+	        $attachmentModel->create(array(
+	        	'filename' => $att['filename'],
+	         	'hash'		 => $att['hash']
+	        ));
+	        $attachmentModel->linkModel($entryModel);      
+				}
+      }
 
       /*
-       * mit ACL speichern
+       * save with
        */
       $entryModel->set($acl)->save();
 
@@ -512,6 +585,15 @@ class logbuch_service_Survey
   		$data['editable'] = false; // @todo should be editable for owner
   		$data['deletable'] = false;
       $this->broadcastClientMessage("entry.created", $data, false );
+      
+      /*
+       * send email if neccessary
+       * FIXME doesn't work.
+       */
+      //qcl_import("logbuch_service_Entry");
+      //qcl_import("qcl_server_Server"); //FIMXE into mailbox.php
+      //$entryController = new logbuch_service_Entry();
+      //$entryController->sendEmail("reply", $entryModel);
     }
   }
 
