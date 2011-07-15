@@ -598,7 +598,7 @@ class logbuch_service_Entry
 		/*
 		 * subject and text
 		 */
-		$text = str_replace(array("<br>","<br />","<br/>","dummyText"), "", $data->text);
+		$text = str_replace(array("dummyText"), "", $data->text);
 		qcl_import("qcl_data_xml_SimpleXMLElement");
 		$xml = '<?xml version="1.0" encoding="utf-8"?><html>' . $text  . '</html>';
 		$xmlDoc = qcl_data_xml_SimpleXMLElement::createFromString($xml);
@@ -615,8 +615,21 @@ class logbuch_service_Entry
 	    {
 	      $itemData['text'] .= trim( $node->asXML() );
 	    }
-
 		}
+		if( strlen( $itemData['text'] ) == 0 or strlen( $itemData['subject'] ) > 255 )
+		{
+		  $p = strpos( $itemData['subject'], "<br" );
+		  if( $p === false and strlen( $itemData['subject'] ) > 255 ) 
+		  {
+		    $p = strpos( $itemData['subject'], " ", 200 );
+		  }
+		  if( $p !== false ) 
+		  {
+		    $itemData['text']    = substr( $itemData['subject'], $p ) . " " . $itemData['text'];
+		    $itemData['subject'] = substr( $itemData['subject'], 0, $p ) ;
+		  }
+		}
+		$itemData['text']    = str_replace("entry-headline", "dummy", $itemData['text'] );
 
 		/*
 		 * acl
