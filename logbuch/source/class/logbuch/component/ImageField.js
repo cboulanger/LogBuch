@@ -23,8 +23,18 @@ qx.Class.define("logbuch.component.ImageField",
 {
   extend : logbuch.component.InputField,
   
+  statics :
+  {
+    QCL_UPLOAD_PATH       : "../../services/attachments",
+    LOGBUCH_USERICON_PATH : "../../services/attachments/thumbs"
+  },
+  
   properties :
   {
+    /**
+     * The size of the maximal size in width or length
+     * @type 
+     */
     imageSize :
     {
       check : "Integer",
@@ -42,7 +52,7 @@ qx.Class.define("logbuch.component.ImageField",
   members :
   {
   
-    __iframeSrc : "../html/fancyupload/single.html?456765454",
+    __iframeSrc : "../html/fancyupload/single.html?" + (new Date).getTime(),
     __iframeBody : null,
     __image : null,
     
@@ -114,40 +124,58 @@ qx.Class.define("logbuch.component.ImageField",
       this._formElement.setValue( value );
       if ( ! this.__iframeBody )
       {
-        if ( ! this.__iframeLoadEvent )
-        {
-          this.__iframeLoadEvent = true;
-          this.getInputControl().addListenerOnce("load", function(){
-            this._applyValue( value, old );
-          },this);
-        }
-        else
-        {
-          return;
-        }
+        this.getInputControl().addListenerOnce("load", function(){
+          this._applyValue( value, old );
+        },this);
+        return;
       }
       else
       {
+        var photo = this.__iframeBody.getElementsByTagName("img")[0];
+        var src, fallback;
         if ( ! value )
         {
           var src = "assets/upload.png";
         }
+        else if ( this.getImageSize() )
+        {
+          src = this.self(arguments).LOGBUCH_USERICON_PATH + "/" + this.getImageSize() + "/" + value;
+          fallback = this.self(arguments).QCL_UPLOAD_PATH + "/" + value;
+        }  
         else
         {
-          if ( this.getImageSize() )
-          {
-            var src = "uploads/" + this.getImageSize() + "/" + value;
-          }
-          else
-          {
-            var src = "uploads/" + value;  
-          }
+          src = this.self(arguments).QCL_UPLOAD_PATH + "/" + value;
+          fallback = "assets/upload.png";
         }
         
-        qx.util.TimerManager.getInstance().start( function(){
-          var photo = this.__iframeBody.getElementsByTagName("img")[0];
-          photo.src = src;
-        }, null, this, null, 50);
+        /*
+         * fallback for invalid photos
+         */
+        photo.onerror = function(){
+          console.log("Invalid image source, falling back to " + fallback ); 
+          photo.onerror = function(){
+            console.log("Invalid fallback, resetting "); 
+            photo.onerror = null;
+            photo.src = "assets/upload.png";
+          }
+          photo.src = fallback;
+        }
+        
+        /*
+         * fix height wehn loaded
+         */
+        var imgSize = this.getImageSize();
+        photo.onload = function(){
+          photo.onload = null;
+          if ( imgSize )
+          {
+            console.log("Setting size to " +  imgSize);
+            photo.style.maxHeigth = imgSize + "px";
+            photo.style.maxWidth  = imgSize + "px";
+          }
+        }
+        console.log("Setting image source to: " + src);
+        photo.src = src;
       }
     },
     // FIXME!

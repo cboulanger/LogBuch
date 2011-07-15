@@ -102,7 +102,8 @@ qx.Class.define("logbuch.module.OrganizationForm",
        * logo
        */
       field =  new logbuch.component.ImageField( this.tr("Logo" ) ).set({
-        height    : 200
+        height    : 200, 
+        imageSize : 180
       });
       field.addToForm( form, "image" );
       formContainer.add( field  );

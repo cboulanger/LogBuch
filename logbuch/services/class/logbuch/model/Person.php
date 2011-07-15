@@ -1,10 +1,10 @@
 <?php
 /* ************************************************************************
 
-   logBuch: Die Online-Plattform fŸr Unternehmenszusammenarbeit
+   logBuch: Die Online-Plattform fï¿½r Unternehmenszusammenarbeit
 
    Copyright:
-     2010 JŸrgen Breiter (Konzeption) Christian Boulanger (Programmierung)
+     2010 Jï¿½rgen Breiter (Konzeption) Christian Boulanger (Programmierung)
 
    License:
      GPL: http://www.gnu.org/licenses/gpl.html
@@ -234,24 +234,11 @@ class logbuch_model_Person
    * Returns the icon path that is used in a visual widget
    * to represent the model record. Defaults to returning
    * a NULL value
-   * @param int|null $iconSize
-   * 		The pixel size of the icon, if any. Defaults to null (= no icon)
    * @return string
    */
-  public function icon( $iconSize=null )
+  public function icon()
   {
-  	if ( $iconSize )
-  	{
-  		return $iconSize . "/" . $this->get("imageUrl");
-  	}
-  	elseif ( $iconSize == "" )
-  	{
-  		return $this->get("image");
-  	}
-  	else
-  	{
-  		return null;
-  	}
+  	return $this->get("image");
   }
 
   public function getFullName()

@@ -324,7 +324,7 @@ Swiff.Uploader = new Class({
 
 		var fail = [], success = [];
 
-		if (successraw) {
+		if (successraw && successraw.each) {
 			successraw.each(function(data) {
 				var ret = new cls(this, data);
 				if (!ret.validate()) {
@@ -367,7 +367,7 @@ $extend(Swiff.Uploader, {
 	STATUS_STOPPED: 4,
 
 	log: function() {
-		//if (window.console && console.info) console.info.apply(console, arguments);
+		if (window.console && console.info) console.info.apply(console, arguments);
 	},
 
 	unitLabels: {

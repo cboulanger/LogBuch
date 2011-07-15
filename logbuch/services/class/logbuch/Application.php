@@ -21,8 +21,11 @@ qcl_import("logbuch_ApplicationCache");
 qcl_import("qcl_util_system_Lock");
 qcl_import("logbuch_service_Survey");
 
-define( 'LOGBUCH_UPLOADS_PATH', "../html/fancyupload/uploads/" ); // @todo streamline this with QCL_UPLOAD_PATH, we don't need two
-
+define( 'LOGBUCH_THUMBNAIL_PATH', QCL_UPLOAD_PATH . "/thumbs" ); // @todo streamline this with QCL_UPLOAD_PATH, we don't need two
+if( ! file_exists( LOGBUCH_THUMBNAIL_PATH ) )
+{
+  mkdir( LOGBUCH_THUMBNAIL_PATH, 0777 );
+}
 
 /**
  * Main application class
@@ -42,13 +45,13 @@ class logbuch_Application
    * The descriptive name of the application
    * @var string
    */
-  protected $applicationName = "logBUCH: Die Online-Plattform f�r Unternehmenszusammenarbeit";
+  protected $applicationName = "LogBuch: Die Online-Plattform für Unternehmenszusammenarbeit";
 
   /**
    * The version of the application
    * @var string
    */
-  protected $applicationVersion = "2.0-pre";
+  protected $applicationVersion = "2.0";
 
   /**
    * The path to the application ini-file

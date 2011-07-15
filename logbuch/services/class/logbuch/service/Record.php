@@ -2,9 +2,9 @@
 /* ************************************************************************
 
    logBuch: Software zur online-Dokumentation von Beratungsprozessen
-   
-   Copyright: Konzeption:     JŸrgen Breiter
-              Programmierung: Christian Boulanger 
+
+   Copyright: Konzeption:     Jï¿½rgen Breiter
+              Programmierung: Christian Boulanger
 
    Lizenz: GPL v.2
 
@@ -16,14 +16,14 @@
 qcl_import("logbuch_service_Controller");
 
 /**
- * A classical CRUD controller which also features a list item generator 
+ * A classical CRUD controller which also features a list item generator
  */
 class logbuch_service_Record
   extends logbuch_service_Controller
 {
-	
+
 	/**
-   * Class-based access control list. 
+   * Class-based access control list.
    * Determines what role has access to what kind of model data.
    * @var array
    */
@@ -43,11 +43,11 @@ class logbuch_service_Record
 
       /*
        * record-level access rules not used here since we're
-       * going to use permissions to do that. 
+       * going to use permissions to do that.
        */
       'rules'         => array()
     ),
-    
+
     array(
       /*
        * this ruleset
@@ -62,11 +62,11 @@ class logbuch_service_Record
 
       /*
        * record-level access rules not used here since we're
-       * going to use permissions to do that. 
+       * going to use permissions to do that.
        */
       'rules'         => array()
-    )    
-  );	
+    )
+  );
 
   /**
    * Constructor. Adds the ACL for this controller
@@ -74,11 +74,11 @@ class logbuch_service_Record
   function __construct()
   {
     $this->addModelAcl( $this->modelAcl );
-  }  
-  
+  }
+
 	/**
-	 * Creates a model record on the server and returns the 
-	 * UI element model of it. 
+	 * Creates a model record on the server and returns the
+	 * UI element model of it.
 	 * @param string $datasource
 	 * @param string $modelType
 	 * @return array
@@ -87,7 +87,7 @@ class logbuch_service_Record
 	{
 		$model = $this->getDatasourceModel()->getInstanceOfType( $modelType );
 		$model->create();
-			
+
 		switch( $modelType )
 		{
 			case "person":
@@ -101,7 +101,7 @@ class logbuch_service_Record
 				$model->set( "userId", $userModel->id() );
 				$model->save();
 				break;
-				
+
 			case "organization":
 				// create new group and link organization
 			  $groupModel = $this->getGroupModel();
@@ -112,10 +112,10 @@ class logbuch_service_Record
 				$groupModel->linkModel($this->getDatasourceModel());
 				break;
 		}
-		
+
 		return $model->uiElementModel("value");
 	}
-	
+
 	/**
 	 * Returns the model record as json data
 	 * @param string $datasource
@@ -129,17 +129,17 @@ class logbuch_service_Record
 		$data = $model->data( array(
 			'exclude'	=> array('created','modified','id','initialPassword','userId')
 		));
-		
+
 		if( $modelType == "person" )
 		{
-			$data['editable']  = 
-				( $this->hasPermission("logbuch.members.manage") 
+			$data['editable']  =
+				( $this->hasPermission("logbuch.members.manage")
 					or $this->getActiveUser()->id() == $model->get("userId") );
 		}
-		
+
 		return $data;
 	}
-	
+
 	/**
 	 * Updates the model record. Returns the record's UI element model.
 	 * @param string $datasource
@@ -151,65 +151,46 @@ class logbuch_service_Record
 	{
 		$model = $this->getDatasourceModel()->getInstanceOfType($modelType);
 		$model->load( $recordId );
-	
+
 		/*
 		 * manage image attachments
 		 */
 		if( $data->image )
 		{
-			$attachmentModel = $this->getAttachmentModel();
-			$oldImage = $model->getImage();
-			$newImage = $data->image;
-			$sizes = array( 16, 64, 80 );
-			
-			if( $oldImage != $newImage )
-			{
-				/*
-				 * delete the old image
-				 */
-				if ( $oldImage )
-				{
-					try 
-					{
-						$attachmentModel->findLinked( $model );
-						while( $attachmentModel->loadNext() )
-						{
-							if ( $attachmentModel->getFilename() == $oldImage )
-							{
-								$attachmentModel->delete();
-							}
-						}	
-					} 
-					catch (qcl_data_model_RecordNotFoundException $e) {}
-				}
-	
-				$newImagePath = LOGBUCH_UPLOADS_PATH . $newImage;
-				
-				if ( ! file_exists( $newImagePath ) )
-				{
-					$this->raiseError( "Image does not exist : $newImagePath" );
-				}
-				
-				/*
-				 * create thumbnails
-				 */
-				require_once 'qcl/lib/img/Image.php';
-				foreach( $sizes as $size )
-				{
-					$img = new Image( $newImagePath );
-					$img->resize($size, $size);
-					$img->save( LOGBUCH_UPLOADS_PATH . "$size/" . $newImage);
-				}
-				
-				/*
-				 * attach new image
-				 */			
-				$attachmentModel->create(array(
-					'filename' 	=> $newImage,
-					'mime'			=> $img->getMimeType()
-				));
-				$attachmentModel->linkModel( $model );
-			}
+		  $attachmentModel = $this->getAttachmentModel();
+
+		  /*
+		   * remove previous images
+		   */
+		  $alreadyLinked = false;
+		  try
+		  {
+  		  $attachmentModel->findLinked($model);
+  		  while( $attachmentModel->loadNext() )
+  		  {
+  		    if( $attachmentModel->get("filename") != $data->image )
+  		    {
+    		    $attachmentModel->unlinkModel($model);
+    		    $attachmentModel->delete();
+  		    }
+  		    else
+  		    {
+  		      $alreadyLinked = true;
+  		    }
+  		  }
+		  }
+		  catch ( qcl_data_model_RecordNotFoundException $e ){}
+
+		  /*
+		   * link new images
+		   */
+		  if( ! $alreadyLinked )
+		  {
+  			$attachmentModel->create(array(
+  				'filename' 	=> $data->image
+  			));
+  			$attachmentModel->linkModel( $model );
+		  }
 		}
 
 		/*
@@ -220,7 +201,7 @@ class logbuch_service_Record
 			/*
 			 * check necessary information
 			 */
-			$requiredFields = array( 
+			$requiredFields = array(
 				"email" 						=>  $this->tr("E-Mail"),
 				"familyName" 				=> 	$this->tr("Family name"),
 				"givenName"					=>  $this->tr("Given name" ),
@@ -236,22 +217,22 @@ class logbuch_service_Record
 					return new qcl_ui_dialog_Alert( $this->tr( "You need to enter a value in field '%s'.", $label ) );
 				}
 			}
-			
+
 			/*
-			 * update the corresponding user 
+			 * update the corresponding user
 			 */
 			$userModel = $this->getUserModel();
 			$userModel->load( $model->get("userId") );
 			$userModel->set( array(
 				'name' 	=> $data->givenName . " " . $data->familyName,
-				'email'	=> $data->email 
+				'email'	=> $data->email
 			));
 			$userModel->save();
-				
+
 			/*
 			 * A person's organization is linked through the
 			 * user/group association
-			 */			
+			 */
 			$organizationId = $data->organizationId;
 			if ( ! $organizationId )
 			{
@@ -262,9 +243,9 @@ class logbuch_service_Record
 				$orgModel = $this->getOrganizationModel();
 				$orgModel->load( $organizationId );
 				$groupModel = $this->getGroupModel();
-				
+
 				/*
-				 * unlink all group model associations and link 
+				 * unlink all group model associations and link
 				 * only the current one
 				 */
 				$userModel->unlinkAll( $groupModel );
@@ -275,7 +256,7 @@ class logbuch_service_Record
 		elseif ( $modelType == "organization" )
 		{
 			/*
-			 * update the corresponding group 
+			 * update the corresponding group
 			 */
 			$groupModel = $this->getGroupModel();
 			$groupModel->load( $model->get("groupId") );
@@ -284,7 +265,7 @@ class logbuch_service_Record
 			));
 			$groupModel->save();
 		}
-		
+
 		/*
 		 * clean data
 		 */
@@ -295,13 +276,13 @@ class logbuch_service_Record
 				$data->$key = trim( $data->$key );
 			}
 		}
-		
+
 		/*
 		 * set properties and save
 		 */
 		$model->set( $data );
 		$model->save();
-		
+
 		/*
 		 * send registration mail
 		 */
@@ -312,10 +293,10 @@ class logbuch_service_Record
 			$service->sendRegistrationEmail( $userModel, $model );
 			$model->set("initialPassword",true);
 			$model->save();
-		}		
-		
+		}
+
 		return $model->uiElementModel("value");
-	}	
+	}
 
 	/**
 	 * Deletes a model record.
@@ -329,7 +310,7 @@ class logbuch_service_Record
 	{
 		$model = $this->getDatasourceModel()->getInstanceOfType( $modelType);
 		$model->load( $recordId );
-		
+
 		switch( $modelType )
 		{
 			case "person":
@@ -343,12 +324,12 @@ class logbuch_service_Record
 				$groupModel->load( $model->get("groupId") );
 				$groupModel->delete();
 				break;
-		}		
-		
+		}
+
 		$model->delete();
 		return "OK";
 	}
-	
+
 	/**
 	 * Returns the list model of the given model type.
 	 * @param string $datasource
@@ -357,22 +338,22 @@ class logbuch_service_Record
 	 * 		The type of the model
 	 * @param array|null $where
 	 * 		An optional where query condition
-	 * @param string|null $orderBy 
+	 * @param string|null $orderBy
 	 * 		An optional order by information
-	 * @param strign $modelKey 
+	 * @param strign $modelKey
 	 * 		The key of the model data value in the json data. Defaults
 	 * 		to "value"
 	 */
 	function method_list( $datasource, $modelType, $where=null, $orderBy=null, $modelKey="value" )
 	{
 		$model = $this->getDatasourceModel()->getInstanceOfType( $modelType );
-		if ( $where ) 
+		if ( $where )
 		{
 			$model->findWhere( $where, $orderBy );
 		}
-		else 
+		else
 		{
-			$model->findAllOrderBy($orderBy);	
+			$model->findAllOrderBy($orderBy);
 		}
 		$listModel = array();
 		while( $model->loadNext() )
@@ -380,8 +361,8 @@ class logbuch_service_Record
 			$listModel[] = $model->uiElementModel( $modelKey );
 		}
 		return $listModel;
-	}	
-	
+	}
+
 	/**
 	 * Returns data for a list of persons
 	 * Enter description here ...
@@ -393,19 +374,19 @@ class logbuch_service_Record
 		if ( is_array( $identifier ) )
 		{
 			$list = implode( ",", $identifier );
-			$query = new qcl_data_db_Query(array( 
+			$query = new qcl_data_db_Query(array(
 				where 						=> "id IN($list) " // FIXME
 			));
 		}
-		elseif ( trim( $identifier ) == "alle" )  
+		elseif ( trim( $identifier ) == "alle" )
 		{
-			$query = new qcl_data_db_Query(array( 
+			$query = new qcl_data_db_Query(array(
 				where 			=> null
 			));
 		}
-		elseif ( is_string( $identifier ) ) 
+		elseif ( is_string( $identifier ) )
 		{
-			$query = new qcl_data_db_Query(array( 
+			$query = new qcl_data_db_Query(array(
 				where 			=> "familyName LIKE :search OR givenName LIKE :search",
 				parameters 	=> array( ':search' => "%$identifier%")
 			));
@@ -414,14 +395,14 @@ class logbuch_service_Record
 		{
 			throw new InvalidArgumentException("Invalid identifier");
 		}
-		
+
 		$listModel = array();
 		$model = $this->getPersonModel();
-		
+
 //		$this->getLogger()->setFilterEnabled(QCL_LOG_DB, true);
 		$model->find( $query );
 //		$this->getLogger()->setFilterEnabled(QCL_LOG_DB, false);
-		
+
 		if( $model->foundNothing() )
 		{
 			return $listModel;
@@ -435,27 +416,27 @@ class logbuch_service_Record
 		}
 		return $listModel;
 	}
-	
+
 	// FIXME
 	function method_getRoleList()
 	{
 		return array(
-			array( 'value' => "employee", 	'label' => "Mitarbeiter/in" ), // 'label' => $this->tr("Employee") ), // 
-			array( 'value' => "external", 	'label' => "Dienstleister/in" ), // 'label' => $this->tr("External employee") ), // 
+			array( 'value' => "employee", 	'label' => "Mitarbeiter/in" ), // 'label' => $this->tr("Employee") ), //
+			array( 'value' => "external", 	'label' => "Dienstleister/in" ), // 'label' => $this->tr("External employee") ), //
 			array( 'value' => "consultant", 'label' => "Berater/in" ), // 'label' => $this->tr("Consultant") ),
 			array( 'value' => "scientist", 	'label' => "Wissenschaftliche Begleitung" ) // 'label' => $this->tr("Scientific expert") )
 		);
 	}
-	
+
 	/**
 	 * Returns a list of users with their organization and online status
 	 */
 	public function method_getUserItemList()
-	{ 
+	{
     $listModel = array();
 		$personModel = $this->getPersonModel();
-		$orgModel    = $this->getOrganizationModel();  
-		
+		$orgModel    = $this->getOrganizationModel();
+
 		$personModel->findAllOrderBy( "familyName" );
 		while( $personModel->loadNext() )
 		{

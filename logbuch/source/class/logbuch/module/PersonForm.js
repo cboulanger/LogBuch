@@ -28,6 +28,12 @@ qx.Class.define("logbuch.module.PersonForm",
     qcl.application.IWidgetModule
   ],
   
+  statics :
+  {
+    QCL_UPLOAD_PATH       : "../services/attachments",
+    LOGBUCH_USERICON_PATH : "../services/attachments/thumbs"
+  },  
+  
   /*
   *****************************************************************************
      MEMBERS
@@ -174,12 +180,12 @@ qx.Class.define("logbuch.module.PersonForm",
        * FIXME create Widget for this!
        */
       var organizationField  = new logbuch.component.InputField( this.tr("Company/Organization" ), null, "selectbox" );
-      
+      var self = this.self(arguments);
       var selectBoxController1 = new qx.data.controller.List(null,organizationField.getInputControl(),"label").set({
         iconPath : "icon",
         iconOptions : {
           converter : function( value ){
-            return ( value ? "../html/fancyupload/uploads/16/" + value : null );
+            return ( value ?  self.LOGBUCH_USERICON_PATH + "/16/" + value : null );
           }
         }
       });

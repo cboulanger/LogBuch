@@ -1,10 +1,12 @@
 <?php
 /* ************************************************************************
 
-   logBuch: Die Online-Plattform fŸr Unternehmenszusammenarbeit
+   logBuch: Die Online-Plattform fÃ¼r Unternehmenszusammenarbeit
 
    Copyright:
-     2010 JŸrgen Breiter (Konzeption) Christian Boulanger (Programmierung) 
+     2010-2011
+     JÃ¼rgen Breiter (Konzeption)
+     Christian Boulanger (Programmierung)
 
    License:
      GPL: http://www.gnu.org/licenses/gpl.html
@@ -17,7 +19,7 @@
 qcl_import( "qcl_data_model_db_ActiveRecord" );
 
 /**
- * 
+ *
  */
 class logbuch_model_Attachment
   extends qcl_data_model_db_ActiveRecord
@@ -34,11 +36,11 @@ class logbuch_model_Attachment
 	 * @var string
 	 */
   protected $tableName = "data_Attachment";
-  
+
   /**
    * The foreign key of this model
    */
-  protected $foreignKey = "AttachmentId";  
+  protected $foreignKey = "AttachmentId";
 
   /**
    * model properties
@@ -51,8 +53,8 @@ class logbuch_model_Attachment
     'filename' => array (
       'check' => 'string',
       'sqltype' => 'varchar(50)'
-    ),  	
-      
+    ),
+
     /**
      * Enter description here ...
      */
@@ -60,12 +62,12 @@ class logbuch_model_Attachment
       'check' => 'string',
       'sqltype' => 'varchar(30)'
     ),
-    
+
     'hash' => array(
       'check' => 'string',
       'sqltype' => 'varchar(32)'
     ),
-    
+
     'size' => array(
       'check' => 'integer',
       'sqltype' => 'int(11)'
@@ -87,8 +89,19 @@ class logbuch_model_Attachment
     'Attachment_Entry' => array(
       'type'        => QCL_RELATIONS_HAS_ONE,
       'target'      => array( 'class'    => "logbuch_model_Entry" )
-    )  
+    )
   );
+
+  /**
+   * The size in pixels of the thumbnails to create
+   */
+  public $thumbnailSizes = array( 16, 64, 80);
+
+  /**
+   * The container directory of the attachments
+   * @var unknown_type
+   */
+  public $container = QCL_UPLOAD_PATH;
 
   /*
   *****************************************************************************
@@ -101,7 +114,6 @@ class logbuch_model_Attachment
     parent::__construct( $datasourceModel );
     $this->addProperties( $this->properties );
     $this->addRelations( $this->relations, __CLASS__ );
-
   }
 
   /*
@@ -109,29 +121,75 @@ class logbuch_model_Attachment
      API
   *****************************************************************************
   */
-  
+
+  /**
+   * Returns the path of the attachment file
+   * @param string $name If given, return the path of the file
+   * with that name, otherwise of the current record
+   */
   public function filepath($name=null)
   {
     if ( ! $name )
     {
-      $name = $this->get("hash");
+      $names = array( $this->get("hash"), $this->get("filename") );
+      foreach( $names as $name )
+      {
+        if ( file_exists( $this->container . "/$name" ) )
+        {
+          return $this->container . "/$name";
+        }
+      }
     }
-    return QCL_UPLOAD_PATH . "/$name";
+    return $this->container . "/$name";
   }
-  
+
+  /**
+   * Return the path to the thumbnail of the attachment
+   * linked to the current record
+   * @param string|number $size
+   */
+  public function thumbnailPath($size)
+  {
+    return LOGBUCH_THUMBNAIL_PATH . "/$size/" .
+      $this->getHash() . substr( $this->get("filename"), -4 );
+  }
+
   /**
    * @override
    * @see qcl_data_model_AbstractActiveRecord::create()
    */
   public function create($data)
   {
+
+
+
+
     if( ! $data["size"] )
     {
-      $file = $this->filepath( $data['hash'] );
+      if ( isset( $data['hash'] ) )
+      {
+        $file = $this->filepath( $data['hash'] );
+      }
+      else
+      {
+        $file = $this->filepath( $data['filename'] );
+        $data['hash'] = substr( $data['filename'], 0, 32 );
+      }
       $data["size"] = filesize( $file );
       $data['mime'] = qcl_get_content_type( $data['filename'] );
     }
-    return parent::create($data);
+
+    $id = parent::create($data);
+
+    /*
+     * create thumbnails from images
+     */
+    if ( substr( $data['mime'], 0, 6 ) == "image/" )
+    {
+      $this->createThumbnails();
+    }
+
+    return $id;
   }
 
   /**
@@ -140,22 +198,109 @@ class logbuch_model_Attachment
    */
   public function delete()
   {
-    unlink( $this->filepath() );
+    $path = $this->filepath();
+    if( ! file_exists($path) )
+    {
+      $this->warn("Attachment '$path' does not exist. Not deleting.");
+    }
+    elseif( ! is_file( $path ) )
+    {
+      $this->warn("Attachment '$path' is not a file. Not deleting.");
+    }
+    elseif ( ! is_writable($path) )
+    {
+      $this->warn("Attachment '$path' cannot be deleted. Check file permissions.");
+    }
+    else
+    {
+      unlink( $path );
+    }
+
+    /*
+     * create thumbnails from images
+     */
+    if ( substr( $this->get('mime'), 0, 6 ) == "image/" )
+    {
+      $this->deleteThumbnails();
+    }
+
     return parent::delete();
   }
-  
+
+  /**
+   * Create thumbnails from images
+   */
+  public function createThumbnails()
+  {
+    require_once 'qcl/lib/img/Image.php';
+    function error_handler( $errno, $errstr, $file, $line )
+    {
+      qcl_log_Logger::getInstance()->debug( "$errstr in $file, $line", __CLASS__, __LINE__ );
+    }
+	  //set_error_handler("error_handler");
+		foreach( $this->thumbnailSizes as $size )
+		{
+		  $this->debug( $this->filepath(), __CLASS__, __LINE__ );
+			$img = new Image( $this->filepath() );
+
+			// resize
+			$img->resize($size, $size);
+
+			// save
+			$path = $this->thumbnailPath($size);
+			$dir  = dirname( $path );
+			if( ! file_exists($dir) )
+			{
+			  $this->raiseError( "Please create thumbnail directory '$dir'!" );
+			}
+		  if( ! is_writable($dir) )
+			{
+			  $this->raiseError( "Thumbnail directory '$dir' is not writable!" );
+			}
+			$this->debug( "$path", __CLASS__, __LINE__ );
+			$img->save( $path );
+		}
+  }
+
+  /**
+   * Delete the thumbnails that belong to this attachment
+   */
   public function deleteThumbnails()
   {
-  	// FIXME!!
-  	$this->checkLoaded();
-  	$sizes = array( 16, 64, 80 );
-  	$filename =  $this->get("filename");
-		@unlink( LOGBUCH_UPLOADS_PATH . $filename );
-		foreach( $sizes as $size )
+		foreach( $this->thumbnailSizes as $size )
 		{
-			@unlink( LOGBUCH_UPLOADS_PATH . "$size/" . $filename );	
+			$path = $this->thumbnailPath($size);
+			if( ! file_exists( $path ) )
+			{
+			  $this->warn("Cannot delete thumbnail '$path' - doesn't exist");
+			}
+			else
+			{
+			  unlink( $path );
+			}
 		}
-  	parent::delete();
+  }
+
+  public function cleanup()
+  {
+    $files = glob( $this->container . "/*" );
+    foreach( $files as $file )
+    {
+
+      $filename = basename($file);
+      $path = $this->container . "/$filename";
+      if ( ! is_file($path) ) continue;
+
+      $this->findWhere(array( 'hash' => $filename ) );
+      if( $this->foundSomething() ) continue;
+      $this->findWhere(array( 'filename' => $filename ) );
+      if( $this->foundSomething() ) continue;
+
+      if( ! @unlink( $path ) )
+      {
+        $this->warn( "Could not delete orphaned file '$path'" );
+      }
+    }
   }
 }
 ?>

@@ -94,6 +94,13 @@ class logbuch_service_Setup
   		qcl_access_model_Session::getInstance()->cleanup();
 
   		/*
+  		 * purge non-linked attachments
+  		 */
+  		qcl_import("logbuch_service_Controller");
+  		$controller = new logbuch_service_Controller;
+  		$controller->getAttachmentModel()->cleanup();
+
+  		/*
   		 * we're done
   		 */
   		return;

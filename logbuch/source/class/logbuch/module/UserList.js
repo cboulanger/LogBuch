@@ -27,6 +27,12 @@ qx.Class.define("logbuch.module.UserList",
     qcl.application.IModule, 
     qcl.application.IWidgetModule
   ],
+  
+  statics :
+  {
+    QCL_UPLOAD_PATH       : "../services/attachments",
+    LOGBUCH_USERICON_PATH : "../services/attachments/thumbs"
+  },  
 
   /*
   *****************************************************************************
@@ -80,12 +86,12 @@ qx.Class.define("logbuch.module.UserList",
 	       * company / organization
 	       */
 	      var organizationField  = new logbuch.component.InputField( this.tr("Company/Organization" ), null, "selectbox" );
-	      
+	      var self = this.self(arguments);
 	      var selectBoxController1 = new qx.data.controller.List(null,organizationField.getInputControl(),"label").set({
 	        iconPath : "icon",
 	        iconOptions : {
 	          converter : function( value ){
-	            return ( value ? "../html/fancyupload/uploads/16/" + value : null );
+	            return ( value ? self.LOGBUCH_USERICON_PATH + "/16/" + value : null );
 	          }
 	        }
 	      });
@@ -147,6 +153,7 @@ qx.Class.define("logbuch.module.UserList",
       /*
        * user list
        */
+      var self = this.self(arguments);
       var list = this.__list = new qx.ui.list.List().set({
         selectionMode : "single",
         itemHeight : 70,
@@ -155,7 +162,7 @@ qx.Class.define("logbuch.module.UserList",
         iconOptions : {
           converter : function(value){
             if ( value ){
-              return "../html/fancyupload/uploads/64/" + value; //FIXME 
+              return self.LOGBUCH_USERICON_PATH + "/64/" + value;
             }
             return  "../html/fancyupload/assets/person.jpg";
           }
@@ -389,8 +396,5 @@ qx.Class.define("logbuch.module.UserList",
     */
     
     dummy : null
-
-  
   }
 });
-

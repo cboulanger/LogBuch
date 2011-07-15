@@ -22,6 +22,13 @@
 qx.Class.define("logbuch.module.OrganizationList",
 {
   extend : logbuch.module.UserList,
+  
+  //
+  statics :
+  {
+    QCL_UPLOAD_PATH       : "../services/attachments",
+    LOGBUCH_USERICON_PATH : "../services/attachments/thumbs"
+  },
 
 
   /*
