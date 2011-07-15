@@ -1,10 +1,10 @@
 <?php
 /* ************************************************************************
 
-   logBuch: Die Online-Plattform fŸr Unternehmenszusammenarbeit
+   logBuch: Die Online-Plattform fÃ¼r Unternehmenszusammenarbeit
 
    Copyright:
-     2010 JŸrgen Breiter (Konzeption) Christian Boulanger (Programmierung) 
+     2010 JÃ¼rgen Breiter (Konzeption) Christian Boulanger (Programmierung)
 
    License:
      GPL: http://www.gnu.org/licenses/gpl.html
@@ -45,7 +45,7 @@ class logbuch_service_Setup
       "custom"    => false,
       "default"   => "LogBuch",
       "final"     => false
-    ),    
+    ),
     "application.logo" => array(
       "type"      => "string",
       "custom"    => false,
@@ -57,8 +57,6 @@ class logbuch_service_Setup
 
   public function method_setup()
   {
-    
-    
     /*
      * do the setup
      */
@@ -76,16 +74,29 @@ class logbuch_service_Setup
     $lock = new qcl_util_system_Lock("logbuch_setup_lock");
 
     /*
-     * if we're already set up, release any lock that might exist
-     * and return
+     * if we're already set up...
      */
     if ( $cache->get("setup") )
     {
+
+      /*
+       * release any lock that might exist
+       */
       if( $lock->isLocked() )
       {
         $lock->release();
       }
-      return;
+
+      /*
+       * purge expired users/sessions
+       */
+  		$this->getApplication()->getAccessController()->getUserModel()->cleanup();
+  		qcl_access_model_Session::getInstance()->cleanup();
+
+  		/*
+  		 * we're done
+  		 */
+  		return;
     }
 
     /*
@@ -112,6 +123,7 @@ class logbuch_service_Setup
       $lock->release();
       throw $e;
     }
+
   }
 
   /**
@@ -139,7 +151,7 @@ class logbuch_service_Setup
     if ( ! $cache->get("schemas_registered") )
     {
       $this->log("Registering datasource schemas ....", QCL_LOG_SETUP );
-      
+
       qcl_import( "logbuch_model_ProjectDatasource");
       $model = logbuch_model_ProjectDatasource::getInstance();
       try
@@ -150,12 +162,12 @@ class logbuch_service_Setup
 
       $cache->set( "schemas_registered", true );
     }
-    
+
     /*
      * create initial logbuch datasource
      */
     $def_ds_name = $this->getIniValue("database.default_datasource_name");
-  	try 
+  	try
 		{
 			$datasourceModel = $this->getDatasourceModel( $def_ds_name );
 		}
@@ -168,7 +180,7 @@ class logbuch_service_Setup
 		  }
 		  catch( qcl_data_model_RecordExistsException $e ){}
 		  $datasourceModel = $this->getDatasourceModel( $def_ds_name );
-		}    
+		}
 
     /*
      * remote and local file storage datasources

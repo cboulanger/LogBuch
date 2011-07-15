@@ -616,14 +616,19 @@ class logbuch_service_Entry
 	      $itemData['text'] .= trim( $node->asXML() );
 	    }
 		}
-		if( strlen( $itemData['text'] ) == 0 or strlen( $itemData['subject'] ) > 255 )
+
+		/*
+		 * fix broken editor content
+		 */
+		if( strlen( trim( strip_tags( $itemData['text'] ) ) ) == 0
+		    or strlen( $itemData['subject'] ) > 255 )
 		{
 		  $p = strpos( $itemData['subject'], "<br" );
-		  if( $p === false and strlen( $itemData['subject'] ) > 255 ) 
+		  if( $p === false and strlen( $itemData['subject'] ) > 255 )
 		  {
 		    $p = strpos( $itemData['subject'], " ", 200 );
 		  }
-		  if( $p !== false ) 
+		  if( $p !== false )
 		  {
 		    $itemData['text']    = substr( $itemData['subject'], $p ) . " " . $itemData['text'];
 		    $itemData['subject'] = substr( $itemData['subject'], 0, $p ) ;
@@ -788,9 +793,9 @@ class logbuch_service_Entry
     $userName      = $this->getActiveUserPerson()->getFullName();
     $entrySubject  = $entryModel->get("subject");
     $entryId       = $entryModel->id();
-    
+
     $body = "Sehr geehrte/r LogBuch-Teilnehmer/in,\n\n";
-    
+
     switch( $action )
     {
       case "create":
@@ -804,7 +809,7 @@ class logbuch_service_Entry
         $subject = "Logbuch-Eintrag aktualisiert: $entrySubject";
         $body .= "$userName hat den Eintrag mit dem Betreff '$entrySubject' aktualisiert.\n\n";
         break;
-  
+
       case "reply":
         /*
          * load the original entry
@@ -822,30 +827,30 @@ class logbuch_service_Entry
           $entryModel->load( $entryId );
           return false;
         }
-        
+
         /*
          * if only the author should be notified,
          * overwrite acl data
          */
         if( $entryModel->get("notify_reply") )
         {
-          $body .= "$userName hat auf Ihren Eintrag '$entrySubject' geantwortet.\n\n";          
+          $body .= "$userName hat auf Ihren Eintrag '$entrySubject' geantwortet.\n\n";
           $aclData= array( 'moreMembers' => array( $entryModel->get("personId") ) );
           $entryModel->load( $entryId );
-          break; 
+          break;
         }
-        
+
         /*
          * notify all recipients
          */
         elseif ( $entryModel->get("notify_reply_all") )
         {
           $originalAuthor = $entryModel->authorName();
-          $body .= "$userName hat auf den Eintrag '$entrySubject' von $originalAuthor geantwortet.\n\n";          
+          $body .= "$userName hat auf den Eintrag '$entrySubject' von $originalAuthor geantwortet.\n\n";
           $entryModel->load( $entryId );
           break;
         }
-        
+
         /*
          * no notification
          */
@@ -854,7 +859,7 @@ class logbuch_service_Entry
           $entryModel->load( $entryId );
           return false;
         }
-                
+
       default:
         throw new InvalidArgumentException( "Invalid action '$action'" );
     }
