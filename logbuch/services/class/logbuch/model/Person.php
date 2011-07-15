@@ -17,7 +17,7 @@
 qcl_import( "qcl_data_model_db_ActiveRecord" );
 
 /**
- *
+ * @todo: remove user when all persons connected with this user are gone.
  */
 class logbuch_model_Person
   extends qcl_data_model_db_ActiveRecord
@@ -98,7 +98,8 @@ class logbuch_model_Person
      */
     'organizationId' => array (
       'check' 			=> 'integer',
-      'sqltype' 	  => 'int(11)'
+      'sqltype' 	  => 'int(11)',
+      'nullable'		=> true
     ),
 
 		/**
@@ -307,6 +308,20 @@ class logbuch_model_Person
 			"consultant" 	=> "Berater/in", // 'label' => $this->tr("Consultant") ),
 			"scientist" 	=> "Wissenschaftliche Begleitung"  // 'label' => $this->tr("Scientific expert") )
 		);
+	}
+
+	public function cleanup()
+	{
+	  $orgModel = $this->datasourceModel()->getOrganizationModel();
+	  $this->findAll();
+	  while( $this->loadNext() )
+	  {
+	    $orgModel->findWhere(array( 'id' => $this->get("organizationId" ) ) );
+      if( $orgModel->foundNothing() )
+      {
+        $this->set("organizationId",null)->save();
+      }
+	  }
 	}
 }
 ?>

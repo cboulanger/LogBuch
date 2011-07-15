@@ -160,10 +160,6 @@ class logbuch_model_Attachment
    */
   public function create($data)
   {
-
-
-
-
     if( ! $data["size"] )
     {
       if ( isset( $data['hash'] ) )
@@ -190,6 +186,19 @@ class logbuch_model_Attachment
     }
 
     return $id;
+  }
+
+  /**
+   * @overridden
+   * @see qcl_data_model_AbstractActiveRecord::save()
+   */
+  public function save()
+  {
+    if ( substr( $this->get("mime"), 0, 6 ) == "image/" )
+    {
+      $this->createThumbnails();
+    }
+    return parent::save();
   }
 
   /**
@@ -233,21 +242,12 @@ class logbuch_model_Attachment
   public function createThumbnails()
   {
     require_once 'qcl/lib/img/Image.php';
-    function error_handler( $errno, $errstr, $file, $line )
-    {
-      qcl_log_Logger::getInstance()->debug( "$errstr in $file, $line", __CLASS__, __LINE__ );
-    }
-	  //set_error_handler("error_handler");
 		foreach( $this->thumbnailSizes as $size )
 		{
-		  $this->debug( $this->filepath(), __CLASS__, __LINE__ );
-			$img = new Image( $this->filepath() );
-
-			// resize
-			$img->resize($size, $size);
-
-			// save
-			$path = $this->thumbnailPath($size);
+		  /*
+		   * check path and containing directory
+		   */
+		  $path = $this->thumbnailPath($size);
 			$dir  = dirname( $path );
 			if( ! file_exists($dir) )
 			{
@@ -257,8 +257,16 @@ class logbuch_model_Attachment
 			{
 			  $this->raiseError( "Thumbnail directory '$dir' is not writable!" );
 			}
-			$this->debug( "$path", __CLASS__, __LINE__ );
-			$img->save( $path );
+
+			/*
+			 * create if it doesn't already exist
+			 */
+		  if( ! file_exists( $path ) )
+		  {
+  			$img = new Image( $this->filepath() );
+  			$img->resize($size, $size);
+  			$img->save( $path );
+		  }
 		}
   }
 
@@ -281,6 +289,10 @@ class logbuch_model_Attachment
 		}
   }
 
+  /**
+   * Purges orphaned files that belong to no attachment
+   * @see qcl_data_model_AbstractActiveRecord::cleanup()
+   */
   public function cleanup()
   {
     $files = glob( $this->container . "/*" );

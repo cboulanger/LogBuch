@@ -100,6 +100,11 @@ class logbuch_service_Setup
   		$controller = new logbuch_service_Controller;
   		$controller->getAttachmentModel()->cleanup();
 
+			/*
+  		 * clean up orphaned persons
+  		 */
+  		$controller->getPersonModel()->cleanup();
+
   		/*
   		 * we're done
   		 */

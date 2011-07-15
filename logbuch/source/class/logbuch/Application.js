@@ -686,7 +686,7 @@ qx.Class.define("logbuch.Application",
      */
     close : function()
     {  
-      if( ! core.getActiveUser().isAnonymous() )
+      if( core.getActiveUser() && ! core.getActiveUser().isAnonymous() )
       {
         return "Sie sind noch angemeldet. Wenn Sie auf OK klicken, schließen Sie das Fenster, ohne sich abzumelden. Bitte klicken Sie auf 'Abbrechen' und melden sich zuerst ab.";
       }

@@ -86,7 +86,7 @@ qx.Class.define("logbuch.component.ImageField",
             var body = control.getBody();
             qx.bom.element.Style.setStyles(body, font.getStyles());
             this.__iframeBody = body;
-            body.__imageField = this;
+            body.imageField = this;
             var img = body.getElementsByTagName("img")[0];
             img.src = "assets/upload.png";
             img.onerror = function(){
@@ -152,9 +152,9 @@ qx.Class.define("logbuch.component.ImageField",
          * fallback for invalid photos
          */
         photo.onerror = function(){
-          console.log("Invalid image source, falling back to " + fallback ); 
+          //console.log("Invalid image source, falling back to " + fallback ); 
           photo.onerror = function(){
-            console.log("Invalid fallback, resetting "); 
+            //console.log("Invalid fallback, resetting "); 
             photo.onerror = null;
             photo.src = "assets/upload.png";
           }
@@ -169,12 +169,12 @@ qx.Class.define("logbuch.component.ImageField",
           photo.onload = null;
           if ( imgSize )
           {
-            console.log("Setting size to " +  imgSize);
+            //console.log("Setting size to " +  imgSize);
             photo.style.maxHeigth = imgSize + "px";
             photo.style.maxWidth  = imgSize + "px";
           }
         }
-        console.log("Setting image source to: " + src);
+        //console.log("Setting image source to: " + src);
         photo.src = src;
       }
     },
