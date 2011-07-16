@@ -181,7 +181,7 @@ class logbuch_service_Survey
             'label'   => "Leseberechtigte<br>(Nachnamen,<br>kommagetrennt)",
             'type'    => "textfield",
              'value'	=> implode(",", $names)
-          ),          
+          ),
         );
         return new qcl_ui_dialog_Form(
           "<h3>Fragebogen bearbeiten</h3>",
@@ -215,9 +215,9 @@ class logbuch_service_Survey
     $templateModel = $this->getDatasourceModel()->getInstanceOfType("emailTemplate");
     $personModel	 = $this->getPersonModel();
     $warning = "";
-    
+
     $templateModel->load($id);
-    
+
     if ( trim($result->names) )
     {
     	$moreMembers = array();
@@ -231,16 +231,16 @@ class logbuch_service_Survey
           $moreMembers[] = $personModel->id();
     		}
     		catch( qcl_data_model_RecordNotFoundException $e )
-    		{		 
+    		{
     			$warning .= ( empty($warning) ? "Die folgenden Nachnamen konnten nicht zugeordnet werden:" : ", ") . $name;
     		}
     	}
     	$templateModel->set( "moreMembers", $moreMembers );
     }
-    
+
     unset($result->names);
     unset($result->frequencylabel);
-    
+
     $templateModel->set( $result );
     //$templateModel->set("personId", $this->getActiveUserPerson()->id() );
     $templateModel->save();
@@ -305,7 +305,7 @@ class logbuch_service_Survey
       'text'		    	=> nl2br($text),
       'notify_reply'	=> true
     ));
-    
+
     /*
      * the entry has the same acl as the template
      */
@@ -367,6 +367,7 @@ class logbuch_service_Survey
    * Handle a mail message received from the local mailhost, handling authentication
    *
    * @param string $mail
+   * @todo this handles not only survey responses -> move into own controller?
    */
   public function handleReceivedEmail( $mail )
   {
@@ -416,28 +417,27 @@ class logbuch_service_Survey
        */
       preg_match("/\[LogBuch\#([a-zA-Z0-9]+)\]/",$subject,$matches );
       $hash = $matches[1];
-      if( ! $hash )
+      $isSurveyResponse = false;
+      if( $hash )
       {
-        $this->warn("Ignoring email from valid sender ($email), but without valid survery id.");
-        continue;
-      }
+        /*
+         * find the corresponding survey
+         */
+        try
+        {
+          $surveyModel->loadWhere(array(
+            'hash' => $hash
+          ));
+        }
+        catch ( qcl_data_model_RecordNotFoundException $e)
+        {
+          $this->warn("Ignoring email from valid sender ($email), but with invalid survery id.");
+          continue;
+        }
 
-      /*
-       * find the corresponding survey
-       */
-      try
-      {
-        $surveyModel->loadWhere(array(
-          'hash' => $hash
-        ));
+        $this->log( "Found valid survey id #$hash" );
+        $isSurveyResponse = true;
       }
-      catch ( qcl_data_model_RecordNotFoundException $e)
-      {
-        $this->warn("Ignoring email from valid sender ($email), but with invalid survery id.");
-        continue;
-      }
-
-      $this->log( "Found valid survey id #$hash" );
 
       /*
        * create temporary access for user from email sender, using
@@ -449,23 +449,26 @@ class logbuch_service_Survey
 
 
       /*
-       * check if parent entry exists
+       * if survey, check if parent entry exists
        */
-      $parentEntryId  = $surveyModel->get("entryId");
-      try
+      if ( $isSurveyResponse )
       {
-        $entryModel->load($parentEntryId);
-      }
-      catch( qcl_data_model_RecordNotFoundException $e )
-      {
-        $this->warn("Cannot process E-mail. Entry connected to survey (#$parentEntryId) does not exist.");
-        continue;
-      }
+        $parentEntryId  = $surveyModel->get("entryId");
+        try
+        {
+          $entryModel->load($parentEntryId);
+        }
+        catch( qcl_data_model_RecordNotFoundException $e )
+        {
+          $this->warn("Cannot process E-mail. Entry connected to survey (#$parentEntryId) does not exist.");
+          continue;
+        }
 
-      /*
-       * get values from paretn entry
-       */
-      $acl = $entryModel->aclData();
+        /*
+         * get values from parenn entry
+         */
+        $acl = $entryModel->aclData();
+      }
 
      	/*
        * analyze parts of the message for the text-only response
@@ -509,17 +512,20 @@ class logbuch_service_Survey
       }
 
       /*
-       * extract the "real" response
+       * if survey response, extract the "real" response
        */
-      preg_match("/\[\<\](.+)\[\>\]/s", $text, $matches);
-      if( $matches[1] )
+      if( $isSurveyResponse )
       {
-        $this->log("Found marked content.");
-        $text = $matches[1];
-      }
-      else
-      {
-        $this->log("No marked content found, using whole message text.");
+        preg_match("/\[\<\](.+)\[\>\]/s", $text, $matches);
+        if( $matches[1] )
+        {
+          $this->log("Found marked content.");
+          $text = $matches[1];
+        }
+        else
+        {
+          $this->log("No marked content found, using whole message text.");
+        }
       }
 
       /*
@@ -528,18 +534,38 @@ class logbuch_service_Survey
       $html = nl2br( $text );
 
       /*
-       * create a response entry with same acl as entry
-       * that has been responded to.
+       * if survey response, create a response entry
        */
+      if( $isSurveyResponse )
+      {
+        $reponseEntryId = $entryModel->create(array(
+          'personId' 			=> $personModel->id(),
+          'parentEntryId' => $parentEntryId,
+          'subject'       => substr( $subject, 0, strlen($subject)-16 ),
+          'text'		      => $html,
+          'notify_reply'  => true
+        ));
+      }
 
-      $reponseEntryId = $entryModel->create(array(
-        'personId' 			=> $personModel->id(),
-        'parentEntryId' => $parentEntryId,
-        'subject'       => substr( $subject, 0, strlen($subject)-16 ),
-        'text'		      => $html,
-        'notify_reply'  => true
-        
-      ));
+      /*
+       * otherwise, create a private message
+       */
+      else
+      {
+        $reponseEntryId = $entryModel->create(array(
+          'personId' 			=> $personModel->id(),
+          'subject'       => $subject,
+          'text'		      => $html,
+          'notify_reply'  => true
+        ));
+        $acl = array( 'moreMembers' => array( $personModel->id() ) );
+      }
+
+      /*
+       * set acl
+       */
+      $entryModel->set($acl)->save();
+
 
       /*
        * add categories
@@ -556,36 +582,41 @@ class logbuch_service_Survey
           }
         }
       }
-      
+
       /*
        * add attachments
        */
       if( count( $attachments ) )
       {
-        $this->log( "Linking attachment to entry" );           	
-        $attachmentModel = $this->getAttachmentModel();       
+        $this->log( "Linking attachment to entry" );
+        $attachmentModel = $this->getAttachmentModel();
         foreach( $attachments as $att )
         {
 	        $attachmentModel->create(array(
 	        	'filename' => $att['filename'],
 	         	'hash'		 => $att['hash']
 	        ));
-	        $attachmentModel->linkModel($entryModel);      
+	        $attachmentModel->linkModel($entryModel);
 				}
       }
 
-      /*
-       * save with
-       */
-      $entryModel->set($acl)->save();
 
-      $this->log( "Created new entry #$reponseEntryId in response to #$parentEntryId" );
+      if ( $isSurveyResponse )
+      {
+        $this->log( "Created new entry #$reponseEntryId in response to survey #$parentEntryId." );
+      }
+      else
+      {
+        $this->log( "Created new entry #$reponseEntryId." );
+      }
 
       $data = $entryController->_getEntryData($entryModel);
   		$data['editable'] = false; // @todo should be editable for owner
   		$data['deletable'] = false;
-      $this->broadcastClientMessage("entry.created", $data, false );
-      
+  		$data['senderId'] = $this->getActiveUserPerson()->id();
+	    $this->getMessageBus()->broadcast( "entry.created", $data, $acl, false );
+
+
       /*
        * send email if neccessary
        * FIXME doesn't work.

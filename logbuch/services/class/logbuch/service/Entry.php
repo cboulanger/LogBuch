@@ -701,10 +701,10 @@ class logbuch_service_Entry
     $new     = $data->categories;
 	  $added   = array_diff( $new, $old );
 	  $deleted = array_diff( $old, $new );
-$this->debug( array(
-  'old'	=> $old, 'new' => $new,
-	'added'=>$added,'deleted'=>$deleted
-), __CLASS__, __LINE__ );
+    //$this->debug( array( //FIXME
+    //  'old'	=> $old, 'new' => $new,
+    //	'added'=>$added,'deleted'=>$deleted
+    //), __CLASS__, __LINE__ );
 		foreach( $added as $category )
 		{
 		  if( ! $category ) continue;
