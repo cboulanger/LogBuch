@@ -823,7 +823,7 @@ function createEntryBody( entry )
   var content="";
   content+= "<div class='entry-headline'>";
   content+= entry.subject + "</div>";
-  
+  content+= "<table width='100%'><tr><td>";
   if (entry.dateStart )
   {
     content+= "<div class='entry-event'><b>Zeit:</b> " + 
@@ -862,7 +862,20 @@ function createEntryBody( entry )
   {
     content+=createAccessHtml(entry);
   }
+  content+="</td>";
   
+  /*
+   * images
+   */
+  if( entry.authorImage )
+  {
+    content+="<td style='width:64px'><img src='" + entry.authorImage + "'/><td>";
+  }
+  if( entry.organizationLogo )
+  {
+    content+="<td style='width:64px'><img src='" + entry.organizationLogo + "'/><td>";
+  }
+  content+="</td></tr></table>";
   content+="<div class='entry-text'>" + entry.text + "</div>";
   return content;
 }

@@ -424,7 +424,7 @@ class logbuch_service_Entry
 		/*
 		 * number of attachments
 		 */
-		$attModel = $datasourceModel->getInstanceOfType("attachment");
+		$attModel = $this->getAttachmentModel();
 		$attachments = $entryModel->countLinksWithModel($attModel);
 
 		/*
@@ -478,6 +478,22 @@ class logbuch_service_Entry
 		  $data['replyToId'] = $parentEntryModel->id();
       $data['replyToSubject'] = $parentEntryModel->get("subject") ;
       $data['replyToAuthor'] =  $parentEntryModel->authorName();
+		}
+
+		/*
+		 * images
+		 */
+		$personModel->load( $entryModel->get("personId") );
+		$path = "../../services/" . LOGBUCH_THUMBNAIL_PATH;
+		if( $authorImage = $personModel->get("image") )
+		{
+		  $data['authorImage'] =  $path . "/64/" . $authorImage;
+		}
+    $orgModel = $this->getOrganizationModel();
+		$orgModel->load( $personModel->get("organizationId") );
+		if( $organizationLogo = $orgModel->get("image") )
+		{
+		  $data['organizationLogo'] = $path . "/64/" . $organizationLogo;
 		}
     return $data;
 	}
