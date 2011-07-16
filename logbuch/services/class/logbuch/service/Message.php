@@ -273,14 +273,14 @@ class logbuch_service_Message
 			$access = true;
 		}
 
-		$this->log( $this->debug( sprintf(
+		$this->log( sprintf(
     	"\n%s => user: %s, author: %s, recipient: %s, access: %s",
     	$data['subject'],
     	$activeUserPerson->getFullName(),
     	$sender->getFullName(),
     	$recipient->getFullName(),
     	($access === true ? "yes" : "no" )
-    , __CLASS__, __LINE__ ) ) );
+    , __CLASS__, __LINE__ ) );
 
   	return $access;
   }

@@ -1026,7 +1026,8 @@ function editEntry(id)
       dijit.byId("editorStandByOverlay").hide();
       dijit.byId("cancelEntryButton").set("disabled",false);
       handleMessages(response);
-      if( response && response.result ) {
+      if( response && response.result ) 
+      {
         window.__populatingForms = true;
         window.setTimeout(function(){
             window.__populatingForms = false;
@@ -1036,10 +1037,21 @@ function editEntry(id)
         var entry = response.result.data;
         ed.setValue("<div class='entry-headline'>" + entry.subject + "</div>" + entry.text);
         ed.entryId = entry.id;
+        
+        /*
+         * set categories
+         */
         dojo.query('input[name="categories"]').forEach(function(node){
           var widget = dijit.getEnclosingWidget(node);
-          widget.set("value", dojo.indexOf( entry.categories, node.value ) != -1 );
+          var value = node.value;
+          var isChecked = dojo.indexOf( entry.categories, value ) != -1;
+          widget.set("value", isChecked );
+          
         });
+        
+        /*
+         * set access
+         */
         dojo.forEach( dojo.query('input[name="access"]'), function(node){
           var widget = dijit.getEnclosingWidget(node);
           if( node.value == "moreMembers" )
@@ -1058,6 +1070,10 @@ function editEntry(id)
              widget.set("value", entry.acl[node.value] );
            }
         });  
+        
+        /*
+         * set time
+         */
         if( entry.timestampStart )
         {
           dijit.byId("entry-date").set("value",new Date( entry.timestampStart ) );
@@ -1336,10 +1352,16 @@ function resetEditor()
 {
   var ed = dijit.byId("entryEditor");
   ed.setValue("<div class='dummyText entry-headline'>Zum Eingeben der Überschrift hier klicken</div><p class='dummyText entry-body'>Zum Eingeben des Haupttextes hier klicken.</p>");
+  
+  /*
+   * reset categories
+   */
   dojo.forEach( dojo.query('input[id^="c-"]'), function(node){
     var widget = dijit.getEnclosingWidget(node);
     if( widget.get("value")) widget.set("value",false);
   });
+  
+  
   window.setTimeout(function(){
     dojo.byId("entryInformationMessage").innerHTML= 
       "Bitte geben Sie oben einen LogBuch-Eintrag ein. "+
@@ -1372,13 +1394,22 @@ function resetEditor()
   dijit.byId("rightCol").domNode.style.backgroundColor = "transparent";
   dijit.byId("editorStandByOverlay").hide();
   
-  // enable checkboxes
+  /*
+   * reset access
+   */
   dojo.forEach( dojo.query('input[name="access"]'), function(node){
     var wgt = dijit.getEnclosingWidget(node);
     wgt.set("readOnly",false);
+    wgt.set("value",false);
   });  
   dojo.byId("access-readonly-explanation").style.display="none";
-
+  var store = dijit.byId("chooseUsersGrid").store;
+  store.fetch({
+    onItem: function(item){
+      store.setValue( item, "selected", false );    
+    }
+  });
+  
   // attachments
   ed.attachmentIds = [];
   dojo.byId("attachment_count").innerHTML = "0";
@@ -1450,16 +1481,19 @@ function updateMessageData( widget )
   var access      = dijit.byId("entryAccess").get("value").access;
   var notify      = dijit.byId("entryNotifications").get("value").notify;
   var data = {
-    'categories'    : dijit.byId("entryCategories").get("value").categories
-                      .concat(dijit.byId("entryTopics").get("value").categories),
+    'categories'    : dijit.byId("entryCategories").get("value").categories,
     'eventTime'     : dijit.byId("entryEventTime").get("value"),
     'text'          : ed.get("value"),
     'acl'           : {},
     'replyToId'     : ed.replyToId,
     'attachmentIds' : ed.attachmentIds
   };
-  
-  
+ 
+  var topics = dijit.byId("entryTopics").get("value").categories;
+  if ( topics && topics.length && topics[0] )
+  {
+    data.categories = data.categories.concat( topics );
+  }
   // clean data
   if ( dojo.indexOf( data.categories, "event") == -1 )
   {
@@ -1471,7 +1505,9 @@ function updateMessageData( widget )
   // Create informational message from data
   var info = "", categories = [];
   dojo.forEach( data.categories, function(c){
+       
     var t = locale[c];
+    
     if (c == "event" )
     {
       if ( data.eventTime && data.eventTime.date && data.eventTime.from && data.eventTime.to )
@@ -1897,12 +1933,10 @@ function updateAttachmentList(files)
   if( ed.attachmentIds.length == 0 )
   {
     dojo.byId("attachment_filelist").innerHTML = html;
-    dijit.getEnclosingWidget( dojo.byId("c-document") ).set("value",false);
   }
   else
   {
     dojo.byId("attachment_filelist").innerHTML = dojo.byId("attachment_filelist").innerHTML + html;
-    dijit.getEnclosingWidget( dojo.byId("c-document") ).set("value",true); // @todo doesn't work, why?
   }
   ed.attachmentIds = ed.attachmentIds.concat( ids );
   dojo.byId("attachment_count").innerHTML= ( ed.attachmentIds.length );

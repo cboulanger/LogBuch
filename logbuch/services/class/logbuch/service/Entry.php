@@ -697,7 +697,15 @@ class logbuch_service_Entry
 		/*
 		 * link categories
 		 */
-		foreach( $data->categories as $category )
+    $old     = $entryModel->categories();
+    $new     = $data->categories;
+	  $added   = array_diff( $new, $old );
+	  $deleted = array_diff( $old, $new );
+$this->debug( array(
+  'old'	=> $old, 'new' => $new,
+	'added'=>$added,'deleted'=>$deleted
+), __CLASS__, __LINE__ );
+		foreach( $added as $category )
 		{
 		  if( ! $category ) continue;
 		  $categoryModel->namedIdExists($category) ?
@@ -706,6 +714,14 @@ class logbuch_service_Entry
 		  try {
 		    $categoryModel->linkModel( $entryModel );
 		  } catch( qcl_data_model_RecordExistsException $e) {}
+		}
+		foreach ( $deleted as $category )
+		{
+		  if( ! $category ) continue;
+		  if( $categoryModel->namedIdExists( $category ) )
+		  {
+		    $categoryModel->unlinkModel( $entryModel );
+		  }
 		}
 
 		/*
