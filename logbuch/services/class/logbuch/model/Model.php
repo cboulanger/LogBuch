@@ -38,6 +38,7 @@ extends qcl_data_model_db_ActiveRecord
     /**
      * Flag that can be used to indicate that
      * the record has been newly created
+     * @deprecated will be removed
      */
     'new' => array (
       'check'     => 'boolean',
@@ -213,7 +214,7 @@ extends qcl_data_model_db_ActiveRecord
   	static $personModel = null;
   	if ( $personModel === null )
   	{
-	  	$personModel = $this->datasourceModel()->getInstanceOfType("person");
+	  	$personModel = $this->datasourceModel()->createInstanceOfType("person");
   	}
   	$personId = $this->get("personId");
   	$personModel->load( $personId );

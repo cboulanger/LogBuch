@@ -821,7 +821,7 @@ function createContent( data, omitContainerNode )
 function createEntryBody( entry )
 {
   var content="";
-  content+= "<div class='entry-headline'>";
+  content+= entry['new'] ? "<div class='entry-headline entry-new'>" : "<div class='entry-headline'>";
   content+= entry.subject + "</div>";
   content+= "<table width='100%'><tr><td>";
   if (entry.dateStart )

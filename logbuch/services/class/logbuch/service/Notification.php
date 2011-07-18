@@ -69,9 +69,9 @@ class logbuch_service_Notification
         $this->warn( "Could not send email: " . $e->getMessage() );
       }
     }
-    else 
+    else
     {
-       //$this->debug( "NICHT gesendet an ". $recipient->get("email"), __CLASS__, __LINE__ ); 
+       //$this->debug( "NICHT gesendet an ". $recipient->get("email"), __CLASS__, __LINE__ );
     }
     return false;
   }
@@ -93,7 +93,7 @@ class logbuch_service_Notification
     $recipientModel = $this->getPersonModel();
     $recipientModel->findAll();
     $activeUserPerson = $this->getActiveUserPerson();
-    $this->debug( "Email $subject", __CLASS__, __LINE__ );
+    //$this->debug( "Email $subject", __CLASS__, __LINE__ );
     while( $recipientModel->loadNext() )
     {
       if( $recipientModel->id() != $activeUserPerson->id() )
@@ -102,7 +102,7 @@ class logbuch_service_Notification
       }
       else
       {
-        $this->debug( "- nicht an den Absender selbst.", __CLASS__, __LINE__ );
+        //$this->debug( "- nicht an den Absender selbst.", __CLASS__, __LINE__ );
       }
     }
   }

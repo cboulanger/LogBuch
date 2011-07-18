@@ -115,6 +115,10 @@ body.claro {
 	padding: 2px;
 }
 
+.entry-new {
+  background-color: #d4eaff !important;
+}
+
 .entry-author, 
 .entry-categories, 
 .entry-date, 

@@ -9,7 +9,7 @@ extends qcl_core_Object
 	public $allConsultants	= false;
 	public $allMembers			= false;
 	public $moreMembers			= array();
-	
+
 	/**
 	 * Constructor
 	 * @param array|object $acl
@@ -21,7 +21,7 @@ extends qcl_core_Object
 			$this->setAcl($acl);
 		}
 	}
-	
+
   /**
    * Returns a singleton instance of this class
    * @return logbuch_model_AccessControlList
@@ -29,8 +29,8 @@ extends qcl_core_Object
   public static function getInstance()
   {
     return qcl_getInstance( __CLASS__ );
-  }  	
-	
+  }
+
 	/**
 	 * Returns an array of names of the acl properties
 	 * @return array
@@ -39,47 +39,56 @@ extends qcl_core_Object
 	{
 		return array( "ownCompany", "ownConsultant", "analyst", "allConsultants", "allMembers", "moreMembers" );
 	}
-	
+
 	/**
-	 * Setter for acl data, checks that all acl properties are defined
-	 * @param array|object $acl
+	 * Setter for acl data.
+	 * @param array|object $acl The passed value must be an array
+	 * or an object and can have more properties than the acl properties.
+	 * Only the acl properties will be used.
+	 * @return logbuch_model_AccessControlList Returns the instance for chaining
 	 */
 	public function setAcl( $acl )
 	{
-		$acl = (array) $acl;
-		//qcl_assert_array_keys( $acl, $this->properties() );
-		$this->set( $acl );		
+	  $properties = $this->properties();
+		foreach( (array) $acl as $key => $value )
+		{
+		  if( in_array($key, $properties ) )
+		  {
+		    $this->set( $key, $value );
+		  }
+		}
+		return $this;
 	}
-	
+
 	/**
-	 * Returns true if the item is not accessible for anyone except the 
+	 * Returns true if the item is not accessible for anyone except the
 	 * item author
 	 */
 	public function isPrivate()
 	{
 	  return ! (
-	    $this->allConsultants or 
+	    $this->allConsultants or
 	    $this->allMembers or
-	    $this->analyst or 
-	    count($this->moreMembers)>0 or 
+	    $this->analyst or
+	    count($this->moreMembers)>0 or
 	    $this->ownCompany or
-	    $this->ownConsultant  
+	    $this->ownConsultant
 	  );
 	}
-	
+
 	/**
 	 * Checks access to a resource.
 	 * @param logbuch_model_Person $sender
 	 * @param logbuch_model_Person $recipient
 	 */
-	public function checkAccess 
-		( logbuch_model_Person $sender, 
+	public function checkAccess
+		( logbuch_model_Person $sender,
 			logbuch_model_Person $recipient )
 	{
 		$sender->checkLoaded();
 		$recipient->checkLoaded();
 		$access = false;
-		
+
 		/*
 		 * everybody
 		 * FIXME if .. elseif .. might be faster!
@@ -87,8 +96,8 @@ extends qcl_core_Object
 		if ( $this->allMembers )
 		{
 			$access = true;
-		}		
-		
+		}
+
 		/*
 		 * own company
 		 */
@@ -99,7 +108,7 @@ extends qcl_core_Object
 				$access = true;
 			}
 		}
-		
+
 		/*
 		 * own consultant
 		 */
@@ -113,18 +122,18 @@ extends qcl_core_Object
 				}
 			}
 		}
-		
+
 		/*
 		 * all consultants
 		 */
 		if ( $this->allConsultants )
 		{
-			if ( $recipient->get("position") == "consultant"  ) 
+			if ( $recipient->get("position") == "consultant"  )
 			{
 				$access = true;
 			}
 		}
-		
+
 		/*
 		 * analyst
 		 */
@@ -134,8 +143,8 @@ extends qcl_core_Object
 			{
 				$access = true;
 			}
-		}		
-		
+		}
+
 		/*
 		 * specific members
 		 */
@@ -145,7 +154,7 @@ extends qcl_core_Object
 			{
 				$access = true;
 			}
-		}				
+		}
 		return $access;
 	}
 }

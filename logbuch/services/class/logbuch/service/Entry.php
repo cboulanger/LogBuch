@@ -54,10 +54,17 @@ class logbuch_service_Entry
 	 */
 	function method_create( $data )
 	{
+	  /*
+	   * update method does all the work
+	   */
 		return $this->method_update(null, $data);
 	}
 
-	function method_list($filter)
+	/**
+	 * Returns a filtered list of entries
+	 * @param stdClass $filter
+	 */
+	function method_list(stdClass $filter)
 	{
 		$entryModel = $this->getEntryModel();
 		$where = array();
@@ -248,7 +255,12 @@ class logbuch_service_Entry
 		);
 	}
 
-	function _getEntryData( $entryModel, $filter=null )
+	/**
+	 * Returns data that represent an entry
+	 * @param logbuch_model_Entry $entryModel
+	 * @param object $filter
+	 */
+	function _getEntryData( logbuch_model_Entry $entryModel, stdClass $filter=null )
 	{
 	  /*
 	   * create some static vars that are cached during request time
@@ -445,6 +457,7 @@ class logbuch_service_Entry
       'subject'     => $entryModel->get("subject"),
       'authorId'		=> $entryModel->get("personId"),
       'author'	 	  => $entryModel->authorName(),
+      'initials'		=> $entryModel->authorInitials(),
       'text'		    => $entryModel->get("text"),
       'acl'					=> $entryModel->aclData(),
       'members'			=> $members,
@@ -483,7 +496,7 @@ class logbuch_service_Entry
 		/*
 		 * images
 		 */
-		$personModel->load( $entryModel->get("personId") );
+		$personModel->load( $data['authorId'] );
 		$path = "../../services/" . LOGBUCH_THUMBNAIL_PATH;
 		if( $authorImage = $personModel->get("image") )
 		{
@@ -495,10 +508,42 @@ class logbuch_service_Entry
 		{
 		  $data['organizationLogo'] = $path . "/64/" . $organizationLogo;
 		}
+
+		/*
+		 * entry metadata
+		 */
+		$userPropModel = $this->getEntryUserPropertyModel();
+		try
+		{
+		  $userPropModel->loadWhere(array(
+		  	'entryId'   => $data['id'],
+		    'personId'	=> $activePerson->id()
+		  ) );
+		}
+		catch( qcl_data_model_RecordNotFoundException $e)
+		{
+      $userPropModel->create(array(
+		  	'entryId'   => $data['id'],
+		    'personId'	=> $activePerson->id()
+		  ) );
+		}
+		$data['new'] = !$userPropModel->get("displayed");
+	  if( $data['new'] )
+	  {
+	    $userPropModel->set( "displayed", true )->save();
+	  }
+
+		/*
+		 * finally, return the entry data
+		 */
     return $data;
 	}
 
-	function _getAttachmentData( $entryModel )
+	/**
+	 * Returns data about the attachments of an entry
+	 * @param logbuch_model_Entry $entryModel
+	 */
+	function _getAttachmentData( logbuch_model_Entry $entryModel )
 	{
 	  $data = array();
 	  static $attModel= null;
@@ -582,6 +627,8 @@ class logbuch_service_Entry
 		$entryModel      = $this->getEntryModel();
 		$categoryModel   = $this->getCategoryModel();
 		$personModel 	   = $this->getPersonModel();
+		$activePerson    = $this->getActiveUserPerson();
+	  $activePersonId  = $activePerson->id();
 		$itemData = array();
 
 		/*
@@ -655,6 +702,7 @@ class logbuch_service_Entry
 		/*
 		 * acl
 		 */
+
 		$aclModel = new logbuch_model_AccessControlList();
 		$aclData  = $aclModel->set($data->acl);
 
@@ -673,6 +721,18 @@ class logbuch_service_Entry
 		$itemData = array_merge( $itemData, $aclData );
 
 		/*
+		 * entry must be visible at least for the author
+		 * of the entry
+		 */
+		if( ! $aclModel->checkAccess($activePerson, $activePerson) )
+		{
+  	  $itemData['moreMembers'] = array_unique( array_merge(
+  	    $itemData['moreMembers'],
+  	    array( $entryModel->get("personId") )
+  	  ));
+		}
+
+		/*
 		 * create or update record
 		 */
 		if( $id === null )
@@ -683,14 +743,11 @@ class logbuch_service_Entry
   		if ( is_numeric( $data->replyToId ) )
   		{
   		  $itemData['parentEntryId'] = $data->replyToId;
-  		  // reply must be visible at least for the author of the entry
-  		  // @todo done on client-remove?
   		  $entryModel->load( $data->replyToId );
-  		  $itemData['moreMembers'] = array_unique( array_merge(
-  		    $itemData['moreMembers'],
-  		    array( $entryModel->get("personId") )
-  		  ));
   		}
+  		/*
+  		 * create the entry
+  		 */
 		  $newId = $entryModel->create( $itemData );
 		}
 		elseif ( $id and is_numeric( $id ) )
@@ -709,6 +766,7 @@ class logbuch_service_Entry
     {
       throw new InvalidArgumentException("Invalid id");
     }
+
 
 		/*
 		 * link categories
@@ -765,12 +823,18 @@ class logbuch_service_Entry
 		  }
 		}
 
+    /*
+     * get entry data for client
+     */
+    $clientdata = $this->_getEntryData($entryModel);
+
 		/*
 		 * notify other clients
 		 */
-		$data = $this->_getEntryData($entryModel);
+		$data = $clientdata;
 		$data['editable'] = false;
 		$data['deletable'] = false;
+		$data['new'] = true;
 		if( $id )
 		{
 		  $this->broadcastEntry("entry.updated", $data, $aclData );
@@ -791,9 +855,92 @@ class logbuch_service_Entry
 		}
 
 		/*
+	   * create "unread" flags for all users that have not
+	   * yet seen the entry
+	   */
+	  $entryPropModel = $this->getEntryUserPropertyModel();
+	  $aclModel = new logbuch_model_AccessControlList($aclData);
+	  $personModel->findAll();
+	  $entryId = $data['id'];
+
+	  while( $personModel->loadNext() )
+	  {
+	    if( $personModel->id() == $activePersonId ) continue;
+
+	    //$this->debug( "Checking entries for " . $personModel->getFullName(), __CLASS__, __LINE__ );
+	    /*
+	     * check access
+	     */
+  	  if( $aclModel->checkAccess( $activePerson, $personModel ) )
+  	  {
+  	    try
+  	    {
+    	    $entryPropModel->create(array(
+    	      'entryId'		=> $entryId,
+    	      'personId'	=> $personModel->id()
+    	    ));
+  	    }
+  	    catch( qcl_data_model_RecordExistsException $e )
+  	    {
+  	      // ignore
+  	    }
+  	  }
+  	  else
+  	  {
+  	    // ignore
+  	  }
+
+  	  /*
+  	   * find number of unread messages
+  	   */
+  	  $count = $entryPropModel->countWhere(array(
+  	    'personId'	=> $personModel->id(),
+  	    'displayed'	=> false
+  	  ));
+
+  	  if ( $count == 0 ) continue;
+
+  	  $number = 10; // FIXME make this configurable!
+
+  	  /*
+  	   * we have the threashold number
+  	   */
+  	  if( ( $count % $number ) == 0 )
+  	  {
+  	    $entryPropModel->findWhere(array(
+    	    'personId'	=> $personModel->id(),
+    	    'displayed'	=> false
+    	  ));
+    	  $emailData = array(
+    	    'number'	    => $count,
+    	    'headlines'		=> array()
+    	  );
+  	    while( $entryPropModel->loadNext() )
+  	    {
+  	      try
+  	      {
+  	        $entryModel->load( $entryPropModel->get("entryId") );
+
+  	      }
+  	      catch( qcl_data_model_RecordNotFoundException $e)
+  	      {
+  	        // the entry no longer exists
+  	        $entryPropModel->delete();
+  	        continue;
+  	      }
+  	      $emailData['headlines'][] =
+  	        $entryModel->get("subject") .
+  	        " (" . $entryModel->authorName() .")";
+  	    }
+
+  	    $this->sendEmailToPerson("unread-messages",$personModel,$emailData);
+  	  }
+	  }
+
+		/*
 		 * done
 		 */
-		return $this->_getEntryData($entryModel);
+		return $clientdata;
 	}
 
 	/**
@@ -901,6 +1048,50 @@ class logbuch_service_Entry
               "&ds=" . $this->getDatasourceName();
     $body .= "\n\n---\n\nBitte antworten Sie nicht auf diese E-Mail.";
     $notificationController->notifyAll( $subject, $body, $aclData);
+    return true;
+	}
+
+	/**
+	 * Sends an email reminder to a specific person
+	 * @param string $action
+	 * @param logbuch_model_Person $personModel
+	 * @param array $data Optional data for the reminder
+	 */
+	function sendEmailToPerson( $action, $personModel, $data )
+	{
+
+	  qcl_import("logbuch_service_Notification");
+	  $notificationController = new logbuch_service_Notification;
+	  $notificationController->sender = "LogBuch";
+	  $notificationController->senderEmail = "nicht_antworten@logbuch-business-travel.de";
+
+    $userName  = $personModel->getFullName();
+    $url = dirname( dirname( qcl_server_Server::getUrl() ) ) .
+    			"/html/teamblog/?ds=" . $this->getDatasourceName();
+    $aclData = array( 'moreMembers' => array($personModel->id() ));
+
+    $body = "Sehr geehrte/r $userName,\n\n";
+
+    switch( $action )
+    {
+      case "unread-messages":
+        $number = $data['number'];
+        $subject = "$number neue Logbuch-Einträge";
+        $body .= "Seit Ihrer letzen Anmeldung im LogBuch wurden $number neue Einträge erstellt:\n\n";
+        $body .= implode( "\n", $data['headlines'] );
+        $body .= "\n\nSchauen Sie doch einmal im LogBuch vorbei: \n\n";
+        $body .= $url;
+        break;
+
+      default:
+        throw new InvalidArgumentException( "Invalid action '$action'" );
+    }
+
+
+    $body .= "\n\n---\n\nBitte antworten Sie nicht auf diese E-Mail.";
+
+    $this->debug( "Sending Email to " . $personModel->getFullName(), __CLASS__, __LINE__ );
+    $notificationController->notify( $subject, $body, $personModel, $aclData);
     return true;
 	}
 

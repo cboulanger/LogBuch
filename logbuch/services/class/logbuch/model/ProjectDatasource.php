@@ -1,10 +1,10 @@
 <?php
 /* ************************************************************************
 
-   logBuch: Die Online-Plattform fŸr Unternehmenszusammenarbeit
+   logBuch: Die Online-Plattform fï¿½r Unternehmenszusammenarbeit
 
    Copyright:
-     2010 JŸrgen Breiter (Konzeption) Christian Boulanger (Programmierung) 
+     2010 Jï¿½rgen Breiter (Konzeption) Christian Boulanger (Programmierung)
 
    License:
      GPL: http://www.gnu.org/licenses/gpl.html
@@ -83,7 +83,7 @@ class logbuch_model_ProjectDatasource
           'model' => array(
             'class'   => "logbuch_model_Organization"
           )
-        ),        
+        ),
         'attachment'  => array(
           'model'    => array(
             'class'    => "logbuch_model_Attachment"
@@ -108,6 +108,11 @@ class logbuch_model_ProjectDatasource
           'model'    => array(
             'class'    => "logbuch_model_EmailSurvey"
           )
+        ),
+        'entryUserProperty' => array(
+          'model'    => array(
+            'class'    => "logbuch_model_EntryUserProperty"
+          )
         )
       ) );
     }
@@ -120,8 +125,8 @@ class logbuch_model_ProjectDatasource
   function getPersonModel()
   {
     return $this->getInstanceOfType("person");
-  }    
-  
+  }
+
   /**
    * Creates a new person model object
    * @return logbuch_model_Person
@@ -129,8 +134,8 @@ class logbuch_model_ProjectDatasource
   function createPersonModel()
   {
     return $this->createInstanceOfType("person");
-  }  
-  
+  }
+
 	/**
    * Returns the singleton instance of the entry model
    * @return logbuch_model_Entry
@@ -138,7 +143,7 @@ class logbuch_model_ProjectDatasource
   function getEntryModel()
   {
   	return $this->getInstanceOfType("entry");
-  }  
+  }
 	/**
    * Returns the singleton instance of the organization model
    * @return logbuch_model_Organization
@@ -146,8 +151,8 @@ class logbuch_model_ProjectDatasource
   function getOrganizationModel()
   {
   	return $this->getInstanceOfType("organization");
-  }   
-  
+  }
+
 	/**
    * Returns the singleton instance of the category model
    * @return logbuch_model_Category
@@ -155,8 +160,8 @@ class logbuch_model_ProjectDatasource
   function getCategoryModel()
   {
   	return $this->getInstanceOfType("category");
-  } 
-  
+  }
+
 	/**
    * Returns the singleton instance of the category model
    * @return logbuch_model_Attachment
@@ -164,6 +169,16 @@ class logbuch_model_ProjectDatasource
   function getAttachmentModel()
   {
   	return $this->getInstanceOfType("attachment");
-  }     
+  }
+
+
+  /**
+   * Returns the singleton instance of the entry's user property model
+   * @return logbuch_model_EntryUserProperty
+   */
+  function getEntryUserPropertyModel()
+  {
+    return $this->getInstanceOfType("entryUserProperty");
+  }
 }
 ?>

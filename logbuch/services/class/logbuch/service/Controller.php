@@ -2,9 +2,9 @@
 /* ************************************************************************
 
    logBuch: Software zur online-Dokumentation von Beratungsprozessen
-   
-   Copyright: Konzeption:     JŸrgen Breiter
-              Programmierung: Christian Boulanger 
+
+   Copyright: Konzeption:     Jï¿½rgen Breiter
+              Programmierung: Christian Boulanger
 
    Lizenz: GPL v.2
 
@@ -21,10 +21,10 @@ qcl_import("qcl_data_controller_Controller");
 class logbuch_service_Controller
   extends qcl_data_controller_Controller
 {
-  
+
   /**
    * overridden: the datasource is determined by the "ds"
-   * parameter in the URL or by a default setting in the 
+   * parameter in the URL or by a default setting in the
    * application.ini file
    * @return logbuch_model_ProjectDatasource
    */
@@ -39,7 +39,7 @@ class logbuch_service_Controller
     }
     return $ds_model;
   }
-  
+
   /**
    * Returns the name of the current datasource, as given in the
    * request URL or by the ini file
@@ -47,12 +47,12 @@ class logbuch_service_Controller
    */
   public function getDatasourceName()
   {
-    return  either( 
-      $_REQUEST['ds'], 
+    return  either(
+      $_REQUEST['ds'],
       $this->getIniValue("database.default_datasource_name")
     );
   }
-  
+
   /**
    * Convenience function returning the user model
    * @return qcl_access_model_User
@@ -63,7 +63,7 @@ class logbuch_service_Controller
 								->getAccessController()
 								->getUserModel();
   }
-  
+
   /**
    * Convenience function returning the role model
    * @return qcl_access_model_Role
@@ -73,7 +73,7 @@ class logbuch_service_Controller
   	return $this->getApplication()
 								->getAccessController()
 								->getRoleModel();
-  }  
+  }
 
   /**
    * Convenience function returning the group model
@@ -85,7 +85,7 @@ class logbuch_service_Controller
 								->getAccessController()
 								->getGroupModel();
   }
- 
+
 
 	/**
    * Convenience function returning the entry model
@@ -94,12 +94,12 @@ class logbuch_service_Controller
   function getPersonModel()
   {
   	return $this->getDatasourceModel()->getPersonModel();
-  }  
-  
+  }
+
   /**
-   * Returns a singleton instance of a person model associated with the active 
-   * user. 
-   * @return logbuch_model_Person    
+   * Returns a singleton instance of a person model associated with the active
+   * user.
+   * @return logbuch_model_Person
    * @throws qcl_data_model_RecordNotFoundException
    */
   public function getActiveUserPerson()
@@ -111,22 +111,22 @@ class logbuch_service_Controller
        * create model
        */
       $activeUserPerson = $this->getDatasourceModel()->createPersonModel();
-      
+
       /*
        * load active user's person model
        */
-      try 
+      try
       {
         $activeUserPerson->loadByUserId( $this->getActiveUser()->id() );
-      } 
+      }
       catch( qcl_data_model_RecordNotFoundException $e )
       {
         throw new qcl_data_model_RecordNotFoundException( "The active user has no person model");
         return false;
-      }           
+      }
     }
     return $activeUserPerson;
-  }  
+  }
 
 	/**
    * Convenience function returning the entry model
@@ -135,7 +135,7 @@ class logbuch_service_Controller
   function getEntryModel()
   {
   	return $this->getDatasourceModel()->getEntryModel();
-  }  
+  }
 	/**
    * Convenience function returning the organization model
    * @return logbuch_model_Organization
@@ -143,8 +143,8 @@ class logbuch_service_Controller
   function getOrganizationModel()
   {
   	return $this->getDatasourceModel()-> getOrganizationModel();
-  }   
-  
+  }
+
 	/**
    * Convenience function returning the category model
    * @return logbuch_model_Category
@@ -152,9 +152,9 @@ class logbuch_service_Controller
   function getCategoryModel()
   {
   	return $this->getDatasourceModel()->getCategoryModel();
-  } 
+  }
 
-  
+
 	/**
    * Convenience function returning the category model
    * @return logbuch_model_Attachment
@@ -162,6 +162,15 @@ class logbuch_service_Controller
   function getAttachmentModel()
   {
   	return $this->getDatasourceModel()->getAttachmentModel();
-  }    
-  
+  }
+
+  /**
+   * Convenience function returning  the entry's user property model
+   * @return logbuch_model_EntryUserProperty
+   */
+  function getEntryUserPropertyModel()
+  {
+    return $this->getDatasourceModel()->getEntryUserPropertyModel();
+  }
+
 }
