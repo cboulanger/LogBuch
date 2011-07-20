@@ -113,11 +113,20 @@ body.claro {
 	margin-top: 5px;
 	background-color: #EEEEEE;
 	padding: 2px;
+	cursor: pointer;
+	cursor: hand;
 }
 
 .entry-new {
+	padding-right: 30px;
+	background: url(img/bullet_star.png) no-repeat right center;
   background-color: #d4eaff !important;
 }
+
+.entry-container {}
+.entry-author-headline {}
+.entry-body {}
+.entry-footer {}
 
 .entry-author, 
 .entry-categories, 

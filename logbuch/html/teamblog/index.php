@@ -89,6 +89,24 @@
         id="clearFilterButton"
         dojoType="dijit.form.Button"
         onClick="onResetFilterButtonClick()">Alle anzeigen</button>
+      <button
+        id="collapseMessagesButton"
+        dojoType="dijit.form.Button"
+        onClick="toggleCollapseMessage()">
+        	<img id="collapseMessageIcon" src="img/list-remove.png">
+       </button>
+      <div dojoType="dijit.Tooltip" connectId="collapseMessagesButton" position="above">
+      	Zwischen Vollanzeige und Überschriften wechseln
+     	</div>
+      <button
+        id="showNewMessagesButton"
+        dojoType="dijit.form.Button"
+        onClick="toggleCollapseMessage('new')">
+        	<img id="collapseMessageIcon" src="img/bullet_star.png">
+       </button>
+      <div dojoType="dijit.Tooltip" connectId="showNewMessagesButton" position="above">
+      	Nur neue Nachrichten anzeigen
+     	</div>
      </div>
 
 		<!-- Search Box -->
@@ -236,6 +254,14 @@
                onChange="updateFilter(this);"/>
           </td><td>
             <label for="filter-misc">Sonstiges</label><br/>
+          </td></tr>
+
+          <tr><td>
+            <input dojoType="dijit.form.CheckBox"
+               id="filter-logbuch" name="filter_category" value="logbuch"
+               onChange="updateFilter(this);"/>
+          </td><td>
+            <label for="filter-logbuch">LogBuch</label><br/>
           </td></tr>
 
         </table>
@@ -450,6 +476,14 @@
                    onChange="updateMessageData(this);"/>
               </td><td>
                 <label for="c-misc">Sonstiges</label><br/>
+              </td></tr>
+
+              <tr><td>
+                <input dojoType="dijit.form.CheckBox"
+                   id="c-logbuch" name="categories" value="logbuch"
+                   onChange="updateMessageData(this);"/>
+              </td><td>
+                <label for="c-logbuch">LogBuch</label><br/>
               </td></tr>
 
             </table>

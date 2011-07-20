@@ -66,6 +66,7 @@ var locale = {
   "hint"            : "Tipps",
   "photo"           : "Photo",
   "misc"            : "Sonstiges",
+  "logbuch"         : "LogBuch",
   "ownCompany"      : "Eigenes Unternehmen",
   "ownConsultant"   : "Berater (Eigenes Unternehmen)",
   "allConsultants"  : "Alle Berater/innen",
@@ -73,6 +74,17 @@ var locale = {
   "allMembers"      : "Alle",
   "moreMembers"     : "Einzelne Teilnehmer/innen"
 };
+
+/*
+ * for substandard browsers
+ */
+if ( ! window.console )
+{
+  window.console = {
+    log : function(){},
+    warn : function(){}
+  }
+}
 
 /**
  * The session id
@@ -422,7 +434,7 @@ function resetEntryFilter()
     "personId"   : [],
     "search"     : null,
     "offset"     : 0,
-    "limit"      : 10,
+    "limit"      : 100,
     "orderBy"    : null
   };
   
@@ -790,13 +802,18 @@ function createContent( data, omitContainerNode )
   dojo.forEach( data, function(entry) {
     if ( entry.id )
     {
-      if ( ! omitContainerNode ) content+= '<div id="entryContainer' + entry.id + '">';
+      if ( ! omitContainerNode )
+      {
+        content+= '<div id="entryContainer' + entry.id + '" class="entry-container">';
+      }
       content+= '<div id="entry' + entry.id + '">';
       content+= createEntryBody( entry );
-      content+= "</div>"; // End of message  
+      content+= "</div>"; // End of message
+      content+= "<div class='entry-footer'>";
       content+= createEntryToolbar(entry);
       content+= createEntryAttachmentHtml(entry.id, entry.attachments);
       content+= '<div class="entryLinkContainer" id="entryLinkContainer' + entry.id + '"></div>';
+      content+= "</div>"; // end footer
       if ( ! omitContainerNode ) content+= "</div>";
     }
     else
@@ -821,8 +838,12 @@ function createContent( data, omitContainerNode )
 function createEntryBody( entry )
 {
   var content="";
-  content+= entry['new'] ? "<div class='entry-headline entry-new'>" : "<div class='entry-headline'>";
-  content+= entry.subject + "</div>";
+  content+= entry['new'] ? "<div class='entry-headline entry-new'" : "<div class='entry-headline'";
+  content+= " onClick='toggleCollapseMessage(this)'>";
+  content+= entry.subject;
+  content+= "<span class='entry-author-headline' style='display:none'>&nbsp;(" + entry.author + ")</span>";
+  content+= "</div>";
+  content+= "<div class='entry-body'>";
   content+= "<table width='100%'><tr><td>";
   if (entry.dateStart )
   {
@@ -877,6 +898,7 @@ function createEntryBody( entry )
   }
   content+="</td></tr></table>";
   content+="<div class='entry-text'>" + entry.text + "</div>";
+  content+="</div>"; // end entry-body
   return content;
 }
 
@@ -1054,12 +1076,11 @@ function editEntry(id)
         /*
          * set categories
          */
-        dojo.query('input[name="categories"]').forEach(function(node){
+        dojo.forEach(dojo.query('input[name="categories"]'), function(node){
           var widget = dijit.getEnclosingWidget(node);
           var value = node.value;
           var isChecked = dojo.indexOf( entry.categories, value ) != -1;
           widget.set("value", isChecked );
-          
         });
         
         /*
@@ -2109,5 +2130,55 @@ function printEntries()
         win.document.write("Error:" + message);
     }
   });    
-  
+}
+
+var messagesCollapsed = false;
+var showNewMessagesOnly = false;
+function toggleCollapseMessage(node)
+{
+  if ( node == "new" )
+  {
+    showNewMessagesOnly = ! showNewMessagesOnly;
+    dojo.byId("showNewMessagesButton").src = showNewMessagesOnly ? "img/bullet_star.png" : "img/edit-undo.png";
+    dojo.forEach( dojo.query('div[class="entry-headline"]'), function(node){
+      if( showNewMessagesOnly  )
+      {
+        dojo.style(node.parentNode.parentNode, "display", dojo.hasClass(node,"entry-new") ? "inline" : "none");
+      }
+      else
+      {
+        dojo.style(node.parentNode.parentNode, "display", "inline" );
+      }
+    }); 
+    return;
+  }
+  else if( node )
+  {
+    var entryBody   = node.nextSibling;
+    var entryFooter = node.parentNode.nextSibling;
+    if( dojo.style( entryBody, "display") == "none")
+    {
+      dojo.fx.wipeIn({ node:entryBody }).play();
+      dojo.fx.wipeIn({ node:entryFooter }).play();
+    }
+    else
+    {
+      dojo.fx.wipeOut({ node:entryBody }).play();
+      dojo.fx.wipeOut({ node:entryFooter }).play();
+    }
+  }
+  else
+  {
+    messagesCollapsed = ! messagesCollapsed;
+    dojo.forEach( dojo.query('span[class="entry-author-headline"]'), function(node){
+      dojo.style(node, "display", messagesCollapsed ? "inline" : "none"); 
+    });  
+    dojo.forEach( dojo.query('div[class="entry-body"]'), function(node){
+      dojo.style(node, "display", messagesCollapsed ? "none" : "inline"); 
+    });
+    dojo.forEach( dojo.query('div[class="entry-footer"]'), function(node){
+      dojo.style(node, "display", messagesCollapsed ? "none" : "inline");  
+    });
+    dojo.byId("collapseMessageIcon").src = messagesCollapsed ? "img/list-add.png" : "img/list-remove.png";
+  }
 }
