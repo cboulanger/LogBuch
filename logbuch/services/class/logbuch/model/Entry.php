@@ -61,7 +61,7 @@ extends logbuch_model_Model
       'sqltype' => 'text',
       'nullable' => true,
     ),
-    
+
     /**
      * Whether recipients should be notified when the entry
      * has been created
@@ -73,19 +73,19 @@ extends logbuch_model_Model
       'nullable'  => false,
       'init'      => true
     ),
-    
+
     /**
-     * Whether the recipients of this entry should should be notified 
+     * Whether the recipients of this entry should should be notified
      */
     'notify_recipients' => array (
       'check'     => 'boolean',
       'sqltype'   => 'tinyint(1) NOT NULL DEFAULT 0',
       'nullable'  => false,
       'init'      => false
-    ),    
-    
+    ),
+
     /**
-     * Whether the author of this entry should should be notified 
+     * Whether the author of this entry should should be notified
      * someone replies to this entry
      */
     'notify_reply' => array (
@@ -94,9 +94,9 @@ extends logbuch_model_Model
       'nullable'  => false,
       'init'      => false
     ),
-    
+
     /**
-     * Whether all recipients of this entry should should be notified 
+     * Whether all recipients of this entry should should be notified
      * someone replies to this entry
      */
     'notify_reply_all' => array (
@@ -104,7 +104,7 @@ extends logbuch_model_Model
       'sqltype'   => 'tinyint(1) NOT NULL DEFAULT 0',
       'nullable'  => false,
       'init'      => false
-    )    
+    )
   );
 
   /**
@@ -186,6 +186,19 @@ extends logbuch_model_Model
       }
     } catch( qcl_data_model_RecordNotFoundException $e ){}
     return $categories;
+  }
+
+  /**
+   * Overridden setter for text property. Replaces unwanted text
+   * in the given value
+   * @param string $value
+   */
+  function setText( $value )
+  {
+    $search   = array("<font","font>");
+    $replace  = array("<span","span>");
+    $this->_set("text", str_replace($search, $replace, $value) );
+    return $this;
   }
 }
 ?>
