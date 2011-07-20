@@ -346,7 +346,7 @@
 	          onRowClick="toggleSelectUserTableOnRowClick">
 						<thead>
 							<tr>
-								<th field="selected" cellType="dojox.grid.cells.Bool" width="16px" editable="true">☒</th>
+								<th field="selected" cellType="dojox.grid.cells.Bool" width="25px" editable="true">☒</th>
 								<th field="name" width="110px" formatter="formatUserName">Name</th>
 							</tr>
 						</thead>
@@ -784,7 +784,7 @@
       onRowClick="toggleSelectUserTableOnRowClick">
       <thead>
         <tr>
-          <th field="selected" cellType="dojox.grid.cells.Bool" width="16px" editable="true">☒</th>
+          <th field="selected" cellType="dojox.grid.cells.Bool" width="25px" editable="true">☒</th>
           <th field="name" width="200px">Name</th>
           <th field="organization" width="200px">Firma</th>
           <th field="online" width="50px" width="100px" formatter="getOnlineStatusHtml">Online</th>

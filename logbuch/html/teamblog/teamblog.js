@@ -51,7 +51,7 @@ dojo.registerModulePath("querybox", "../../lib/querybox");
 dojo.require("querybox.QueryBox");
   
 
-
+// @todo load from server
 var locale = {
   "__index__"       : {},
   "event"           : "Termin",
