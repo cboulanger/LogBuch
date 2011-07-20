@@ -491,19 +491,24 @@ class logbuch_service_Survey
       {
         if ( $part instanceof ezcMailText )
         {
-          if ( ! $text and $part->subType == "html" )
+          if ( $part->subType == "html" )
           {
-            $text = qcl_html_to_text( $part->text );
+            $html = $part->text;
+            if ( ! $text) $text = qcl_html_to_text( $html );
           }
-          elseif ( $part->subType == "html" )
+          elseif ( $part->subType != "html" )
           {
             $text = $part->text;
+            if ( ! $html) $html = nl2br( $part->text );
           }
         }
         elseif ( $part instanceof ezcMailFile )
         {
           $path   = $part->fileName;
-          $fileName = basename( $part->contentDisposition->displayFileName );
+          $fileName = either(
+            trim(basename( $part->contentDisposition->displayFileName )),
+            "Attachment"
+           );
           $hash = md5( $filename . microtime_float() );
           $target = QCL_UPLOAD_PATH . "/$hash";
           $this->log( "Saving $path to $target" );
@@ -516,7 +521,7 @@ class logbuch_service_Survey
         }
       }
 
-      if( ! $text )
+      if( ! $text and ! $html)
       {
         throw new ErrorException("Ihre E-Mail hatte keinen auswertbaren Inhalt.");
       }
@@ -536,12 +541,13 @@ class logbuch_service_Survey
         {
           $this->log("No marked content found, using whole message text.");
         }
+
+        /*
+         * convert text into html
+         */
+        $html = nl2br( $text );
       }
 
-      /*
-       * convert into html
-       */
-      $html = nl2br( $text );
 
       /*
        * if survey response, create a response entry
