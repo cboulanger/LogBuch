@@ -544,6 +544,27 @@ class logbuch_service_Entry
 	    $userPropModel->set( "displayed", true )->save();
 	  }
 
+	  /*
+	   * create image link, needs more thought
+	   *
+	  if( preg_match_all( "/\[\[([^\]]+)\]\]/s", $data['text'], $matches ) )
+	  {
+	    foreach( $matches[1] as $index => $match )
+	    {
+	      foreach( $data['attachments'] as $attachment )
+	      {
+	        if( stristr( $attachment['name'], $match ) )
+	        {
+	          $url = $this->getServerInstance()->getUrl() .
+              "?QCLSESSID=" . $this->getSessionId() .
+              "&service=logbuch.file&method=download&params=[" . $attachment['id'] . "]";
+	          $imgTag = "<img src='$url' style='max-width:80px; max-height:80px'/>";
+	          $data['text'] = str_replace( $matches[0][$index], $imgTag, $data['text']);
+	        }
+	      }
+	    }
+	  }*/
+
 		/*
 		 * finally, return the entry data
 		 */
@@ -1101,7 +1122,7 @@ class logbuch_service_Entry
 
     $body .= "\n\n---\n\nBitte antworten Sie nicht auf diese E-Mail.";
 
-    $this->debug( "Sending Email to " . $personModel->getFullName(), __CLASS__, __LINE__ );
+    //$this->debug( "Sending Email to " . $personModel->getFullName(), __CLASS__, __LINE__ );
     $notificationController->notify( $subject, $body, $personModel, $aclData);
     return true;
 	}
