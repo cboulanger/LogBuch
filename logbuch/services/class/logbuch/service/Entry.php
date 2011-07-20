@@ -470,6 +470,17 @@ class logbuch_service_Entry
     );
 
     /*
+     * cleanup hacks
+     */
+    if ( in_array(null,$data['acl']['moreMembers']) )
+    {
+      foreach( $data['acl']['moreMembers'] as $i => $value )
+      {
+        if( $value === null ) unset( $data['acl']['moreMembers'][$i] );
+      }
+    }
+
+    /*
      * events
      */
     if( in_array("event", $categories) )
@@ -724,13 +735,13 @@ class logbuch_service_Entry
 		 * entry must be visible at least for the author
 		 * of the entry
 		 */
-		if( ! $aclModel->checkAccess($activePerson, $activePerson) )
-		{
-  	  $itemData['moreMembers'] = array_unique( array_merge(
-  	    $itemData['moreMembers'],
-  	    array( $entryModel->get("personId") )
-  	  ));
-		}
+		//if( ! $aclModel->checkAccess($activePerson, $activePerson) )
+		//{
+  	//  $itemData['moreMembers'] = array_unique( array_merge(
+  	//    $itemData['moreMembers'],
+  	//    array( $activePerson->id() )
+  	//  ));
+		//}
 
 		/*
 		 * create or update record
