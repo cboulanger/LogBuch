@@ -311,6 +311,16 @@ class logbuch_service_Survey
      */
     $entryModel->set( $templateModel->aclData() )->save();
 
+    /*
+     * link with survey category
+     */
+    $categoryModel = $this->getCategoryModel();
+    $categoryModel->createIfNotExists("survey");
+    $categoryModel->linkModel($entryModel);
+
+    /*
+     * broadcast
+     */
     $data = $entryController->_getEntryData($entryModel);
 		$data['editable'] = false;
 		$data['deletable'] = false;
@@ -545,6 +555,8 @@ class logbuch_service_Survey
           'text'		      => $html,
           'notify_reply'  => true
         ));
+        $categoryModel->load("survey");
+        $categoryModel->linkModel($entryModel);
       }
 
       /*

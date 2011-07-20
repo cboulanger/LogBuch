@@ -67,6 +67,7 @@ var locale = {
   "photo"           : "Photo",
   "misc"            : "Sonstiges",
   "logbuch"         : "LogBuch",
+  "survey"          : "Umfrage",
   "ownCompany"      : "Eigenes Unternehmen",
   "ownConsultant"   : "Berater (Eigenes Unternehmen)",
   "allConsultants"  : "Alle Berater/innen",
