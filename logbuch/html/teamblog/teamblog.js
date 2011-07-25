@@ -931,6 +931,12 @@ function createEntryToolbar(entry)
 //  if( entry.replyToId ) content+= '<img onmouseover="explain(this)" '+ 
 //    'onclick="replyToEntry('+ entry.replyToId + ')" ' +
 //    'alt="Auf den ursprünglichen Eintrag antworten" src="img/mail-reply-all.png"/>&nbsp;| ';
+
+  // FIXME
+  if( entry.author == dojo.byId("username").innerHTML ){ 
+    entry.editable = true;
+    entry.deletable = true;
+  }
   content+= '<img onmouseover="explain(this)" '+ 
     'onclick="replyToEntry('+ entry.id + ')" ' +
     'alt="Auf diesen Eintrag antworten" src="img/mail-reply-sender.png"/>';     
