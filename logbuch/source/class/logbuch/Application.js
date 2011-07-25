@@ -576,14 +576,19 @@ qx.Class.define("logbuch.Application",
       });
       core.register("personal-information", right );
       hbox.add( right, { flex : 1 } );
+      var _this = this;
+      var switchFunc = function(){
+        document.body.style.visibility = "hidden";
+        core.setConfirmQuit(false);
+        core.setConfirmLogout(false);
+        var l=document.location;
+        l.href = l.protocol+"//"+l.host+l.pathname+"../html/teamblog/index.php"+l.search+"#"+core.getSessionId();
+      };
       
-      right.addListener("cancel",function(){
-        core.setApplicationState("view", core.isAuthenticatedUser() ? "main" : "login" );
-      },this);
-      
+      right.addListener("cancel",switchFunc,this);
       right.addListener("completed",function(){
-        core.setApplicationState("view", "main" );
-        core.publish("reload-calendar");
+        var ok = confirm("Ihre Eingaben wurden gespeichert. Wenn Sie ins LogBuch wechseln möchten, klicken Sie bitte auf 'OK'.");
+        if( ok ) switchFunc();
       },this);      
       
       left.setUserData("buddy",right);
@@ -684,8 +689,9 @@ qx.Class.define("logbuch.Application",
      * Called before the page is closed.
      * @return
      */
-    close : function()
-    {  
+    _close : function()
+    {
+      
       if( core.getActiveUser() && ! core.getActiveUser().isAnonymous() )
       {
         return "Sie sind noch angemeldet. Wenn Sie auf OK klicken, schließen Sie das Fenster, ohne sich abzumelden. Bitte klicken Sie auf 'Abbrechen' und melden sich zuerst ab.";
@@ -698,7 +704,7 @@ qx.Class.define("logbuch.Application",
      * rpc manager. Override by definining a terminate() method in your application
      * class
      */
-    terminate : function()
+    _terminate : function()
     {
       core.terminate();
     },
