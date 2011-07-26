@@ -88,6 +88,26 @@ if ($error) {
 	chmod( $imgPath, 0666 );
 }
 
+
+/*
+ * manual file upload
+ */
+if( $_GET['manualupload'] )
+{
+  header('Content-type: text/html');
+  ?>
+  <html>  <body>
+  	Datei wurde hochgeladen....
+  	<script type="text/javascript" >
+    	window.opener.document.body.imageField.setValue("<?php echo $newName; ?>");
+    	window.close();
+    </script>    	
+  </body>
+  </html>
+  <?php 
+  exit;
+}
+
 /*
  * output
  */

@@ -187,7 +187,7 @@ qx.Class.define("logbuch.Application",
        */
       core.addListener("changeActiveUser", function(e){
         new qx.util.DeferredCall( function(){
-          core.publish("authenticated", e.getData() !==null && ! e.getData().isAnonymous()  );
+          core.publish("authenticated", qx.lang.Type.isFunction(e&&e.getData()&&e.getData().isAnonymous) && ! e.getData().isAnonymous()  );//FIXME
         },this).schedule();
       },this);
       

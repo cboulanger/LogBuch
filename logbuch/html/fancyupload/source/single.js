@@ -11,7 +11,7 @@ window.addEvent('domready', function() {
   
   var dialog = top.dialog.Dialog;
   
-  var target = $('photo');
+  var target = $('image');
 
 	// Uploader instance
 	var swf = new Swiff.Uploader({
@@ -21,7 +21,7 @@ window.addEvent('domready', function() {
      */
 		path          : 'source/Swiff.Uploader.swf',
 		url           : 'server/script.php',
-		verbose       : true,
+		verbose       : false,
 		queued        : false,
 		multiple      : false,
 		target        : target,
@@ -66,8 +66,7 @@ window.addEvent('domready', function() {
         //console.log(data)
 				var name = data.name;
         //console.log('Successful Upload of ' + name );
-        document.body.__imageField.setValue(name);
-        
+        document.body.imageField.setValue(name);
 			}
 			
 			file.remove();
@@ -86,6 +85,10 @@ window.addEvent('domready', function() {
 		click: function() {
 			return false;
 		},
+    
+    dblclick : function(){
+      window.open("../../html/fancyupload/fallback.html");
+    },
 		
     mouseenter: function() {
 			swf.reposition();

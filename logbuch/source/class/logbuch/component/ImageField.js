@@ -91,14 +91,11 @@ qx.Class.define("logbuch.component.ImageField",
             img.src = "assets/upload.png";
             img.onerror = function(){
               img.src = "assets/upload.png";
-            };            
+            };
+            this.__image = img;
           }, this);          
           this._formElement = new qx.ui.form.TextField();
           this._add(control, {flex : 1});
-          
-          this.__image = new qx.ui.basic.Image().set({
-            scale : true
-          });
           break;
       }
 
@@ -131,7 +128,6 @@ qx.Class.define("logbuch.component.ImageField",
       }
       else
       {
-        var photo = this.__iframeBody.getElementsByTagName("img")[0];
         var src, fallback;
         if ( ! value )
         {
@@ -151,33 +147,36 @@ qx.Class.define("logbuch.component.ImageField",
         /*
          * fallback for invalid photos
          */
-        photo.onerror = function(){
+        var img = this.__image;
+        img.onerror = function(){
           //console.log("Invalid image source, falling back to " + fallback ); 
-          photo.onerror = function(){
+          img.onerror = function(){
             //console.log("Invalid fallback, resetting "); 
-            photo.onerror = null;
-            photo.src = "assets/upload.png";
+            img.onerror = null;
+            img.src = "assets/upload.png";
           }
-          photo.src = fallback;
+          img.src = fallback;
         }
         
         /*
          * fix height wehn loaded
          */
         var imgSize = this.getImageSize();
-        photo.onload = function(){
-          photo.onload = null;
+        img.onload = function(){
+          img.onload = null;
           if ( imgSize )
           {
             //console.log("Setting size to " +  imgSize);
-            photo.style.maxHeigth = imgSize + "px";
-            photo.style.maxWidth  = imgSize + "px";
+            img.style.maxHeigth = imgSize + "px";
+            img.style.maxWidth  = imgSize + "px";
           }
         }
         //console.log("Setting image source to: " + src);
-        photo.src = src;
+        img.src = src;
       }
     },
+    
+    
     // FIXME!
     _applyEnabled : function( value, old )
     {

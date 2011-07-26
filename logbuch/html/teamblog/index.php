@@ -264,6 +264,14 @@
             <label for="filter-logbuch">LogBuch</label><br/>
           </td></tr>
 
+          <tr><td>
+            <input dojoType="dijit.form.CheckBox"
+               id="filter-survey" name="filter_category" value="survey"
+               onChange="updateFilter(this);"/>
+          </td><td>
+            <label for="filter-survey">Umfrage</label><br/>
+          </td></tr>
+
         </table>
 		  </div>
 
