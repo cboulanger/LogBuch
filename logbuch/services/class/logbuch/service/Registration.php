@@ -16,6 +16,7 @@
 ************************************************************************ */
 
 qcl_import("logbuch_service_Controller");
+require "qcl/lib/phpmailer/class.phpmailer.php";
 
 /**
  *
@@ -128,17 +129,23 @@ Wir wünschen Ihnen produktives Arbeiten mit dem LogBuch.
     /*
      * send mail
      */
-    qcl_import("qcl_util_system_Mail");
-
-    $mail = new qcl_util_system_Mail( array(
-    	'sender'					=> $adminName,
-      'senderEmail'     => $adminEmail,
-      'recipient'       => $name,
-      'recipientEmail'  => $email,
-      'subject'         => $subject,
-      'body'            => $body
-    ) );
-    $mail->send();
+    $mailer = new PHPMailer(true);
+    try
+    {
+      $mailer->Mailer    = "smtp"; // FIXME into ini file
+      $mailer->Subject   = $subject;
+      $mailer->FromName  = $adminName;
+      $mailer->From      = $adminEmail;
+      $mailer->CharSet	 = "utf-8";
+      $mailer->Body      = $body;
+      $mailer->AddAddress( $email, $name );
+      $mailer->AddCustomHeader(sprintf("Return-Path: %s <%s> ", $mailer->From, $mailer->FromName));
+      $mailer->Send();
+    }
+    catch( phpmailerException $e)
+    {
+      throw new JsonRpcException( "Could not send email: " . $e->getMessage() );
+    }
 
     qcl_import("qcl_ui_dialog_Alert");
     new qcl_ui_dialog_Alert( $this->tr( "A registration email has been sent to %s." , $email ) );

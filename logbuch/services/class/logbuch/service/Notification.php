@@ -15,7 +15,7 @@
 
 qcl_import("logbuch_service_Controller");
 qcl_import("logbuch_model_AccessControlList");
-qcl_import("qcl_util_system_Mail");
+require "qcl/lib/phpmailer/class.phpmailer.php";
 
 /**
  *
@@ -48,25 +48,24 @@ class logbuch_service_Notification
     $aclModel = new logbuch_model_AccessControlList( $acl );
     if( $aclModel->checkAccess( $activeUserPerson, $recipient ) )
     {
-      $mailer = qcl_util_system_Mail::getInstance();
-      $mailer->reset();
+      $mailer = new PHPMailer(true);
       try
       {
-        $mailer->set( array(
-          'subject'         => $subject,
-          'body'            => $body,
-          'sender'          => $this->sender,
-          'senderEmail'     => $this->senderEmail,
-          'recipient'       => $recipient->getFullName(),
-          'recipientEmail'  => $recipient->get("email")
-        ) );
-        $mailer->send();
+        $mailer->Mailer    = "smtp"; // FIXME into ini file
+        $mailer->Subject   = $subject;
+        $mailer->FromName  = $this->sender;
+        $mailer->From      = $this->senderEmail;
+        $mailer->CharSet	 = "utf-8";
+        $mailer->MsgHTML(nl2br($body));
+        $mailer->AddAddress( $recipient->get("email"), $recipient->getFullName() );
+        $mailer->AddCustomHeader(sprintf("Return-Path: %s <%s> ", $mailer->From, $mailer->FromName));
+        $mailer->Send();
         //$this->debug( "Gesendet an ". $recipient->get("email"), __CLASS__, __LINE__ );
         return true;
       }
-      catch( LogicException $e)
+      catch( phpmailerException $e)
       {
-        $this->warn( "Could not send email: " . $e->getMessage() );
+        throw new JsonRpcException( "Could not send email: " . $e->getMessage() );
       }
     }
     else

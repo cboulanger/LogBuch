@@ -155,11 +155,11 @@ class logbuch_service_Survey
  		    $recipients = array();
       	foreach( (array) $templateModel->get("recipients") as $personId )
       	{
-      		if( ! $personId ) continue;      		
+      		if( ! $personId ) continue;
       		$personModel->load($personId);
       		$recipients[] = $personModel->get("familyName");
       	}
-      	sort($recipients);	
+      	sort($recipients);
         $formData = array(
           'frequencylabel'  => array(
             'label'   => "Wie oft soll der Fragebogen ausgesendet werden?",
@@ -192,14 +192,15 @@ class logbuch_service_Survey
             'type'    => "textarea",
             'lines' 	=> 3,
              'value'	=> implode(", ", $names),
-             'placeholder' => "foo"
+             'placeholder' => "Geben Sie hier eine kommagetrennte Liste der Nachnamen ein."
           ),
           'recipients'  => array(
             'label'   => "Empfänger/ innen",
             'type'    => "textarea",
             'lines' 	=> 4,
-             'value'	=> implode(", ", $recipients)
-          )          
+            'value'	=> implode(", ", $recipients),
+            'placeholder' => "Geben Sie hier eine kommagetrennte Liste der Nachnamen ein."
+          )
         );
         return new qcl_ui_dialog_Form(
           "<h3>Fragebogen bearbeiten</h3>",
@@ -256,7 +257,7 @@ class logbuch_service_Survey
     	}
     	$templateModel->set( "moreMembers", $moreMembers );
     }
-    
+
     if ( trim($result->recipients) )
     {
 			$recipients = array();
@@ -264,11 +265,11 @@ class logbuch_service_Survey
     	foreach( $names as $name )
     	{
     		$name = trim( $name );
-    		if( ! $name ) continue;    		
+    		if( ! $name ) continue;
     		if( strstr( $name," " ) )
     		{
     			$name = explode(" ",$name);
-    			$name = $name[count($name)-1];	
+    			$name = $name[count($name)-1];
     		}
     		try
     		{
@@ -280,13 +281,13 @@ class logbuch_service_Survey
     			$warning .= ( empty($warning) ? "Die folgenden Nachnamen konnten nicht zugeordnet werden:" : ", ") . $name;
     		}
     	}
-    	$templateModel->set( "recipients", $recipients );    	
+    	$templateModel->set( "recipients", $recipients );
     }
 
     unset($result->names);
     unset($result->recipients);
     unset($result->frequencylabel);
-    
+
 		$result->personId = $this->getActiveUserPerson()->id();
     $templateModel->set( $result );
 
@@ -578,7 +579,14 @@ class logbuch_service_Survey
        */
       if( $isSurveyResponse )
       {
-        preg_match("/\[\<\](.+)\[\>\]/s", $text, $matches);
+        if ( $html )
+        {
+          preg_match("/\[\&lt;\](.+)\[\&gt;\]/s", $html, $matches);
+        }
+        else
+        {
+          preg_match("/\[\<\](.+)\[\>\]/s", $text, $matches);
+        }
         if( $matches[1] )
         {
           $this->log("Found marked content.");
@@ -588,11 +596,7 @@ class logbuch_service_Survey
         {
           $this->log("No marked content found, using whole message text.");
         }
-
-        /*
-         * convert text into html
-         */
-        $html = nl2br( $text );
+        $html = $html ? $text : nl2br( $text );
       }
 
 
@@ -605,7 +609,7 @@ class logbuch_service_Survey
           'personId' 			=> $personModel->id(),
           'parentEntryId' => $parentEntryId,
           'subject'       => substr( $subject, 0, strlen($subject)-16 ),
-          'text'		      => $html,
+          'text'		      => either( $html, nl2br($text) ),
           'notify_reply'  => true
         ));
         $categoryModel->load("survey");

@@ -22,6 +22,12 @@ class logbuch_service_Controller
   extends qcl_data_controller_Controller
 {
 
+  public function alert( $msg )
+  {
+    qcl_import("qcl_ui_dialog_Alert");
+    return new qcl_ui_dialog_Alert( $msg );
+  }
+
   /**
    * overridden: the datasource is determined by the "ds"
    * parameter in the URL or by a default setting in the
