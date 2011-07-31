@@ -88,6 +88,16 @@ extends logbuch_model_Model
     ),
     
     /**
+     * recipient ids
+     */
+    'recipients' 	=> array (
+      'check' 		=> 'array',
+      'serialize' => true,
+      'sqltype' 	=> 'text',
+      'init' 			=> array()
+    ),    
+    
+    /**
      * Whether recipients should be notified when the entry
      * has been created
      * @deprecated Column will be removed

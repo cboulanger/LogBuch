@@ -34,16 +34,15 @@ class logbuch_service_Report
 	  echo <<<EOF
 <html>
 <head>
-<title>Zeiterfassung LogBuch</title>
+<title>Statistiken LogBuch</title>
 </head>
 <body>
-<h1>Zeiterfassung LogBuch</h1>	  
+<h1>Zeiterfassung</h1>	  
 <p>
 Diese Auswertung erfasst nur die Zeiträume, in denen die Benutzer/innen seit Beginn 
 der Zeiterfassung im 
 LogBuch angemeldet waren. Sie sagt nichts darüber hinaus, ob in dieser Zeit auch 
-Aktivität erfolgte. Deswegen ist es nötig, die Benutzer/innen dazu anzuhalten, 
-sich jedes Mal nach dem Ende ihrer Arbeit im LogBuch auch wieder abzumelden.</p>	  
+Aktivität erfolgte. Die Zahl der Logins ist z.Z. fehlerhaft.</p>	  
 
 <style type="text/css">
 table.sample {
@@ -85,8 +84,7 @@ EOF;
     /*
      * iterate through all users
      */
-    $dsModel  = $this->getDatasourceModel("demo");
-    $personModel = $dsModel->getInstanceOfType("person");
+    $personModel =$this->getPersonModel();
     $personModel->findAllOrderBy("familyName");
     while( $personModel->loadNext() )
     {
@@ -99,7 +97,38 @@ EOF;
       );
     }
     
-    echo "</tbody></table></body></html>";
+    echo "</tbody></table>"; 
+?>
+<h1>Ungelesene Nachrichten</h1>
+
+Die folgende Tabelle zeigt an, wie viele ungelesene Nachrichten pro Nutzer/in
+vorliegen.
+
+<table class="sample">
+ <thead>
+  <tr>
+    <th>Name</th>
+    <th>Anzahl ungelesener Nachrichten</th>
+  </tr>
+</thead>
+<tbody>
+    
+<?php
+    $propModel= $this->getEntryUserPropertyModel();
+    $personModel->findAllOrderBy("familyName");
+    while( $personModel->loadNext() )
+    {
+      echo sprintf(
+        "<tr><td>%s</td><td>%s</td></tr>",
+        $personModel->get("familyName") . ", " . $personModel->get("givenName"),
+        $propModel->countWhere(array(
+        	'personId' 	=> $personModel->id(),
+        	'displayed' => false
+        ))
+      );
+    }
+    echo "</tbody></table>";     
+    echo "</body></html>";
 	  exit;
 	}
 	

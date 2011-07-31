@@ -145,11 +145,21 @@ class logbuch_service_Survey
 
       case "edit":
  		    $names = array();
-      	foreach( $templateModel->get("moreMembers") as $personId )
+      	foreach( (array) $templateModel->get("moreMembers") as $personId )
       	{
+      		if( ! $personId ) continue;
       		$personModel->load($personId);
       		$names[] = $personModel->get("familyName");
       	}
+      	sort($names);
+ 		    $recipients = array();
+      	foreach( (array) $templateModel->get("recipients") as $personId )
+      	{
+      		if( ! $personId ) continue;      		
+      		$personModel->load($personId);
+      		$recipients[] = $personModel->get("familyName");
+      	}
+      	sort($recipients);	
         $formData = array(
           'frequencylabel'  => array(
             'label'   => "Wie oft soll der Fragebogen ausgesendet werden?",
@@ -173,15 +183,23 @@ class logbuch_service_Survey
           'body'  => array(
             'label'   => "Nachrichtentext",
             'type'    => "textarea",
-            'lines'		=> 20,
+            'lines'		=> 15,
             'width' 	=> 800,
             'value'	=> $templateModel->get("body")
           ),
           'names'  => array(
-            'label'   => "Leseberechtigte<br>(Nachnamen,<br>kommagetrennt)",
-            'type'    => "textfield",
-             'value'	=> implode(",", $names)
+            'label'   => "Leseberechtigte",
+            'type'    => "textarea",
+            'lines' 	=> 3,
+             'value'	=> implode(", ", $names),
+             'placeholder' => "foo"
           ),
+          'recipients'  => array(
+            'label'   => "Empfänger/ innen",
+            'type'    => "textarea",
+            'lines' 	=> 4,
+             'value'	=> implode(", ", $recipients)
+          )          
         );
         return new qcl_ui_dialog_Form(
           "<h3>Fragebogen bearbeiten</h3>",
@@ -225,6 +243,7 @@ class logbuch_service_Survey
     	foreach( $names as $name )
     	{
     		$name = trim( $name );
+    		if( ! $name ) continue;
     		try
     		{
     			$personModel->loadWhere(array("familyName" => $name ));
@@ -237,12 +256,40 @@ class logbuch_service_Survey
     	}
     	$templateModel->set( "moreMembers", $moreMembers );
     }
+    
+    if ( trim($result->recipients) )
+    {
+			$recipients = array();
+    	$names = explode(",", $result->recipients);
+    	foreach( $names as $name )
+    	{
+    		$name = trim( $name );
+    		if( ! $name ) continue;    		
+    		if( strstr( $name," " ) )
+    		{
+    			$name = explode(" ",$name);
+    			$name = $name[count($name)-1];	
+    		}
+    		try
+    		{
+    			$personModel->loadWhere(array("familyName" => $name ));
+          $recipients[] = $personModel->id();
+    		}
+    		catch( qcl_data_model_RecordNotFoundException $e )
+    		{
+    			$warning .= ( empty($warning) ? "Die folgenden Nachnamen konnten nicht zugeordnet werden:" : ", ") . $name;
+    		}
+    	}
+    	$templateModel->set( "recipients", $recipients );    	
+    }
 
     unset($result->names);
+    unset($result->recipients);
     unset($result->frequencylabel);
-
+    
+		$result->personId = $this->getActiveUserPerson()->id();
     $templateModel->set( $result );
-    //$templateModel->set("personId", $this->getActiveUserPerson()->id() );
+
     $templateModel->save();
     return $this->alert("Der Fragebogen wurde gespeichert. $warning", true);
   }
@@ -345,9 +392,9 @@ class logbuch_service_Survey
     /*
      * send email
      */
-    $body .= "\n\nAntworten auf diesen Fragebogen können unter dem Link ";
+    /*$body .= "\n\nAntworten auf diesen Fragebogen können unter dem Link ";
     $body .= "\n\n\t" . dirname( dirname( $this->getServerInstance()->getUrl() ) ) . "/html/teamblog/?showEntry=" . $entryModel->id() ;
-    $body .= "\n\n abgerufen werden.";
+    $body .= "\n\n abgerufen werden.";*/
 
     $notification = new logbuch_service_Notification;
     $notification->sender = "LogBuch";
@@ -360,7 +407,7 @@ class logbuch_service_Survey
     while( $recipientModel->loadNext() )
     {
       $success = $notification->notify( $subject, $body, $recipientModel, array(
-        'allMembers' => true
+        'moreMembers' => $templateModel->get("recipients")
       ));
       if( $success ) $count++;
     }
