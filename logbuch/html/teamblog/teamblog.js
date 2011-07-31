@@ -935,7 +935,10 @@ function createEntryToolbar(entry)
   // FIXME
   if( entry.author == dojo.byId("username").innerHTML ){ 
     entry.editable = true;
-    entry.deletable = true;
+    if( entry.comments == 0)
+    {
+      entry.deletable = true;
+    }
   }
   content+= '<img onmouseover="explain(this)" '+ 
     'onclick="replyToEntry('+ entry.id + ')" ' +
