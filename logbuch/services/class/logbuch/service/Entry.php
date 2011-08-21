@@ -315,7 +315,7 @@ class logbuch_service_Entry
     	      $cat = array(array(),array());
       	    foreach( $filterCategories as $category )
       	    {
-      	      
+
       	      $categoryModel->createIfNotExists($category);
       	      if( $categoryModel->get("custom") )
       	      {
@@ -539,11 +539,13 @@ class logbuch_service_Entry
 		    'personId'	=> $activePerson->id()
 		  ) );
 		}
+		$userPropModelId = $userPropModel->id();
 		$data['new'] = !$userPropModel->get("displayed");
 	  if( $data['new'] )
 	  {
 	    $userPropModel->set( "displayed", true )->save();
 	  }
+
 
 	  /*
 	   * create image link, needs more thought
@@ -1145,13 +1147,18 @@ class logbuch_service_Entry
 		{
 			$personModel = $this->getPersonModel();
 			$personModel->loadWhere( array( "userId" => $this->getActiveUser()->id() ) );
+			$propModel = $this->getEntryUserPropertyModel();
 			if( $model->get("personId") == $personModel->id() )
 			{
+			  // todo: relation
+				$propModel->deleteWhere(array(
+				  'entryId' => $model->id()
+				));
 				$model->delete();
 			}
 			else
 			{
-				throw new JsonRpcError( $this->tr( "Sie d�rfen diesen Eintrag nicht l�schen.") );
+				throw new JsonRpcError( $this->tr( "Not allowed.") );// FIXME
 			}
 		}
 		$this->broadcastClientMessage("entry.deleted",$id,true);

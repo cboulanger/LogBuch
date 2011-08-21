@@ -77,7 +77,7 @@ class logbuch_service_Message
 		  }
 		}
 		else
-		{		 
+		{
       /*
        * purge expired messages
        */
@@ -281,7 +281,7 @@ class logbuch_service_Message
 */
   	return $access;
   }
-  
+
   /**
    * callback method called when user logs in
    * @param unknown_type $msg
@@ -296,12 +296,12 @@ class logbuch_service_Message
       $personModel->set( "countLogins", $logins );
       $personModel->save();
     }
-    else 
+    else
     {
-      $this->debug( "User already online, not incrementing login count", __CLASS__, __LINE__ );
+      $this->log( "User already online, not incrementing login count.");
     }
-  }    
-  
+  }
+
   /**
    * callback method called when user logs out
    * @param unknown_type $msg
@@ -309,6 +309,6 @@ class logbuch_service_Message
   public function onLogout()
   {
     // do nothing for the moment
-  }     
+  }
 }
 ?>

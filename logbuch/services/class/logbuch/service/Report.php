@@ -2,9 +2,9 @@
 /* ************************************************************************
 
    logBuch: Software zur online-Dokumentation von Beratungsprozessen
-   
+
    Copyright: Konzeption:     Jürgen Breiter
-              Programmierung: Christian Boulanger 
+              Programmierung: Christian Boulanger
 
    Lizenz: GPL v.2
 
@@ -17,13 +17,23 @@ qcl_import("logbuch_service_Controller");
 qcl_import("logbuch_model_AccessControlList");
 
 /**
+ * @todo Cleanup Scripts:
  *
+
+		DELETE FROM businesstravel2010_data_EntryUserProperties
+    WHERE id in
+    (SELECT id FROM
+      (SELECT id, entryId, personId, displayed, COUNT(*)
+      FROM `businesstravel2010_data_EntryUserProperties`
+      GROUP BY entryId, personId
+      HAVING COUNT(*) > 1) as A
+    )
  */
 class logbuch_service_Report
   extends logbuch_service_Controller
 {
 
-	
+
 	function method_createTimesheet()
 	{
 	  if ( ! $this->hasRole("manager") )
@@ -37,12 +47,8 @@ class logbuch_service_Report
 <title>Statistiken LogBuch</title>
 </head>
 <body>
-<h1>Zeiterfassung</h1>	  
-<p>
-Diese Auswertung erfasst nur die Zeiträume, in denen die Benutzer/innen seit Beginn 
-der Zeiterfassung im 
-LogBuch angemeldet waren. Sie sagt nichts darüber hinaus, ob in dieser Zeit auch 
-Aktivität erfolgte. Die Zahl der Logins ist z.Z. fehlerhaft.</p>	  
+<h1>Statistiken LogBuch</h1>
+
 
 <style type="text/css">
 table.sample {
@@ -68,15 +74,15 @@ table.sample td {
   border-color: black;
   background-color: white;
 }
-</style>	  
+</style>
 <table class="sample">
  <thead>
   <tr>
     <th>Name</th>
     <th>Anmeldungen</th>
-    <th>Zeit gesamt</th>
-    <th>Zeit pro Anmeldung</th>
-  </tr>
+    <th>Verfasste Nachrichten</th>
+    <th>Ungelesene Nachrichten</th>
+   </tr>
 </thead>
 <tbody>
 EOF;
@@ -84,7 +90,9 @@ EOF;
     /*
      * iterate through all users
      */
-    $personModel =$this->getPersonModel();
+	  $propModel    = $this->getEntryUserPropertyModel();
+	  $entryModel   = $this->getEntryModel();
+    $personModel  = $this->getPersonModel();
     $personModel->findAllOrderBy("familyName");
     while( $personModel->loadNext() )
     {
@@ -92,56 +100,29 @@ EOF;
         "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>",
         $personModel->get("familyName") . ", " . $personModel->get("givenName"),
         (int) $personModel->get("countLogins"),
-        $this->getHms( $personModel->get("worktime") ),
-        $this->getHms( floor( $personModel->get("worktime") / max( array( 1, $personModel->get("countLogins") ) ) ) )
-      );
-    }
-    
-    echo "</tbody></table>"; 
-?>
-<h1>Ungelesene Nachrichten</h1>
-
-Die folgende Tabelle zeigt an, wie viele ungelesene Nachrichten pro Nutzer/in
-vorliegen.
-
-<table class="sample">
- <thead>
-  <tr>
-    <th>Name</th>
-    <th>Anzahl ungelesener Nachrichten</th>
-  </tr>
-</thead>
-<tbody>
-    
-<?php
-    $propModel= $this->getEntryUserPropertyModel();
-    $personModel->findAllOrderBy("familyName");
-    while( $personModel->loadNext() )
-    {
-      echo sprintf(
-        "<tr><td>%s</td><td>%s</td></tr>",
-        $personModel->get("familyName") . ", " . $personModel->get("givenName"),
+        $entryModel->countWhere(array( 'personId' => $personModel->id() ) ),
         $propModel->countWhere(array(
         	'personId' 	=> $personModel->id(),
         	'displayed' => false
         ))
       );
     }
-    echo "</tbody></table>";     
+
+    echo "</tbody></table>";
     echo "</body></html>";
 	  exit;
 	}
-	
+
 	protected function getHms( $sec )
 	{
     $hms = "";
-    $hours = intval(intval($sec) / 3600); 
+    $hours = intval(intval($sec) / 3600);
     $hms .= str_pad($hours, 2, "0", STR_PAD_LEFT). ":";
-    $minutes = intval(($sec / 60) % 60); 
+    $minutes = intval(($sec / 60) % 60);
     $hms .= str_pad($minutes, 2, "0", STR_PAD_LEFT). ":";
-    $seconds = intval($sec % 60); 
+    $seconds = intval($sec % 60);
     $hms .= str_pad($seconds, 2, "0", STR_PAD_LEFT);
-    return $hms;	  
+    return $hms;
 	}
 }
 ?>

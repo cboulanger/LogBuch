@@ -19,7 +19,7 @@
 ************************************************************************ */
 
 //-------------------------------------------------------------
-// Error level
+// Timezone
 //-------------------------------------------------------------
 date_default_timezone_set('Europe/Berlin');
 
@@ -28,7 +28,7 @@ date_default_timezone_set('Europe/Berlin');
 //-------------------------------------------------------------
 
 error_reporting( E_ALL ^ E_NOTICE  );
-ini_set("display_errors",1);
+ini_set("display_errors",1); // debugging
 
 //-------------------------------------------------------------
 // Configure paths to the various libraries used by the backend
