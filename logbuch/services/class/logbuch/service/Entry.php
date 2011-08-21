@@ -315,7 +315,8 @@ class logbuch_service_Entry
     	      $cat = array(array(),array());
       	    foreach( $filterCategories as $category )
       	    {
-      	      $categoryModel->load($category);
+      	      
+      	      $categoryModel->createIfNotExists($category);
       	      if( $categoryModel->get("custom") )
       	      {
       	        $cat[0][] = $category;

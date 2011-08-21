@@ -1,10 +1,10 @@
 <?php
 /* ************************************************************************
 
-   logBuch: Die Online-Plattform f�r Unternehmenszusammenarbeit
+   logBuch: Die Online-Plattform für Unternehmenszusammenarbeit
 
    Copyright:
-     2010 J�rgen Breiter (Konzeption) Christian Boulanger (Programmierung)
+     2010 Jürgen Breiter (Konzeption) Christian Boulanger (Programmierung)
 
    License:
      GPL: http://www.gnu.org/licenses/gpl.html
@@ -182,10 +182,13 @@ class logbuch_Application
     $surveyController = new logbuch_service_Survey();
     $surveyController->checkAutosend();
 
-
-
+    /*
+     * callbacks for login and logoff
+     */
+    $this->getMessageBus()->subscribe("qcl/access/login",		"logbuch_service_Message", "onLogin");
+    $this->getMessageBus()->subscribe("qcl/access/logout",	"logbuch_service_Message", "onLogout");
   }
-
+  
   /**
    * Check whether the application has been set up
    */

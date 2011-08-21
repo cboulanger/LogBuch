@@ -63,24 +63,21 @@ class logbuch_service_Message
 		  /*
 		   * only count time differences below 60 seconds, all others are due
 		   * to timeouts etc.
-		   * @todo this needs to be synchronized with the polling interval.
+		   * @todo this needs to be synchronized with the polling interval
+		   * Disabled for the moment.
 		   */
 		  if( $seconds < 60 )
 		  {
-  		  $personModel->set( "worktime", $personModel->get("worktime") + $seconds );
-  		  $personModel->save();
+  		  //$personModel->set( "worktime", $personModel->get("worktime") + $seconds );
+  		  //$personModel->save();
 		  }
 		  else
 		  {
-		    $this->warn( $personModel->getFullName() . " has been disconnected for $seconds seconds.");
+		    //$this->warn( $personModel->getFullName() . " has been disconnected for $seconds seconds.");
 		  }
 		}
 		else
-		{
-		  // count the logins
-      $personModel->set( "countLogins", $personModel->get("countLogins") + 1 );
-      $personModel->save();
-
+		{		 
       /*
        * purge expired messages
        */
@@ -272,7 +269,7 @@ class logbuch_service_Message
 		{
 			$access = true;
 		}
-
+/*
 		$this->log( sprintf(
     	"\n%s => user: %s, author: %s, recipient: %s, access: %s",
     	$data['subject'],
@@ -281,8 +278,37 @@ class logbuch_service_Message
     	$recipient->getFullName(),
     	($access === true ? "yes" : "no" )
     , __CLASS__, __LINE__ ) );
-
+*/
   	return $access;
   }
+  
+  /**
+   * callback method called when user logs in
+   * @param unknown_type $msg
+   */
+  public function onLogin()
+  {
+    $activeUser = $this->getActiveUser();
+    if ( ! $activeUser->get("online") )
+    {
+      $personModel = $this->getActiveUserPerson();
+  		$logins = $personModel->get("countLogins") + 1;
+      $personModel->set( "countLogins", $logins );
+      $personModel->save();
+    }
+    else 
+    {
+      $this->debug( "User already online, not incrementing login count", __CLASS__, __LINE__ );
+    }
+  }    
+  
+  /**
+   * callback method called when user logs out
+   * @param unknown_type $msg
+   */
+  public function onLogout()
+  {
+    // do nothing for the moment
+  }     
 }
 ?>
